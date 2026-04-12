@@ -123,7 +123,7 @@ export default function Dashboard() {
       >
         <div style={{ fontFamily: 'var(--font-mono)', fontSize: '3rem', color: 'var(--text-3)' }}>◌</div>
         <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 300 }}>Connect your wallet</h2>
-        <p>Connect Petra to access your creator dashboard</p>
+        <p>Connect an Aptos wallet to access your creator dashboard</p>
       </div>
     )
   }

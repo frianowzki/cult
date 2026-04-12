@@ -15,6 +15,7 @@ export default function Layout() {
   const [walletMenuOpen, setWalletMenuOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [notifOpen, setNotifOpen] = useState(false)
+  const [walletPickerOpen, setWalletPickerOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const walletMenuRef = useRef<HTMLDivElement | null>(null)
   const notifRef = useRef<HTMLDivElement | null>(null)
@@ -53,16 +54,20 @@ export default function Layout() {
   }, [])
 
   const handleConnect = async () => {
-    const petra = wallets?.find((w) => w.name === 'Petra')
-    const target = petra || wallets?.[0]
-    if (target) {
-      try {
-        await connect(target.name)
-      } catch (e) {
-        console.error(e)
-      }
-    } else {
-      window.open('https://petra.app/', '_blank')
+    if (!wallets?.length) {
+      toast.error('No Aptos wallet detected. Install Petra, Martian, Fewcha, Nightly, or another Aptos wallet.')
+      return
+    }
+    setWalletPickerOpen(true)
+  }
+
+  const handleWalletSelect = async (walletName: string) => {
+    try {
+      await connect(walletName)
+      setWalletPickerOpen(false)
+    } catch (e) {
+      console.error(e)
+      toast.error(`Failed to connect ${walletName}`)
     }
   }
 
@@ -311,6 +316,60 @@ export default function Layout() {
       </motion.main>
 
       {registerModalOpen && <RegisterCreatorModal />}
+
+      {walletPickerOpen && (
+        <div className="modal-overlay" onClick={() => setWalletPickerOpen(false)}>
+          <motion.div
+            className="modal"
+            initial={{ opacity: 0, scale: 0.96, y: 16 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={(e) => e.stopPropagation()}
+            style={{ maxWidth: 420, width: '100%' }}
+          >
+            <div className="modal-header">
+              <div>
+                <div className="section-eyebrow">Wallet</div>
+                <h3 style={{ fontWeight: 300 }}>Choose an Aptos wallet</h3>
+              </div>
+              <button className="btn btn-ghost btn-sm" onClick={() => setWalletPickerOpen(false)}>✕</button>
+            </div>
+
+            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {wallets.map((wallet) => (
+                <button
+                  key={wallet.name}
+                  className="btn"
+                  onClick={() => void handleWalletSelect(wallet.name)}
+                  style={{ justifyContent: 'space-between', width: '100%', padding: '12px 14px', minHeight: 52 }}
+                >
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                    {'icon' in wallet && wallet.icon ? (
+                      <img
+                        src={wallet.icon}
+                        alt={wallet.name}
+                        style={{ width: 22, height: 22, borderRadius: 6, flexShrink: 0 }}
+                      />
+                    ) : (
+                      <span style={{ width: 22, height: 22, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6, border: '1px solid var(--border)', color: 'var(--accent)', fontSize: 11, flexShrink: 0 }}>
+                        ◌
+                      </span>
+                    )}
+                    <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: 0 }}>
+                      <span style={{ fontWeight: 600, color: 'var(--text)' }}>{wallet.name}</span>
+                      <span style={{ fontSize: 11, color: 'var(--text-3)' }}>Aptos wallet</span>
+                    </span>
+                  </span>
+                  <span style={{ fontSize: 11, color: 'var(--text-3)', flexShrink: 0 }}>Connect</span>
+                </button>
+              ))}
+              <p style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 4 }}>
+                Supported if installed in your browser: Petra, Martian, Fewcha, Nightly, and other Aptos-standard wallets.
+              </p>
+            </div>
+          </motion.div>
+        </div>
+      )}
 
       <footer
         style={{
