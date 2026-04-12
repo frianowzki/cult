@@ -319,7 +319,10 @@ export async function getAllCreators(): Promise<IndexedCreator[]> {
     const profiles = await Promise.all(
       creatorAddresses.map(async (address) => {
         try {
-          const profile = await getCreatorProfile(address)
+          const [profile, contents] = await Promise.all([
+            getCreatorProfile(address),
+            getCreatorContent(address),
+          ])
           if (!profile) return null
 
           return {
@@ -330,7 +333,7 @@ export async function getAllCreators(): Promise<IndexedCreator[]> {
             avatar_shelby_cid: profile.avatar_shelby_cid,
             banner_shelby_cid: profile.banner_shelby_cid,
             subscriber_count: profile.subscriber_count,
-            content_count: profile.content_count,
+            content_count: contents.length,
             total_earned: profile.total_earned,
             tiers: profile.tiers,
             created_at: profile.created_at,

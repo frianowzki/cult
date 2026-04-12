@@ -18,11 +18,12 @@ import { resolveContentUrl, buildDeleteBlobPayload, parseCid } from '../lib/shel
 import { useStore } from '../lib/store'
 import UploadContentModal from '../components/UploadContentModal'
 import EditProfileModal from '../components/EditProfileModal'
+import RegisterCreatorModal from '../components/RegisterCreatorModal'
 import ContentViewer from '../components/ContentViewer'
 
 export default function Dashboard() {
   const { connected, account, signAndSubmitTransaction } = useWallet()
-  const { uploadModalOpen, setUploadModalOpen, setRegisterModalOpen } = useStore()
+  const { uploadModalOpen, setUploadModalOpen, registerModalOpen, setRegisterModalOpen } = useStore()
 
   const [creator, setCreator] = useState<CreatorProfile | null>(null)
   const [contents, setContents] = useState<Content[]>([])
@@ -142,29 +143,32 @@ export default function Dashboard() {
 
   if (!creator) {
     return (
-      <div
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '60vh',
-          gap: 24,
-          textAlign: 'center',
-          padding: '60px 32px',
-        }}
-      >
-        <div style={{ fontFamily: 'var(--font-display)', fontSize: '4rem', color: 'var(--text-3)', fontStyle: 'italic' }}>
-          CULT
+      <>
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: '60vh',
+            gap: 24,
+            textAlign: 'center',
+            padding: '60px 32px',
+          }}
+        >
+          <div style={{ fontFamily: 'var(--font-display)', fontSize: '4rem', color: 'var(--text-3)', fontStyle: 'italic' }}>
+            CULT
+          </div>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 300 }}>You're not yet a creator</h2>
+          <p style={{ maxWidth: 400 }}>
+            Register your creator profile to start publishing content and earning from your audience.
+          </p>
+          <button className="btn btn-primary btn-lg" onClick={() => setRegisterModalOpen(true)}>
+            Register as Creator
+          </button>
         </div>
-        <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 300 }}>You're not yet a creator</h2>
-        <p style={{ maxWidth: 400 }}>
-          Register your creator profile to start publishing content and earning from your audience.
-        </p>
-        <button className="btn btn-primary btn-lg" onClick={() => setRegisterModalOpen(true)}>
-          Register as Creator
-        </button>
-      </div>
+        {registerModalOpen && <RegisterCreatorModal onSuccess={loadData} />}
+      </>
     )
   }
 
@@ -446,6 +450,7 @@ export default function Dashboard() {
       )}
 
       {uploadModalOpen && <UploadContentModal onSuccess={loadData} />}
+      {registerModalOpen && <RegisterCreatorModal onSuccess={loadData} />}
       {editModalOpen && (
         <EditProfileModal
           profile={creator}

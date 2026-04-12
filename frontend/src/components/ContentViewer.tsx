@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import toast from 'react-hot-toast'
+import { useEffect, useState } from 'react'
+import { useWallet } from '@aptos-labs/wallet-adapter-react'
 import { motion } from 'framer-motion'
-import { type Content } from '../lib/aptos'
+import { getCreatorProfile, type Content } from '../lib/aptos'
 import { resolveContentUrl } from '../lib/shelby'
 import { CONTENT_TYPE_ICONS, CONTENT_TYPE_LABELS, ACCESS_LEVEL_LABELS } from '../lib/constants'
 
@@ -13,29 +15,72 @@ interface Props {
 }
 
 export default function ContentViewer({ content, hasAccess, onClose, onDelete, deleting = false }: Props) {
+  const { connected, account, signMessage } = useWallet()
   const [downloading, setDownloading] = useState(false)
+  const [canDownload, setCanDownload] = useState(false)
 
   const contentUrl = resolveContentUrl(content.shelby_cid)
+
+  useEffect(() => {
+    let mounted = true
+
+    const checkRegistered = async () => {
+      if (!connected || !account?.address) {
+        if (mounted) setCanDownload(false)
+        return
+      }
+
+      try {
+        const profile = await getCreatorProfile(String(account.address))
+        if (mounted) setCanDownload(!!profile)
+      } catch {
+        if (mounted) setCanDownload(false)
+      }
+    }
+
+    void checkRegistered()
+    return () => {
+      mounted = false
+    }
+  }, [connected, account?.address])
   const thumbnailUrl = resolveContentUrl(content.thumbnail_shelby_cid)
   const typeIcon = CONTENT_TYPE_ICONS[content.content_type]
   const typeLabel = CONTENT_TYPE_LABELS[content.content_type]
 
   async function handleDownload() {
     if (!contentUrl) return
+    if (!connected || !account) {
+      toast.error('Connect wallet first')
+      return
+    }
+    if (!canDownload) {
+      toast.error('Only registered accounts can download content')
+      return
+    }
+
     setDownloading(true)
     try {
+      await signMessage({
+        message: `Authorize download for \"${content.title}\"`,
+        nonce: `${content.id}-${Date.now()}`,
+        address: true,
+        application: true,
+        chainId: true,
+      })
+
       const res = await fetch(contentUrl)
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      // Extract filename from CID
       const parts = content.shelby_cid.split('::')
       a.download = parts[1] || `content-${content.id}`
       a.click()
       URL.revokeObjectURL(url)
+      toast.success('Download authorized')
     } catch (e) {
       console.error('Download failed:', e)
+      toast.error('Download cancelled or failed')
     } finally {
       setDownloading(false)
     }
@@ -212,14 +257,20 @@ export default function ContentViewer({ content, hasAccess, onClose, onDelete, d
                 {deleting ? 'Deleting…' : 'Delete Permanently'}
               </button>
             )}
-            {hasAccess && contentUrl && (
+            {hasAccess && contentUrl && canDownload && (
               <button
                 className="btn btn-primary"
                 onClick={handleDownload}
-                disabled={downloading || deleting}
+                disabled={downloading || deleting || !connected}
+                title={connected ? 'Sign to authorize download' : 'Connect wallet to download'}
               >
-                {downloading ? 'Downloading…' : '↓ Download'}
+                {downloading ? 'Signing…' : '↓ Download'}
               </button>
+            )}
+            {hasAccess && contentUrl && connected && !canDownload && (
+              <span style={{ fontSize: 12, color: 'var(--text-3)' }}>
+                Register an account to download
+              </span>
             )}
             {!hasAccess && (
               <span style={{ fontSize: 12, color: 'var(--text-3)' }}>

@@ -122,7 +122,12 @@ export default function UploadContentModal({ onSuccess }: Props) {
       }
     } catch (e: any) {
       console.error('Upload error:', e)
-      toast.error('Upload failed: ' + (e?.message || String(e)))
+      const message = e?.message || String(e)
+      if (message.includes('multipart upload') || message.includes('status: 500') || message.includes('Internal Server Error')) {
+        toast.error('Shelby upload failed on the server side. Please retry in a moment or try a smaller file.')
+      } else {
+        toast.error('Upload failed: ' + message)
+      }
       setUploading(false)
       return
     }

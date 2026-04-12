@@ -170,8 +170,10 @@ export default function CreatorPage() {
 
   return (
     <div>
-      <div style={{ height: isMobile ? 140 : 'clamp(140px, 28vw, 220px)', background: bannerUrl ? `url(${bannerUrl}) center/cover no-repeat` : 'linear-gradient(135deg, #1a1510 0%, #2a2015 50%, #1a1510 100%)', position: 'relative' }}>
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, transparent 40%, var(--bg) 100%)' }} />
+      <div style={{ height: isMobile ? 140 : 'clamp(140px, 28vw, 220px)', background: bannerUrl ? `url(${bannerUrl}) center/cover no-repeat` : 'linear-gradient(135deg, #1a1510 0%, #2a2015 50%, #1a1510 100%)', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(6,6,6,0.08) 0%, rgba(6,6,6,0.18) 30%, rgba(6,6,6,0.58) 78%, var(--bg) 100%)' }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(8,8,8,0.35) 0%, transparent 28%, transparent 72%, rgba(8,8,8,0.35) 100%)' }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at center, transparent 0%, transparent 52%, rgba(0,0,0,0.18) 100%)' }} />
         <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontFamily: 'var(--font-mono)', fontSize: isMobile ? '2.6rem' : '4rem', color: 'rgba(200,169,110,0.08)', pointerEvents: 'none', userSelect: 'none' }}>✦</div>
       </div>
 
