@@ -359,12 +359,12 @@ export default function Layout() {
                       <span style={{ fontWeight: 600, color: 'var(--text)' }}>{wallet.name}</span>
                     </span>
                   </span>
-                  <span style={{ fontSize: 11, color: 'var(--text-3)', flexShrink: 0 }}>Connect</span>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--text-3)', flexShrink: 0 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 8px rgba(74, 222, 128, 0.45)' }} />
+                    <span>Connect</span>
+                  </span>
                 </button>
               ))}
-              <p style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 4 }}>
-                Supported if installed in your browser: Petra, Martian, Fewcha, Nightly, and other Aptos-standard wallets.
-              </p>
             </div>
           </motion.div>
         </div>
