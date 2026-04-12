@@ -357,7 +357,6 @@ export default function Layout() {
                     )}
                     <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', minWidth: 0 }}>
                       <span style={{ fontWeight: 600, color: 'var(--text)' }}>{wallet.name}</span>
-                      <span style={{ fontSize: 11, color: 'var(--text-3)' }}>Aptos wallet</span>
                     </span>
                   </span>
                   <span style={{ fontSize: 11, color: 'var(--text-3)', flexShrink: 0 }}>Connect</span>
