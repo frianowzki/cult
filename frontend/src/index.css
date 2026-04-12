@@ -14,9 +14,9 @@
   --text-2: #a09880;
   --text-3: #605848;
 
-  --accent: #c8a96e;
-  --accent-dim: #7a6540;
-  --accent-glow: rgba(200, 169, 110, 0.12);
+  --accent: #FE77C9;
+  --accent-dim: #b84f90;
+  --accent-glow: rgba(254, 119, 201, 0.14);
 
   --red: #c0392b;
   --green: #2ecc71;
@@ -95,17 +95,17 @@ body {
 }
 
 .cult-hero-layer.a {
-  background: radial-gradient(ellipse at 30% 38%, rgba(207, 154, 82, 0.20) 0%, rgba(207, 154, 82, 0.08) 28%, transparent 62%);
+  background: radial-gradient(ellipse at 30% 38%, rgba(254, 119, 201, 0.20) 0%, rgba(254, 119, 201, 0.08) 28%, transparent 62%);
   animation: cultDriftA 18s ease-in-out infinite;
 }
 
 .cult-hero-layer.b {
-  background: radial-gradient(ellipse at 72% 34%, rgba(158, 96, 43, 0.18) 0%, rgba(158, 96, 43, 0.06) 30%, transparent 64%);
+  background: radial-gradient(ellipse at 72% 34%, rgba(224, 104, 177, 0.18) 0%, rgba(224, 104, 177, 0.06) 30%, transparent 64%);
   animation: cultDriftB 24s ease-in-out infinite;
 }
 
 .cult-hero-layer.c {
-  background: radial-gradient(circle at 50% 78%, rgba(120, 88, 45, 0.15) 0%, rgba(120, 88, 45, 0.04) 24%, transparent 58%);
+  background: radial-gradient(circle at 50% 78%, rgba(176, 79, 141, 0.15) 0%, rgba(176, 79, 141, 0.04) 24%, transparent 58%);
   animation: cultDriftC 20s ease-in-out infinite;
 }
 
@@ -115,7 +115,7 @@ body {
   opacity: 0.05;
   background-image:
     radial-gradient(rgba(255,255,255,0.35) 0.6px, transparent 0.6px),
-    radial-gradient(rgba(200,169,110,0.22) 0.7px, transparent 0.7px);
+    radial-gradient(rgba(254,119,201,0.22) 0.7px, transparent 0.7px);
   background-size: 16px 16px, 23px 23px;
   background-position: 0 0, 11px 9px;
   mix-blend-mode: soft-light;
@@ -132,7 +132,7 @@ body {
 .cult-hero-sweep {
   position: absolute;
   inset: -20% -10%;
-  background: linear-gradient(90deg, transparent 18%, rgba(220, 176, 98, 0.08) 50%, transparent 82%);
+  background: linear-gradient(90deg, transparent 18%, rgba(254, 119, 201, 0.08) 50%, transparent 82%);
   filter: blur(26px);
   animation: cultSweep 16s ease-in-out infinite;
 }
@@ -200,8 +200,8 @@ a {
 }
 
 .btn-primary:hover {
-  background: #e0c07e;
-  border-color: #e0c07e;
+  background: #ff8fd5;
+  border-color: #ff8fd5;
   color: var(--bg);
 }
 
