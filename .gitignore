@@ -1,0 +1,30 @@
+# secrets
+.aptos/
+.env
+.env.local
+.env.*.local
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+
+# dependencies
+node_modules/
+frontend/node_modules/
+
+# build output
+build/
+dist/
+frontend/dist/
+move/build/
+.next/
+frontend/.next/
+
+# deploy/local tooling
+.vercel/
+frontend/.vercel/
+
+# system
+.DS_Store
+Thumbs.db
+*.zip
+

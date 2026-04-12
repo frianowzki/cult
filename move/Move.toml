@@ -1,0 +1,12 @@
+[package]
+name = "cult"
+version = "1.0.0"
+
+[addresses]
+cult = "0x9fdad97a7d44e6af7f969ff0fa143b821868222ac5c90c2983bf58b613bc9a23"
+aptos_framework = "0x1"
+
+[dependencies.AptosFramework]
+git = "https://github.com/aptos-labs/aptos-core.git"
+rev = "testnet"
+subdir = "aptos-move/framework/aptos-framework"
