@@ -374,10 +374,9 @@ export default function Layout() {
         style={{
           borderTop: '1px solid var(--border)',
           padding: '16px 32px',
-          display: 'flex',
-          justifyContent: 'space-between',
+          display: 'grid',
+          gridTemplateColumns: '1fr auto 1fr',
           alignItems: 'center',
-          flexWrap: 'wrap',
           gap: 16,
           maxWidth: 1280,
           margin: '0 auto',
@@ -386,7 +385,56 @@ export default function Layout() {
         }}
       >
         <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', color: 'var(--text-3)' }}>CULT</span>
-        <p style={{ fontSize: 12, color: 'var(--text-3)' }}>Built on Aptos Testnet · Powered by Shelby Serves</p>
+
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 28, flexWrap: 'wrap' }}>
+          <a
+            href="https://x.com/widyakrnwn"
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: 11,
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+              color: 'var(--text-3)',
+              transition: 'var(--transition)',
+            }}
+          >
+            X
+          </a>
+          <a
+            href="https://t.me/widyakrnwn"
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: 11,
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+              color: 'var(--text-3)',
+              transition: 'var(--transition)',
+            }}
+          >
+            Telegram
+          </a>
+          <a
+            href="https://github.com/frianowzki/cult"
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: 11,
+              letterSpacing: '0.14em',
+              textTransform: 'uppercase',
+              color: 'var(--text-3)',
+              transition: 'var(--transition)',
+            }}
+          >
+            GitHub
+          </a>
+        </div>
+
+        <p style={{ fontSize: 12, color: 'var(--text-3)', textAlign: 'right' }}>Built on Aptos Testnet · Powered by Shelby Serves</p>
       </footer>
     </>
   )

@@ -427,6 +427,15 @@ textarea.input {
     font-size: 14px;
   }
 
+  footer {
+    grid-template-columns: 1fr !important;
+    text-align: center;
+  }
+
+  footer p {
+    text-align: center !important;
+  }
+
   .btn {
     padding: 9px 14px;
     font-size: 12px;
