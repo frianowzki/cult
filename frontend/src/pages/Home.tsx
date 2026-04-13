@@ -109,10 +109,6 @@ export default function Home() {
   width: '100%',
 }}
         >
-          <motion.div variants={stagger.item} className="section-eyebrow" style={{ marginBottom: 24 }}>
-            Web3 Creator Platform · Aptos Testnet
-          </motion.div>
-
           <motion.h1
             variants={stagger.item}
             style={{
@@ -149,45 +145,6 @@ export default function Home() {
           </motion.div>
         </motion.div>
 
-        <motion.div
-  initial={{ opacity: 0 }}
-  animate={{ opacity: 1 }}
-  transition={{ delay: 0.6, duration: 0.5 }}
-  style={{
-    position: 'relative',
-    display: 'flex',
-    gap: 32,
-    rowGap: 20,
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 20,
-    paddingTop: 8,
-  }}
->
-          {[
-            ['95%', 'Creator revenue share'],
-            ['<1s', 'Aptos finality'],
-            ['∞', 'Content formats'],
-          ].map(([val, label]) => (
-            <div key={label} style={{ textAlign: 'center' }}>
-              <div
-                style={{
-                  fontFamily: 'var(--font-display)',
-                  fontSize: '2rem',
-                  fontWeight: 300,
-                  color: 'var(--accent)',
-                  lineHeight: 1,
-                }}
-              >
-                {val}
-              </div>
-              <div style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 6, letterSpacing: '0.06em', lineHeight: 1.5, }}>
-                {label}
-              </div>
-            </div>
-          ))}
-        </motion.div>
       </section>
 
       <section
