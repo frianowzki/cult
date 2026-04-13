@@ -55,7 +55,7 @@ export default function Home() {
           alignItems: 'center',
           justifyContent: 'center',
           textAlign: 'center',
-          padding: '96px 20px 72px',
+          padding: '72px 20px 56px',
           position: 'relative',
           overflow: 'hidden',
           gap: 40,
@@ -104,10 +104,16 @@ export default function Home() {
           initial="initial"
           animate="animate"
           style={{
-  position: 'relative',
-  maxWidth: 800,
-  width: '100%',
-}}
+            position: 'relative',
+            maxWidth: 800,
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: '0 auto',
+            transform: 'translateY(-12px)',
+          }}
         >
           <motion.h1
             variants={stagger.item}
@@ -117,6 +123,8 @@ export default function Home() {
               fontStyle: 'italic',
               marginBottom: 24,
               color: 'var(--text)',
+              textAlign: 'center',
+              lineHeight: 1.06,
             }}
           >
             Where creators build
@@ -126,7 +134,7 @@ export default function Home() {
 
           <motion.p
             variants={stagger.item}
-            style={{ fontSize: '1.1rem', maxWidth: 560, margin: '0 auto 40px', lineHeight: 1.7 }}
+            style={{ fontSize: '1.1rem', maxWidth: 560, margin: '0 auto 36px', lineHeight: 1.7, textAlign: 'center' }}
           >
             CULT is a decentralized creator platform on Aptos. Upload content to Shelby Serves,
             monetize with subscriptions, pay-per-view, and direct tips — all on-chain.
