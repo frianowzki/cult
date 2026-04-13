@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useWallet } from '@aptos-labs/wallet-adapter-react'
 import toast from 'react-hot-toast'
-import { buildLoveContentPayload, hasLovedContent } from '../lib/aptos'
+import { buildLoveContentPayload, buildUnloveContentPayload, hasLovedContent } from '../lib/aptos'
 import { ACCESS_LEVELS } from '../lib/constants'
 
 interface Props {
@@ -40,22 +40,21 @@ export default function LoveButton({ creatorAddr, contentId, accessLevel, hasAcc
       return
     }
 
-    if (loved) return  // already loved, no toggle (contract doesn't support unlove)
-
     setLoading(true)
-    // optimistic
-    setLoved(true)
+    const nextLoved = !loved
+    setLoved(nextLoved)
 
     try {
-      const payload = buildLoveContentPayload(creatorAddr, contentId)
+      const payload = loved
+        ? buildUnloveContentPayload(contentId)
+        : buildLoveContentPayload(creatorAddr, contentId)
       await signAndSubmitTransaction({ data: payload })
-      toast.success('Loved ♥')
+      toast.success(loved ? 'Love removed' : 'Loved ♥')
     } catch (e: unknown) {
       // revert optimistic update
-      setLoved(false)
+      setLoved(loved)
       const msg = e instanceof Error ? e.message : String(e)
       if (msg.includes('ALREADY_LOVED') || msg.includes('19')) {
-        // already loved on-chain, keep loved=true
         setLoved(true)
         toast('Already loved', { icon: '♥' })
       } else if (msg.includes('NO_ACCESS') || msg.includes('21')) {
@@ -84,7 +83,7 @@ export default function LoveButton({ creatorAddr, contentId, accessLevel, hasAcc
           : accessLevel !== ACCESS_LEVELS.FREE && !hasAccess
           ? 'Subscribe or purchase to react'
           : loved
-          ? 'You loved this'
+          ? 'Remove love'
           : 'Love this content'
       }
       style={{

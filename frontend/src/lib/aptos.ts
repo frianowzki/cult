@@ -398,6 +398,125 @@ export function buildUnfollowPayload(creatorAddr: string) {
   }
 }
 
+// ─── ADD THESE to src/lib/aptos.ts ────────────────────────────────────────────
+// Paste after the existing buildUnfollowPayload / isFollowing functions
+
+// ── Types ──────────────────────────────────────────────────────────────────────
+
+export interface CommentItem {
+  id: number
+  fanAddr: string
+  contentId: number
+  text: string
+  postedAt: number
+}
+
+// ── Love ───────────────────────────────────────────────────────────────────────
+
+export function buildLoveContentPayload(creatorAddr: string, contentId: number) {
+  return {
+    function: `${CONTRACT_ADDRESS}::${MODULE_NAME}::love_content` as `${string}::${string}::${string}`,
+    typeArguments: [] as [],
+    functionArguments: [creatorAddr, contentId.toString()],
+  }
+}
+
+export function buildUnloveContentPayload(contentId: number) {
+  return {
+    function: `${CONTRACT_ADDRESS}::${MODULE_NAME}::unlove_content` as `${string}::${string}::${string}`,
+    typeArguments: [] as [],
+    functionArguments: [contentId.toString()],
+  }
+}
+
+export async function hasLovedContent(
+  fanAddr: string,
+  contentId: number,
+): Promise<boolean> {
+  try {
+    const result = await aptos.view({
+      payload: {
+        function: `${CONTRACT_ADDRESS}::${MODULE_NAME}::has_loved_content`,
+        typeArguments: [],
+        functionArguments: [fanAddr, contentId.toString()],
+      },
+    })
+    return result[0] as boolean
+  } catch {
+    return false
+  }
+}
+
+// ── Comments ───────────────────────────────────────────────────────────────────
+
+export function buildPostCommentPayload(
+  creatorAddr: string,
+  contentId: number,
+  text: string,
+) {
+  return {
+    function: `${CONTRACT_ADDRESS}::${MODULE_NAME}::post_comment` as `${string}::${string}::${string}`,
+    typeArguments: [] as [],
+    functionArguments: [creatorAddr, contentId.toString(), text],
+  }
+}
+
+export function buildDeleteCommentPayload(commentId: number) {
+  return {
+    function: `${CONTRACT_ADDRESS}::${MODULE_NAME}::delete_comment` as `${string}::${string}::${string}`,
+    typeArguments: [] as [],
+    functionArguments: [commentId.toString()],
+  }
+}
+
+export async function getFanComments(
+  fanAddr: string,
+  contentId: number,
+): Promise<CommentItem[]> {
+  try {
+    const result = await aptos.view({
+      payload: {
+        function: `${CONTRACT_ADDRESS}::${MODULE_NAME}::get_fan_comments`,
+        typeArguments: [],
+        functionArguments: [fanAddr, contentId.toString()],
+      },
+    })
+    const raw = result[0] as Array<{
+      id: string
+      fan_addr: string
+      content_id: string
+      text: string
+      posted_at: string
+    }>
+    return raw.map((c) => ({
+      id: Number(c.id),
+      fanAddr: c.fan_addr,
+      contentId: Number(c.content_id),
+      text: c.text,
+      postedAt: Number(c.posted_at),
+    }))
+  } catch {
+    return []
+  }
+}
+
+// Fetch comments from all followers of this creator for a content post.
+// Since comments are stored per-fan, we need to query each fan address.
+// For the MVP we query the current user's own comments + passed fan addresses.
+export async function getCommentsForContent(
+  fanAddresses: string[],
+  contentId: number,
+): Promise<CommentItem[]> {
+  try {
+    const all = await Promise.all(
+      fanAddresses.map((addr) => getFanComments(addr, contentId))
+    )
+    return all.flat().sort((a, b) => a.postedAt - b.postedAt)
+  } catch {
+    return []
+  }
+}
+
 export async function isFollowing(fanAddr: string, creatorAddr: string): Promise<boolean> {
   try {
     const result = await aptos.view({

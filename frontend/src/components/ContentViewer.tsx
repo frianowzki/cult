@@ -308,12 +308,18 @@ export default function ContentViewer({
               )}
             </div>
 
-            <CommentSection
-              creatorAddr={creatorAddr}
-              contentId={content.id}
-              accessLevel={content.access_level}
-              hasAccess={hasAccess}
-            />
+            {(content.access_level === 0 || hasAccess) ? (
+              <CommentSection
+                creatorAddr={creatorAddr}
+                contentId={content.id}
+                accessLevel={content.access_level}
+                hasAccess={hasAccess}
+              />
+            ) : (
+              <div style={{ fontSize: 12, color: 'var(--text-3)' }}>
+                Subscribe or purchase to view comments
+              </div>
+            )}
           </div>
         </div>
 

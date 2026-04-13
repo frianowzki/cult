@@ -1014,4 +1014,292 @@ public fun get_following(fan_addr: address): vector<address> acquires FollowStor
     let follow_store = borrow_global<FollowStore>(fan_addr);
     *&follow_store.following
 }
+
+// ─── ADD THESE ERROR CODES to the existing error codes section ────────────────
+
+const E_ALREADY_LOVED: u64 = 19;
+const E_NOT_LOVED: u64 = 20;
+const E_NO_ACCESS_TO_REACT: u64 = 21;
+const E_COMMENT_TOO_LONG: u64 = 22;
+const E_CONTENT_NOT_ACTIVE: u64 = 23;
+
+// ─── ADD THESE STRUCTS after the existing structs ─────────────────────────────
+
+struct LoveRecord has store, copy, drop {
+    fan_addr: address,
+    content_id: u64,
+    loved_at: u64,
+}
+
+struct LoveStore has key {
+    loves: vector<LoveRecord>,
+    love_events: EventHandle<LoveEvent>,
+}
+
+struct Comment has store, copy, drop {
+    id: u64,
+    fan_addr: address,
+    content_id: u64,
+    text: String,
+    posted_at: u64,
+}
+
+struct CommentStore has key {
+    comments: vector<Comment>,
+    comment_count: u64,
+    comment_events: EventHandle<CommentEvent>,
+}
+
+// ─── ADD THESE EVENTS after the existing events ───────────────────────────────
+
+struct LoveEvent has drop, store {
+    fan_addr: address,
+    creator_addr: address,
+    content_id: u64,
+}
+
+struct CommentEvent has drop, store {
+    fan_addr: address,
+    creator_addr: address,
+    content_id: u64,
+    comment_id: u64,
+    text: String,
+}
+
+// ─── ADD THESE ENTRY FUNCTIONS after the existing fan functions ────────────────
+
+public entry fun love_content(
+    fan: &signer,
+    creator_addr: address,
+    content_id: u64,
+) acquires ContentStore, FanSubscriptions, FanPurchases, LoveStore {
+    let fan_addr = signer::address_of(fan);
+
+    // verify content exists and is active, get its access_level
+    assert!(exists<ContentStore>(creator_addr), E_CREATOR_NOT_FOUND);
+    let store = borrow_global<ContentStore>(creator_addr);
+    let len = vector::length(&store.contents);
+    let i = 0u64;
+    let found = false;
+    let access_level = 0u8;
+    while (i < len) {
+        let content = vector::borrow(&store.contents, i);
+        if (content.id == content_id) {
+            assert!(content.is_active, E_CONTENT_NOT_ACTIVE);
+            access_level = content.access_level;
+            found = true;
+            break
+        };
+        i = i + 1;
+    };
+    assert!(found, E_CONTENT_NOT_FOUND);
+
+    // check access rights
+    if (access_level != ACCESS_FREE) {
+        if (access_level == ACCESS_PURCHASE) {
+            assert!(has_purchased_content(fan_addr, creator_addr, content_id), E_NO_ACCESS_TO_REACT);
+        } else {
+            let (is_sub, tier_idx, _) = has_active_subscription(fan_addr, creator_addr);
+            assert!(is_sub && (tier_idx + 1) >= access_level, E_NO_ACCESS_TO_REACT);
+        };
+    };
+
+    // init LoveStore if first time
+    if (!exists<LoveStore>(fan_addr)) {
+        move_to(fan, LoveStore {
+            loves: vector::empty(),
+            love_events: account::new_event_handle<LoveEvent>(fan),
+        });
+    };
+
+    let love_store = borrow_global_mut<LoveStore>(fan_addr);
+
+    // check not already loved
+    let j = 0u64;
+    let loves_len = vector::length(&love_store.loves);
+    while (j < loves_len) {
+        let rec = vector::borrow(&love_store.loves, j);
+        assert!(!(rec.content_id == content_id && rec.fan_addr == fan_addr), E_ALREADY_LOVED);
+        j = j + 1;
+    };
+
+    vector::push_back(&mut love_store.loves, LoveRecord {
+        fan_addr,
+        content_id,
+        loved_at: timestamp::now_seconds(),
+    });
+
+    event::emit_event(&mut love_store.love_events, LoveEvent {
+        fan_addr,
+        creator_addr,
+        content_id,
+    });
+}
+
+public entry fun unlove_content(
+    fan: &signer,
+    content_id: u64,
+) acquires LoveStore {
+    let fan_addr = signer::address_of(fan);
+    assert!(exists<LoveStore>(fan_addr), E_NOT_LOVED);
+
+    let love_store = borrow_global_mut<LoveStore>(fan_addr);
+    let len = vector::length(&love_store.loves);
+    let i = 0u64;
+    let found = false;
+
+    while (i < len) {
+        let rec = vector::borrow(&love_store.loves, i);
+        if (rec.content_id == content_id && rec.fan_addr == fan_addr) {
+            vector::remove(&mut love_store.loves, i);
+            found = true;
+            break
+        };
+        i = i + 1;
+    };
+
+    assert!(found, E_NOT_LOVED);
+}
+
+public entry fun post_comment(
+    fan: &signer,
+    creator_addr: address,
+    content_id: u64,
+    text: String,
+) acquires ContentStore, FanSubscriptions, FanPurchases, CommentStore {
+    let fan_addr = signer::address_of(fan);
+
+    // max 500 chars
+    assert!(string::length(&text) <= 500, E_COMMENT_TOO_LONG);
+
+    // verify content exists, is active, check access
+    assert!(exists<ContentStore>(creator_addr), E_CREATOR_NOT_FOUND);
+    let store = borrow_global<ContentStore>(creator_addr);
+    let len = vector::length(&store.contents);
+    let i = 0u64;
+    let found = false;
+    let access_level = 0u8;
+    while (i < len) {
+        let content = vector::borrow(&store.contents, i);
+        if (content.id == content_id) {
+            assert!(content.is_active, E_CONTENT_NOT_ACTIVE);
+            access_level = content.access_level;
+            found = true;
+            break
+        };
+        i = i + 1;
+    };
+    assert!(found, E_CONTENT_NOT_FOUND);
+
+    // same access check as love
+    if (access_level != ACCESS_FREE) {
+        if (access_level == ACCESS_PURCHASE) {
+            assert!(has_purchased_content(fan_addr, creator_addr, content_id), E_NO_ACCESS_TO_REACT);
+        } else {
+            let (is_sub, tier_idx, _) = has_active_subscription(fan_addr, creator_addr);
+            assert!(is_sub && (tier_idx + 1) >= access_level, E_NO_ACCESS_TO_REACT);
+        };
+    };
+
+    // init CommentStore under creator if first comment on this creator's content
+    if (!exists<CommentStore>(creator_addr)) {
+        // cannot move_to another account — store under fan instead
+        // we store all comments under the creator's address
+        // NOTE: only the creator can call move_to for their own address
+        // so we store comments under a global resource keyed by fan
+        // Workaround: store CommentStore under fan_addr
+    };
+
+    if (!exists<CommentStore>(fan_addr)) {
+        move_to(fan, CommentStore {
+            comments: vector::empty(),
+            comment_count: 0,
+            comment_events: account::new_event_handle<CommentEvent>(fan),
+        });
+    };
+
+    let comment_store = borrow_global_mut<CommentStore>(fan_addr);
+    let comment_id = comment_store.comment_count;
+    comment_store.comment_count = comment_id + 1;
+
+    vector::push_back(&mut comment_store.comments, Comment {
+        id: comment_id,
+        fan_addr,
+        content_id,
+        text: *&text,
+        posted_at: timestamp::now_seconds(),
+    });
+
+    event::emit_event(&mut comment_store.comment_events, CommentEvent {
+        fan_addr,
+        creator_addr,
+        content_id,
+        comment_id,
+        text,
+    });
+}
+
+public entry fun delete_comment(
+    fan: &signer,
+    comment_id: u64,
+) acquires CommentStore {
+    let fan_addr = signer::address_of(fan);
+    assert!(exists<CommentStore>(fan_addr), E_CONTENT_NOT_FOUND);
+
+    let comment_store = borrow_global_mut<CommentStore>(fan_addr);
+    let len = vector::length(&comment_store.comments);
+    let i = 0u64;
+    let found = false;
+
+    while (i < len) {
+        let c = vector::borrow(&comment_store.comments, i);
+        if (c.id == comment_id && c.fan_addr == fan_addr) {
+            vector::remove(&mut comment_store.comments, i);
+            found = true;
+            break
+        };
+        i = i + 1;
+    };
+
+    assert!(found, E_CONTENT_NOT_FOUND);
+}
+
+// ─── ADD THESE VIEW FUNCTIONS ─────────────────────────────────────────────────
+
+#[view]
+public fun has_loved_content(
+    fan_addr: address,
+    content_id: u64,
+): bool acquires LoveStore {
+    if (!exists<LoveStore>(fan_addr)) return false;
+    let love_store = borrow_global<LoveStore>(fan_addr);
+    let len = vector::length(&love_store.loves);
+    let i = 0u64;
+    while (i < len) {
+        let rec = vector::borrow(&love_store.loves, i);
+        if (rec.content_id == content_id) return true;
+        i = i + 1;
+    };
+    false
+}
+
+#[view]
+public fun get_fan_comments(
+    fan_addr: address,
+    content_id: u64,
+): vector<Comment> acquires CommentStore {
+    if (!exists<CommentStore>(fan_addr)) return vector::empty();
+    let comment_store = borrow_global<CommentStore>(fan_addr);
+    let result = vector::empty<Comment>();
+    let len = vector::length(&comment_store.comments);
+    let i = 0u64;
+    while (i < len) {
+        let c = vector::borrow(&comment_store.comments, i);
+        if (c.content_id == content_id) {
+            vector::push_back(&mut result, *c);
+        };
+        i = i + 1;
+    };
+    result
+}
 }
