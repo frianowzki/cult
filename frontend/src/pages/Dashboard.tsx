@@ -462,6 +462,7 @@ export default function Dashboard() {
         <ContentViewer
           content={viewingContent}
           hasAccess={true}
+          creatorAddr={String(account?.address || '')}
           onClose={() => setViewingContent(null)}
           onDelete={() => void handlePermanentDelete(viewingContent)}
           deleting={deletingId === viewingContent.id}

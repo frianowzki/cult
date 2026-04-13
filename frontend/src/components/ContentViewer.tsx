@@ -5,16 +5,27 @@ import { motion } from 'framer-motion'
 import { getCreatorProfile, type Content } from '../lib/aptos'
 import { resolveContentUrl } from '../lib/shelby'
 import { CONTENT_TYPE_ICONS, CONTENT_TYPE_LABELS, ACCESS_LEVEL_LABELS } from '../lib/constants'
+import LoveButton from './LoveButton'
+import CommentSection from './CommentSection'
 
 interface Props {
   content: Content
   hasAccess: boolean
+  creatorAddr: string   // ADD THIS
   onClose: () => void
   onDelete?: () => void
   deleting?: boolean
 }
 
-export default function ContentViewer({ content, hasAccess, onClose, onDelete, deleting = false }: Props) {
+export default function ContentViewer({
+  content,
+  hasAccess,
+  creatorAddr,   // ADD THIS
+  onClose,
+  onDelete,
+  deleting = false,
+}: Props) {
+  
   const { connected, account, signMessage } = useWallet()
   const [downloading, setDownloading] = useState(false)
   const [canDownload, setCanDownload] = useState(false)
@@ -243,41 +254,71 @@ export default function ContentViewer({ content, hasAccess, onClose, onDelete, d
           )}
         </div>
 
-        {/* Footer */}
+        <div style={{ padding: '18px clamp(16px, 4vw, 32px) 0' }}>
+          <div
+            style={{
+              borderTop: '1px solid var(--border)',
+              paddingTop: 16,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 14,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+              <LoveButton
+                creatorAddr={creatorAddr}
+                contentId={content.id}
+                accessLevel={content.access_level}
+                hasAccess={hasAccess}
+              />
+
+              {hasAccess && contentUrl && canDownload && (
+                <button
+                  className="btn btn-ghost btn-sm"
+                  onClick={handleDownload}
+                  disabled={downloading || deleting || !connected}
+                  title={connected ? 'Sign to authorize download' : 'Connect wallet to download'}
+                  style={{ fontSize: 12 }}
+                >
+                  {downloading ? 'Signing…' : '↓ Download'}
+                </button>
+              )}
+
+              {hasAccess && onDelete && (
+                <button
+                  className="btn btn-ghost btn-sm"
+                  onClick={onDelete}
+                  disabled={deleting}
+                  style={{ color: '#ff8a8a', fontSize: 12 }}
+                >
+                  {deleting ? 'Deleting…' : 'Delete'}
+                </button>
+              )}
+
+              {hasAccess && contentUrl && connected && !canDownload && (
+                <span style={{ fontSize: 12, color: 'var(--text-3)' }}>
+                  Register an account to download
+                </span>
+              )}
+
+              {!hasAccess && (
+                <span style={{ fontSize: 12, color: 'var(--text-3)' }}>
+                  Subscribe or purchase to unlock
+                </span>
+              )}
+            </div>
+
+            <CommentSection
+              creatorAddr={creatorAddr}
+              contentId={content.id}
+              accessLevel={content.access_level}
+              hasAccess={hasAccess}
+            />
+          </div>
+        </div>
+
         <div className="modal-footer" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
           <button className="btn" onClick={onClose}>Close</button>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-            {hasAccess && onDelete && (
-              <button
-                className="btn btn-ghost"
-                onClick={onDelete}
-                disabled={deleting}
-                style={{ color: '#ff8a8a', borderColor: 'rgba(255,138,138,0.25)' }}
-              >
-                {deleting ? 'Deleting…' : 'Delete Permanently'}
-              </button>
-            )}
-            {hasAccess && contentUrl && canDownload && (
-              <button
-                className="btn btn-primary"
-                onClick={handleDownload}
-                disabled={downloading || deleting || !connected}
-                title={connected ? 'Sign to authorize download' : 'Connect wallet to download'}
-              >
-                {downloading ? 'Signing…' : '↓ Download'}
-              </button>
-            )}
-            {hasAccess && contentUrl && connected && !canDownload && (
-              <span style={{ fontSize: 12, color: 'var(--text-3)' }}>
-                Register an account to download
-              </span>
-            )}
-            {!hasAccess && (
-              <span style={{ fontSize: 12, color: 'var(--text-3)' }}>
-                Subscribe or purchase to unlock
-              </span>
-            )}
-          </div>
         </div>
       </motion.div>
     </div>

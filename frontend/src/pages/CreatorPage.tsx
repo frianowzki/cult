@@ -368,6 +368,7 @@ export default function CreatorPage() {
         <ContentViewer
           content={viewingContent}
           hasAccess={accessMap[viewingContent.id] ?? (viewingContent.access_level === ACCESS_LEVELS.FREE)}
+          creatorAddr={creatorAddr}
           onClose={() => setViewingContent(null)}
         />
       )}

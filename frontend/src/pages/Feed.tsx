@@ -200,6 +200,7 @@ export default function Feed() {
         <ContentViewer
           content={viewingContent.content}
           hasAccess={true}
+          creatorAddr={viewingContent.creatorAddr}
           onClose={() => setViewingContent(null)}
         />
       )}
