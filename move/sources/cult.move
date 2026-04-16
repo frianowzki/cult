@@ -1264,6 +1264,46 @@ public entry fun delete_comment(
     assert!(found, E_CONTENT_NOT_FOUND);
 }
 
+public entry fun delete_comment_v2(
+    fan: &signer,
+    creator_addr: address,
+    content_id: u64,
+    comment_id: u64,
+) acquires CommentStore, GlobalCommentStore {
+    let fan_addr = signer::address_of(fan);
+
+    // Delete from personal store if exists
+    if (exists<CommentStore>(fan_addr)) {
+        let comment_store = borrow_global_mut<CommentStore>(fan_addr);
+        let len = vector::length(&comment_store.comments);
+        let i = 0u64;
+        while (i < len) {
+            let c = vector::borrow(&comment_store.comments, i);
+            if (c.id == comment_id && c.fan_addr == fan_addr) {
+                vector::remove(&mut comment_store.comments, i);
+                break;
+            };
+            i = i + 1;
+        };
+    }
+
+    // Delete from global store
+    if (exists<GlobalCommentStore>(creator_addr)) {
+        let global_store = borrow_global_mut<GlobalCommentStore>(creator_addr);
+        let glen = vector::length(&global_store.comments);
+        let j = 0u64;
+        while (j < glen) {
+            let gc = vector::borrow(&global_store.comments, j);
+            if (gc.id == comment_id && gc.fan_addr == fan_addr && gc.content_id == content_id) {
+                vector::remove(&mut global_store.comments, j);
+                global_store.comment_count = global_store.comment_count - 1;
+                break;
+            };
+            j = j + 1;
+        };
+    }
+}
+
 // ─── ADD THESE VIEW FUNCTIONS ─────────────────────────────────────────────────
 
 #[view]
@@ -1301,5 +1341,98 @@ public fun get_fan_comments(
         i = i + 1;
     };
     result
+}
+
+    // ─── Global Comment Store Initialization ──────────────────────────────────────
+
+    public entry fun init_global_comment_store(creator: &signer) {
+        let creator_addr = signer::address_of(creator);
+        assert!(!exists<GlobalCommentStore>(creator_addr), E_ALREADY_INITIALIZED);
+        move_to(creator, GlobalCommentStore {
+            comments: vector::empty(),
+            comment_count: 0,
+        });
+    }
+
+#[view]
+public fun get_comments_for_content(
+    creator_addr: address,
+    content_id: u64,
+): vector<Comment> acquires GlobalCommentStore {
+    if (!exists<GlobalCommentStore>(creator_addr)) return vector::empty();
+    let store = borrow_global<GlobalCommentStore>(creator_addr);
+    let result = vector::empty<Comment>();
+    let len = vector::length(&store.comments);
+    let i = 0u64;
+    while (i < len) {
+        let c = vector::borrow(&store.comments, i);
+        if (c.content_id == content_id) {
+            vector::push_back(&mut result, *c);
+        };
+        i = i + 1;
+    };
+    result
+}
+
+struct GlobalCommentStore has key {
+    comments: vector<Comment>,
+    comment_count: u64,
+}
+
+// ─── User Profile (restored for backward compatibility) ───────────────────────
+
+struct UserProfile has key, copy, drop, store {
+    user_addr: address,
+    display_name: String,
+    bio: String,
+    avatar_shelby_cid: String,
+    created_at: u64,
+    updated_at: u64,
+}
+
+#[view]
+public fun has_user_profile(user_addr: address): bool {
+    exists<UserProfile>(user_addr)
+}
+
+#[view]
+public fun get_user_profile(user_addr: address): UserProfile acquires UserProfile {
+    assert!(exists<UserProfile>(user_addr), E_NOT_INITIALIZED);
+    *borrow_global<UserProfile>(user_addr)
+}
+
+public entry fun register_user_profile(
+    user: &signer,
+    display_name: String,
+    bio: String,
+    avatar_cid: String,
+) {
+    let user_addr = signer::address_of(user);
+    assert!(!exists<UserProfile>(user_addr), E_ALREADY_INITIALIZED);
+
+    move_to(user, UserProfile {
+        user_addr,
+        display_name,
+        bio,
+        avatar_shelby_cid: avatar_cid,
+        created_at: timestamp::now_seconds(),
+        updated_at: timestamp::now_seconds(),
+    });
+}
+
+public entry fun update_user_profile(
+    user: &signer,
+    display_name: String,
+    bio: String,
+    avatar_cid: String,
+) acquires UserProfile {
+    let user_addr = signer::address_of(user);
+    assert!(exists<UserProfile>(user_addr), E_NOT_INITIALIZED);
+
+    let profile = borrow_global_mut<UserProfile>(user_addr);
+    profile.display_name = display_name;
+    profile.bio = bio;
+    profile.avatar_shelby_cid = avatar_cid;
+    profile.updated_at = timestamp::now_seconds();
 }
 }

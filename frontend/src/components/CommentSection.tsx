@@ -45,7 +45,7 @@ export default function CommentSection({ creatorAddr, contentId, accessLevel, ha
     setComments((prev) => prev.filter((c) => c.id !== commentId))
 
     try {
-      const payload = buildDeleteCommentPayload(commentId)
+      const payload = buildDeleteCommentPayload(creatorAddr, contentId, commentId)
       await signAndSubmitTransaction({ data: payload })
       toast.success('Comment deleted')
     } catch (e) {

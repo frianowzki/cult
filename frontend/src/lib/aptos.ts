@@ -461,13 +461,14 @@ export function buildPostCommentPayload(
   }
 }
 
-export function buildDeleteCommentPayload(commentId: number) {
+export function buildDeleteCommentPayload(creatorAddr: string, contentId: number, commentId: number) {
   return {
-    function: `${CONTRACT_ADDRESS}::${MODULE_NAME}::delete_comment` as `${string}::${string}::${string}`,
-    typeArguments: [] as [],
-    functionArguments: [commentId.toString()],
+    function: `${CONTRACT_ADDRESS}::${MODULE_NAME}::delete_comment_v2`,
+    typeArguments: [],
+    functionArguments: [creatorAddr, contentId.toString(), commentId.toString()],
   }
 }
+
 
 export async function getFanComments(
   fanAddr: string,

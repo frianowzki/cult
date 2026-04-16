@@ -374,14 +374,16 @@ export default function Layout() {
         style={{
           borderTop: '1px solid var(--border)',
           padding: '16px 32px',
-          display: 'grid',
-          gridTemplateColumns: '1fr auto 1fr',
-          alignItems: 'center',
-          gap: 16,
+          display: isMobile ? 'flex' : 'grid',
+          gridTemplateColumns: isMobile ? 'none' : '1fr auto 1fr',
+          flexDirection: isMobile ? 'column' : 'row',
+          alignItems: isMobile ? 'center' : 'center',
+          gap: isMobile ? 12 : 16,
           maxWidth: 1280,
           margin: '0 auto',
           position: 'relative',
           zIndex: 1,
+          textAlign: isMobile ? 'center' : 'left',
         }}
       >
         <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', color: 'var(--text-3)' }}>CULT</span>
@@ -434,7 +436,7 @@ export default function Layout() {
           </a>
         </div>
 
-        <p style={{ fontSize: 12, color: 'var(--text-3)', textAlign: 'right' }}>Built on Aptos Testnet · Powered by Shelby Serves</p>
+        <p style={{ fontSize: 12, color: 'var(--text-3)', textAlign: isMobile ? 'center' : 'right', marginTop: isMobile ? 8 : 0 }}>Built on Aptos Testnet · Powered by Shelby Serves · Created by Frianowzki</p>
       </footer>
     </>
   )
