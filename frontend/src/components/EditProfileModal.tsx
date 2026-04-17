@@ -4,7 +4,17 @@ import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 
 import { aptos, buildDeleteCreatorPayload, buildUpdateTiersPayload, type CreatorProfile } from '../lib/aptos'
-import { encodeFileAndGetPayload, pushBlobToRpc, mockUpload, isShelbyEnabled, buildDeleteBlobPayload, parseCid, resolveContentUrl } from '../lib/shelby'
+import {
+  encodeFileAndGetPayload,
+  pushBlobToRpc,
+  mockUpload,
+  isShelbyEnabled,
+  SHELBY_REGISTER_BLOB_MAX_GAS,
+  SHELBY_REGISTER_BLOB_GAS_UNIT_PRICE,
+  buildDeleteBlobPayload,
+  parseCid,
+  resolveContentUrl,
+} from '../lib/shelby'
 import { CONTRACT_ADDRESS, MODULE_NAME } from '../lib/constants'
 
 interface Props {
@@ -70,7 +80,13 @@ export default function EditProfileModal({ profile, onSuccess, onClose }: Props)
       return `${result.uploaderAddress}::${result.blobName}`
     }
     const { payload, data, uniqueName } = await encodeFileAndGetPayload(file, addr)
-    const submitted = await signAndSubmitTransaction({ data: payload })
+    const submitted = await signAndSubmitTransaction({
+      data: payload,
+      options: {
+        maxGasAmount: SHELBY_REGISTER_BLOB_MAX_GAS,
+        gasUnitPrice: SHELBY_REGISTER_BLOB_GAS_UNIT_PRICE,
+      },
+    })
     await aptos.waitForTransaction({ transactionHash: (submitted as any).hash })
     const result = await pushBlobToRpc(uniqueName, data, addr)
     return `${result.uploaderAddress}::${result.blobName}`

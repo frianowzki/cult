@@ -10,6 +10,8 @@ import {
   pushBlobToRpc,
   mockUpload,
   isShelbyEnabled,
+  SHELBY_REGISTER_BLOB_MAX_GAS,
+  SHELBY_REGISTER_BLOB_GAS_UNIT_PRICE,
   type ProgressCallback,
   type ShelbyUploadResult,
 } from '../lib/shelby'
@@ -92,7 +94,13 @@ export default function UploadContentModal({ onSuccess }: Props) {
     // Step 2: register blob on-chain via Petra
     setUploadStep('registering')
     setUploadPercent(50)
-    const submitted = await signAndSubmitTransaction({ data: payload })
+    const submitted = await signAndSubmitTransaction({
+      data: payload,
+      options: {
+        maxGasAmount: SHELBY_REGISTER_BLOB_MAX_GAS,
+        gasUnitPrice: SHELBY_REGISTER_BLOB_GAS_UNIT_PRICE,
+      },
+    })
     await aptos.waitForTransaction({ transactionHash: (submitted as any).hash })
     setUploadPercent(65)
 

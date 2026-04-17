@@ -4,7 +4,14 @@ import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 
 import { buildRegisterCreatorPayload, aptos } from '../lib/aptos'
-import { mockUpload, encodeFileAndGetPayload, pushBlobToRpc, isShelbyEnabled } from '../lib/shelby'
+import {
+  mockUpload,
+  encodeFileAndGetPayload,
+  pushBlobToRpc,
+  isShelbyEnabled,
+  SHELBY_REGISTER_BLOB_MAX_GAS,
+  SHELBY_REGISTER_BLOB_GAS_UNIT_PRICE,
+} from '../lib/shelby'
 import { useStore } from '../lib/store'
 import { DEFAULT_TIER_NAMES } from '../lib/constants'
 
@@ -66,7 +73,13 @@ export default function RegisterCreatorModal({ onSuccess }: Props) {
     const { payload, data, uniqueName } = await encodeFileAndGetPayload(file, addr)
 
     // Step 2: register on-chain
-    const submitted = await signAndSubmitTransaction({ data: payload })
+    const submitted = await signAndSubmitTransaction({
+      data: payload,
+      options: {
+        maxGasAmount: SHELBY_REGISTER_BLOB_MAX_GAS,
+        gasUnitPrice: SHELBY_REGISTER_BLOB_GAS_UNIT_PRICE,
+      },
+    })
     await aptos.waitForTransaction({ transactionHash: (submitted as any).hash })
 
     // Step 3: push bytes to Shelby RPC using uniqueName (string), not file object

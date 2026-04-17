@@ -14,6 +14,8 @@ export const SHELBY_RPC_ENDPOINT = 'https://api.testnet.shelby.xyz/shelby'
 const SHELBY_DEPLOYER = '0x85fdb9a176ab8ef1d9d9c1b60d60b3924f0800ac1de1cc2085fb0b8bb4988e6a'
 const BLOB_EXPIRATION_MS = 1000 * 60 * 60 * 24 * 30
 const DEFAULT_ENCODING_ENUM_INDEX = '0'
+export const SHELBY_REGISTER_BLOB_MAX_GAS = 20000
+export const SHELBY_REGISTER_BLOB_GAS_UNIT_PRICE = 100
 
 export function parseCid(cid: string): { address: string; blobName: string } | null {
   if (!cid) return null

@@ -12,6 +12,8 @@ import {
   buildDeleteBlobPayload,
   parseCid,
   resolveContentUrl,
+  SHELBY_REGISTER_BLOB_MAX_GAS,
+  SHELBY_REGISTER_BLOB_GAS_UNIT_PRICE,
 } from '../lib/shelby'
 import { ACCESS_LEVELS, ACCESS_LEVEL_LABELS } from '../lib/constants'
 
@@ -42,7 +44,13 @@ export default function EditContentModal({ content, onSuccess, onClose }: Props)
       return `${result.uploaderAddress}::${result.blobName}`
     }
     const { payload, data, uniqueName } = await encodeFileAndGetPayload(file, addr)
-    const submitted = await signAndSubmitTransaction({ data: payload })
+    const submitted = await signAndSubmitTransaction({
+      data: payload,
+      options: {
+        maxGasAmount: SHELBY_REGISTER_BLOB_MAX_GAS,
+        gasUnitPrice: SHELBY_REGISTER_BLOB_GAS_UNIT_PRICE,
+      },
+    })
     await aptos.waitForTransaction({ transactionHash: (submitted as any).hash })
     const result = await pushBlobToRpc(uniqueName, data, addr)
     return `${result.uploaderAddress}::${result.blobName}`
