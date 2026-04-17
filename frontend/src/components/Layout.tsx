@@ -11,6 +11,7 @@ import NotificationsPopup from './NotificationsPopup'
 export default function Layout() {
   const { connected, account, connect, disconnect, wallets } = useWallet()
   const location = useLocation()
+  const isCreatorPage = location.pathname.startsWith('/u/')
   const { setRegisterModalOpen, registerModalOpen } = useStore()
   const [walletMenuOpen, setWalletMenuOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
@@ -235,11 +236,21 @@ export default function Layout() {
           position: 'sticky',
           top: 0,
           zIndex: 100,
-          background: 'linear-gradient(180deg, rgba(26, 18, 24, 0.44) 0%, rgba(14, 11, 14, 0.34) 42%, rgba(8, 8, 7, 0.24) 100%)',
-          backdropFilter: 'blur(26px) saturate(170%) brightness(1.03)',
-          WebkitBackdropFilter: 'blur(26px) saturate(170%) brightness(1.03)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
-          boxShadow: '0 10px 34px rgba(0, 0, 0, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 -1px 0 rgba(254, 119, 201, 0.05)',
+          background: isCreatorPage
+            ? 'linear-gradient(180deg, rgba(26, 18, 24, 0.28) 0%, rgba(14, 11, 14, 0.18) 42%, rgba(8, 8, 7, 0.1) 100%)'
+            : 'linear-gradient(180deg, rgba(26, 18, 24, 0.44) 0%, rgba(14, 11, 14, 0.34) 42%, rgba(8, 8, 7, 0.24) 100%)',
+          backdropFilter: isCreatorPage
+            ? 'blur(24px) saturate(165%) brightness(1.03)'
+            : 'blur(26px) saturate(170%) brightness(1.03)',
+          WebkitBackdropFilter: isCreatorPage
+            ? 'blur(24px) saturate(165%) brightness(1.03)'
+            : 'blur(26px) saturate(170%) brightness(1.03)',
+          borderBottom: isCreatorPage
+            ? '1px solid rgba(255, 255, 255, 0.05)'
+            : '1px solid rgba(255, 255, 255, 0.06)',
+          boxShadow: isCreatorPage
+            ? '0 8px 28px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.05), inset 0 -1px 0 rgba(254, 119, 201, 0.04)'
+            : '0 10px 34px rgba(0, 0, 0, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 -1px 0 rgba(254, 119, 201, 0.05)',
         }}
       >
         {isMobile ? (
