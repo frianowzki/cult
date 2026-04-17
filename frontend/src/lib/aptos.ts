@@ -437,61 +437,76 @@ export function clearCreatorCache() {
 }
 
 export async function getAllCreators(forceRefresh = false): Promise<IndexedCreator[]> {
-  if (!forceRefresh) {
-    const cached = readCreatorCache()
-    if (cached) return cached
-  }
+  const cached = !forceRefresh ? readCreatorCache() : null
+  if (cached) return cached
 
   try {
-    const result = await aptos.view({
-      payload: {
-        function: `${CONTRACT_ADDRESS}::${MODULE_NAME}::get_all_creators`,
-        typeArguments: [],
-        functionArguments: [],
-      },
-    })
+    const fetchCreators = async () => {
+      const result = await aptos.view({
+        payload: {
+          function: `${CONTRACT_ADDRESS}::${MODULE_NAME}::get_all_creators`,
+          typeArguments: [],
+          functionArguments: [],
+        },
+      })
 
-    const creatorAddresses = ((result?.[0] as string[]) || []).filter(Boolean)
+      const creatorAddresses = ((result?.[0] as string[]) || []).filter(Boolean)
 
-    if (creatorAddresses.length === 0) {
-      writeCreatorCache([])
-      return []
+      if (creatorAddresses.length === 0) {
+        return []
+      }
+
+      const profiles = await Promise.all(
+        creatorAddresses.map(async (address) => {
+          try {
+            const [profile, contents] = await Promise.all([
+              getCreatorProfile(address),
+              getCreatorContent(address),
+            ])
+            if (!profile) return null
+
+            return {
+              address,
+              handle: profile.handle,
+              display_name: profile.display_name,
+              bio: profile.bio,
+              avatar_shelby_cid: profile.avatar_shelby_cid,
+              banner_shelby_cid: profile.banner_shelby_cid,
+              subscriber_count: profile.subscriber_count,
+              content_count: contents.length,
+              total_earned: profile.total_earned,
+              tiers: profile.tiers,
+              created_at: profile.created_at,
+            }
+          } catch (err) {
+            console.error(`Failed to load creator profile for ${address}:`, err)
+            return null
+          }
+        })
+      )
+
+      return profiles.filter((p): p is IndexedCreator => p !== null)
     }
 
-    const profiles = await Promise.all(
-      creatorAddresses.map(async (address) => {
-        try {
-          const [profile, contents] = await Promise.all([
-            getCreatorProfile(address),
-            getCreatorContent(address),
-          ])
-          if (!profile) return null
+    const first = await fetchCreators()
+    if (first.length > 0) {
+      writeCreatorCache(first)
+      return first
+    }
 
-          return {
-            address,
-            handle: profile.handle,
-            display_name: profile.display_name,
-            bio: profile.bio,
-            avatar_shelby_cid: profile.avatar_shelby_cid,
-            banner_shelby_cid: profile.banner_shelby_cid,
-            subscriber_count: profile.subscriber_count,
-            content_count: contents.length,
-            total_earned: profile.total_earned,
-            tiers: profile.tiers,
-            created_at: profile.created_at,
-          }
-        } catch (err) {
-          console.error(`Failed to load creator profile for ${address}:`, err)
-          return null
-        }
-      })
-    )
+    await new Promise((resolve) => setTimeout(resolve, 500))
+    const second = await fetchCreators()
+    if (second.length > 0) {
+      writeCreatorCache(second)
+      return second
+    }
 
-    const filtered = profiles.filter((p): p is IndexedCreator => p !== null)
-    writeCreatorCache(filtered)
-    return filtered
+    if (cached) return cached
+    writeCreatorCache([])
+    return []
   } catch (error) {
     console.error('getAllCreators error:', error)
+    if (cached) return cached
     return []
   }
 }
