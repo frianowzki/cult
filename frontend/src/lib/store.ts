@@ -16,6 +16,9 @@ interface AppState {
   registerModalOpen: boolean
   setRegisterModalOpen: (v: boolean) => void
 
+  userProfileModalOpen: boolean
+  setUserProfileModalOpen: (v: boolean) => void
+
   tipModalOpen: boolean
   tipTarget: string | null
   openTipModal: (creatorAddr: string) => void
@@ -36,6 +39,9 @@ export const useStore = create<AppState>((set) => ({
 
   registerModalOpen: false,
   setRegisterModalOpen: (v) => set({ registerModalOpen: v }),
+
+  userProfileModalOpen: false,
+  setUserProfileModalOpen: (v) => set({ userProfileModalOpen: v }),
 
   tipModalOpen: false,
   tipTarget: null,

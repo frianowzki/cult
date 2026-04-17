@@ -9,11 +9,13 @@ import {
   getCreatorProfile,
   getCreatorContent,
   getSubscriptionStatus,
+  getUserProfile,
   buildToggleContentPayload,
   unitsToUsd,
   type CreatorProfile,
   type Content,
   type SubscriptionStatus,
+  type UserProfile,
 } from '../lib/aptos'
 import { CONTENT_TYPE_ICONS, ACCESS_LEVEL_LABELS } from '../lib/constants'
 import { resolveContentUrl, buildDeleteBlobPayload, parseCid } from '../lib/shelby'
@@ -24,12 +26,21 @@ import RegisterCreatorModal from '../components/RegisterCreatorModal'
 import EditContentModal from '../components/EditContentModal'
 import AutoRenewBanner from '../components/AutoRenewBanner'
 import ContentViewer from '../components/ContentViewer'
+import UserProfileModal from '../components/UserProfileModal'
 
 export default function Dashboard() {
   const { connected, account, signAndSubmitTransaction } = useWallet()
-  const { uploadModalOpen, setUploadModalOpen, registerModalOpen, setRegisterModalOpen } = useStore()
+  const {
+    uploadModalOpen,
+    setUploadModalOpen,
+    registerModalOpen,
+    setRegisterModalOpen,
+    userProfileModalOpen,
+    setUserProfileModalOpen,
+  } = useStore()
 
   const [creator, setCreator] = useState<CreatorProfile | null>(null)
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
   const [contents, setContents] = useState<Content[]>([])
   const [loading, setLoading] = useState(true)
   const [editModalOpen, setEditModalOpen] = useState(false)
@@ -55,12 +66,14 @@ export default function Dashboard() {
 
     setLoading(true)
     try {
-      const [profile, contentList, ownSubStatus] = await Promise.all([
+      const [profile, basicProfile, contentList, ownSubStatus] = await Promise.all([
         getCreatorProfile(String(account.address)),
+        getUserProfile(String(account.address)),
         getCreatorContent(String(account.address)),
         getSubscriptionStatus(String(account.address), String(account.address)),
       ])
       setCreator(profile)
+      setUserProfile(basicProfile)
       setContents(contentList)
       setFanSubscription(ownSubStatus)
     } finally {
@@ -167,15 +180,31 @@ export default function Dashboard() {
           <div style={{ fontFamily: 'var(--font-display)', fontSize: '4rem', color: 'var(--text-3)', fontStyle: 'italic' }}>
             CULT
           </div>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 300 }}>You're not yet a creator</h2>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 300 }}>
+            {userProfile ? `Welcome, ${userProfile.display_name}` : "You're not yet a creator"}
+          </h2>
           <p style={{ maxWidth: 400 }}>
-            Register your creator profile to start publishing content and earning from your audience.
+            {userProfile
+              ? 'You already have a fan profile. Register as a creator whenever you want to start publishing and earning.'
+              : 'Create a fan profile now, or register your creator profile to start publishing content and earning from your audience.'}
           </p>
-          <button className="btn btn-primary btn-lg" onClick={() => setRegisterModalOpen(true)}>
-            Register as Creator
-          </button>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
+            <button className="btn" onClick={() => setUserProfileModalOpen(true)}>
+              {userProfile ? 'Edit Fan Profile' : 'Create Fan Profile'}
+            </button>
+            <button className="btn btn-primary btn-lg" onClick={() => setRegisterModalOpen(true)}>
+              Register as Creator
+            </button>
+          </div>
         </div>
         {registerModalOpen && <RegisterCreatorModal onSuccess={loadData} />}
+        {userProfileModalOpen && (
+          <UserProfileModal
+            profile={userProfile}
+            onSuccess={loadData}
+            onClose={() => setUserProfileModalOpen(false)}
+          />
+        )}
       </>
     )
   }
@@ -503,6 +532,13 @@ export default function Dashboard() {
       )}
 
       {uploadModalOpen && <UploadContentModal onSuccess={loadData} />}
+      {userProfileModalOpen && (
+        <UserProfileModal
+          profile={userProfile}
+          onSuccess={loadData}
+          onClose={() => setUserProfileModalOpen(false)}
+        />
+      )}
       {registerModalOpen && <RegisterCreatorModal onSuccess={loadData} />}
       {editModalOpen && (
         <EditProfileModal
