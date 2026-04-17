@@ -488,16 +488,6 @@ export default function Dashboard() {
                         </span>
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                          <button
-                            className="btn btn-ghost btn-sm"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setEditingContent(c)
-                            }}
-                            style={{ fontSize: 10 }}
-                          >
-                            Edit
-                          </button>
                           <span style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 600 }}>
                             View →
                           </span>
