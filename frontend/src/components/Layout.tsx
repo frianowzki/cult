@@ -235,9 +235,11 @@ export default function Layout() {
           position: 'sticky',
           top: 0,
           zIndex: 100,
-          background: 'rgba(8, 8, 7, 0.82)',
-          backdropFilter: 'blur(16px)',
-          borderBottom: '1px solid var(--border)',
+          background: 'linear-gradient(180deg, rgba(22, 18, 20, 0.74) 0%, rgba(10, 9, 9, 0.68) 100%)',
+          backdropFilter: 'blur(22px) saturate(150%)',
+          WebkitBackdropFilter: 'blur(22px) saturate(150%)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+          boxShadow: '0 8px 28px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.04)',
         }}
       >
         {isMobile ? (
@@ -382,9 +384,11 @@ export default function Layout() {
       <footer
         style={{
           width: '100%',
-          borderTop: '1px solid var(--border)',
-          background: 'rgba(8, 8, 7, 0.72)',
-          backdropFilter: 'blur(16px)',
+          borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+          background: 'linear-gradient(180deg, rgba(14, 12, 13, 0.58) 0%, rgba(8, 8, 7, 0.74) 100%)',
+          backdropFilter: 'blur(18px) saturate(135%)',
+          WebkitBackdropFilter: 'blur(18px) saturate(135%)',
+          boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.03)',
           padding: isMobile ? '12px 16px calc(12px + env(safe-area-inset-bottom))' : '14px 28px',
           display: isMobile ? 'flex' : 'grid',
           gridTemplateColumns: isMobile ? 'none' : 'minmax(120px, 1fr) auto minmax(260px, 1fr)',
