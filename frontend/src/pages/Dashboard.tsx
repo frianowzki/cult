@@ -8,10 +8,12 @@ import {
   aptos,
   getCreatorProfile,
   getCreatorContent,
+  getSubscriptionStatus,
   buildToggleContentPayload,
   unitsToUsd,
   type CreatorProfile,
   type Content,
+  type SubscriptionStatus,
 } from '../lib/aptos'
 import { CONTENT_TYPE_ICONS, ACCESS_LEVEL_LABELS } from '../lib/constants'
 import { resolveContentUrl, buildDeleteBlobPayload, parseCid } from '../lib/shelby'
@@ -20,6 +22,7 @@ import UploadContentModal from '../components/UploadContentModal'
 import EditProfileModal from '../components/EditProfileModal'
 import RegisterCreatorModal from '../components/RegisterCreatorModal'
 import EditContentModal from '../components/EditContentModal'
+import AutoRenewBanner from '../components/AutoRenewBanner'
 import ContentViewer from '../components/ContentViewer'
 
 export default function Dashboard() {
@@ -33,7 +36,8 @@ export default function Dashboard() {
   const [viewingContent, setViewingContent] = useState<Content | null>(null)
   const [editingContent, setEditingContent] = useState<Content | null>(null)
   const [deletingId, setDeletingId] = useState<number | null>(null)
-  const [dashTab, setDashTab] = useState<'posts' | 'following'>('posts')
+  const [fanSubscription, setFanSubscription] = useState<SubscriptionStatus | null>(null)
+  const [dashTab, setDashTab] = useState<'posts' | 'analytics' | 'following'>('posts')
 
   useEffect(() => {
     if (account?.address) {
@@ -51,12 +55,14 @@ export default function Dashboard() {
 
     setLoading(true)
     try {
-      const [profile, contentList] = await Promise.all([
+      const [profile, contentList, ownSubStatus] = await Promise.all([
         getCreatorProfile(String(account.address)),
         getCreatorContent(String(account.address)),
+        getSubscriptionStatus(String(account.address), String(account.address)),
       ])
       setCreator(profile)
       setContents(contentList)
+      setFanSubscription(ownSubStatus)
     } finally {
       setLoading(false)
     }
@@ -274,8 +280,16 @@ export default function Dashboard() {
         ))}
       </div>
 
-      <div style={{ display: 'flex', gap: 4, marginBottom: 28, borderBottom: '1px solid var(--border)' }}>
-        {(['posts', 'following'] as const).map((tab) => (
+      {fanSubscription?.isActive && (
+        <AutoRenewBanner
+          creatorAddr={String(account?.address || '')}
+          expiresAt={fanSubscription.expiresAt}
+          onRenewed={loadData}
+        />
+      )}
+
+      <div style={{ display: 'flex', gap: 4, marginBottom: 28, borderBottom: '1px solid var(--border)', flexWrap: 'wrap' }}>
+        {(['posts', 'analytics', 'following'] as const).map((tab) => (
           <button
             key={tab}
             className="btn btn-ghost btn-sm"
@@ -288,13 +302,50 @@ export default function Dashboard() {
               textTransform: 'capitalize',
             }}
           >
-            {tab === 'posts' ? 'Your Content' : 'Following Feed'}
+            {tab === 'posts' ? 'Your Content' : tab === 'analytics' ? 'Analytics' : 'Following Feed'}
           </button>
         ))}
       </div>
 
       {dashTab === 'following' ? (
         <FollowingFeed />
+      ) : dashTab === 'analytics' ? (
+        <div style={{ display: 'grid', gap: 20, marginBottom: 8 }}>
+          <div className="card" style={{ padding: '22px 24px' }}>
+            <div className="section-eyebrow">Analytics</div>
+            <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 300, marginBottom: 18 }}>Creator overview</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
+              {[
+                { label: 'Lifetime earnings', value: `$${unitsToUsd(creator.total_earned)}` },
+                { label: 'Subscribers', value: creator.subscriber_count },
+                { label: 'Published posts', value: creator.content_count || contents.length },
+                { label: 'Average earnings / post', value: contents.length > 0 ? `$${(Number(unitsToUsd(creator.total_earned)) / contents.length).toFixed(2)}` : '$0.00' },
+              ].map((item) => (
+                <div key={item.label} style={{ padding: '16px', border: '1px solid var(--border)', background: 'var(--bg-2)' }}>
+                  <div style={{ fontSize: 11, color: 'var(--text-3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>{item.label}</div>
+                  <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.7rem', fontWeight: 300 }}>{item.value}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="card" style={{ padding: '22px 24px' }}>
+            <div className="section-eyebrow">Content mix</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
+              {[
+                { label: 'Video', count: contents.filter((c) => c.content_type === 0).length },
+                { label: 'Image', count: contents.filter((c) => c.content_type === 1).length },
+                { label: 'Audio', count: contents.filter((c) => c.content_type === 2).length },
+                { label: 'Article', count: contents.filter((c) => c.content_type === 3).length },
+              ].map((item) => (
+                <div key={item.label} style={{ padding: '16px', border: '1px solid var(--border)', background: 'var(--bg-2)' }}>
+                  <div style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 8 }}>{item.label}</div>
+                  <div style={{ fontSize: '1.4rem', color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>{item.count}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       ) : (
         <div style={{ marginBottom: 8 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>

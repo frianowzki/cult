@@ -277,6 +277,14 @@ export function buildSubscribePayload(creatorAddr: string, tierIndex: number) {
   }
 }
 
+export function buildRenewSubscriptionPayload(creatorAddr: string) {
+  return {
+    function: `${CONTRACT_ADDRESS}::${MODULE_NAME}::renew_subscription` as `${string}::${string}::${string}`,
+    typeArguments: [] as [],
+    functionArguments: [creatorAddr, PLATFORM_ADDRESS],
+  }
+}
+
 export function buildPurchaseContentPayload(creatorAddr: string, contentId: number) {
   return {
     function: `${CONTRACT_ADDRESS}::${MODULE_NAME}::purchase_content` as `${string}::${string}::${string}`,
@@ -333,7 +341,54 @@ export interface IndexedCreator {
   created_at: number
 }
 
-export async function getAllCreators(): Promise<IndexedCreator[]> {
+const CREATOR_CACHE_KEY = 'cult:getAllCreators:v1'
+const CREATOR_CACHE_TTL_MS = 60 * 1000
+
+function readCreatorCache(): IndexedCreator[] | null {
+  if (typeof window === 'undefined') return null
+
+  try {
+    const raw = window.sessionStorage.getItem(CREATOR_CACHE_KEY)
+    if (!raw) return null
+
+    const parsed = JSON.parse(raw) as { timestamp: number; data: IndexedCreator[] }
+    if (!parsed?.timestamp || !Array.isArray(parsed?.data)) return null
+    if (Date.now() - parsed.timestamp > CREATOR_CACHE_TTL_MS) return null
+
+    return parsed.data
+  } catch {
+    return null
+  }
+}
+
+function writeCreatorCache(data: IndexedCreator[]) {
+  if (typeof window === 'undefined') return
+
+  try {
+    window.sessionStorage.setItem(
+      CREATOR_CACHE_KEY,
+      JSON.stringify({ timestamp: Date.now(), data })
+    )
+  } catch {
+    // ignore cache write failures
+  }
+}
+
+export function clearCreatorCache() {
+  if (typeof window === 'undefined') return
+  try {
+    window.sessionStorage.removeItem(CREATOR_CACHE_KEY)
+  } catch {
+    // ignore cache clear failures
+  }
+}
+
+export async function getAllCreators(forceRefresh = false): Promise<IndexedCreator[]> {
+  if (!forceRefresh) {
+    const cached = readCreatorCache()
+    if (cached) return cached
+  }
+
   try {
     const result = await aptos.view({
       payload: {
@@ -346,6 +401,7 @@ export async function getAllCreators(): Promise<IndexedCreator[]> {
     const creatorAddresses = ((result?.[0] as string[]) || []).filter(Boolean)
 
     if (creatorAddresses.length === 0) {
+      writeCreatorCache([])
       return []
     }
 
@@ -378,7 +434,9 @@ export async function getAllCreators(): Promise<IndexedCreator[]> {
       })
     )
 
-    return profiles.filter((p): p is IndexedCreator => p !== null)
+    const filtered = profiles.filter((p): p is IndexedCreator => p !== null)
+    writeCreatorCache(filtered)
+    return filtered
   } catch (error) {
     console.error('getAllCreators error:', error)
     return []
@@ -394,7 +452,7 @@ export async function findCreatorByHandle(handle: string): Promise<IndexedCreato
   if (found) return found
 
   await new Promise((resolve) => setTimeout(resolve, 400))
-  const retryCreators = await getAllCreators()
+  const retryCreators = await getAllCreators(true)
   return retryCreators.find((creator) => creator.handle.toLowerCase() === normalized) || null
 }
 
