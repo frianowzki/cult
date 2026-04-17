@@ -56,8 +56,13 @@ export default function CommentSection({ creatorAddr, contentId, accessLevel, ha
 
       const entries = await Promise.all(
         unresolved.map(async (addr) => {
-          if (addr === creatorAddr) return [addr, { name: 'Creator', avatarCid: null }] as const
           const identity = await resolveDisplayIdentity(addr)
+          if (addr === creatorAddr) {
+            return [addr, {
+              name: identity.name || 'Creator',
+              avatarCid: identity.avatarCid || null,
+            }] as const
+          }
           return [addr, { name: identity.name || '', avatarCid: identity.avatarCid || null }] as const
         })
       )
@@ -171,6 +176,8 @@ export default function CommentSection({ creatorAddr, contentId, accessLevel, ha
     return avatarCid ? resolveContentUrl(avatarCid) : ''
   }
 
+  const isCreatorComment = (addr: string) => addr === creatorAddr
+
   return (
     <div style={{ marginTop: 16 }}>
       <div style={{ paddingTop: 4 }}>
@@ -267,9 +274,10 @@ export default function CommentSection({ creatorAddr, contentId, accessLevel, ha
                       animate={{ opacity: 1, y: 0 }}
                       style={{
                         padding: '10px 12px',
-                        background: 'var(--bg-3)',
-                        border: '1px solid var(--border)',
+                        background: isCreatorComment(c.fanAddr) ? 'rgba(254, 119, 201, 0.06)' : 'var(--bg-3)',
+                        border: isCreatorComment(c.fanAddr) ? '1px solid var(--accent-dim)' : '1px solid var(--border)',
                         borderRadius: 'var(--radius)',
+                        boxShadow: isCreatorComment(c.fanAddr) ? '0 0 0 1px rgba(254, 119, 201, 0.04) inset' : 'none',
                       }}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 6 }}>
@@ -292,15 +300,22 @@ export default function CommentSection({ creatorAddr, contentId, accessLevel, ha
                           >
                             {!getAvatarUrl(c.fanAddr) && (getDisplayName(c.fanAddr).charAt(0).toUpperCase() || '◌')}
                           </div>
-                          <span style={{
-                            fontFamily: 'var(--font-mono)', fontSize: 10,
-                            color: c.fanAddr === String(account?.address) ? 'var(--accent)' : 'var(--text-3)',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                          }}>
-                            {getDisplayName(c.fanAddr)}
-                          </span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0, flexWrap: 'wrap' }}>
+                            <span style={{
+                              fontFamily: 'var(--font-mono)', fontSize: 10,
+                              color: c.fanAddr === String(account?.address) || isCreatorComment(c.fanAddr) ? 'var(--accent)' : 'var(--text-3)',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                            }}>
+                              {getDisplayName(c.fanAddr)}
+                            </span>
+                            {isCreatorComment(c.fanAddr) && (
+                              <span className="badge badge-accent" style={{ fontSize: 9, padding: '1px 6px' }}>
+                                ♛ Creator
+                              </span>
+                            )}
+                          </div>
                         </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-3)' }}>
