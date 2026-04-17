@@ -169,7 +169,7 @@ export default function CreatorPage() {
   const bannerUrl = resolveContentUrl(creator.banner_shelby_cid)
 
   return (
-    <div>
+    <div style={{ minHeight: '100%' }}>
       <div style={{ height: isMobile ? 140 : 'clamp(140px, 28vw, 220px)', background: bannerUrl ? `url(${bannerUrl}) center/cover no-repeat` : 'linear-gradient(135deg, #1a1510 0%, #2a2015 50%, #1a1510 100%)', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(6,6,6,0.08) 0%, rgba(6,6,6,0.18) 30%, rgba(6,6,6,0.58) 78%, var(--bg) 100%)' }} />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(8,8,8,0.35) 0%, transparent 28%, transparent 72%, rgba(8,8,8,0.35) 100%)' }} />
@@ -177,7 +177,7 @@ export default function CreatorPage() {
         <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', fontFamily: 'var(--font-mono)', fontSize: isMobile ? '2.6rem' : '4rem', color: 'rgba(200,169,110,0.08)', pointerEvents: 'none', userSelect: 'none' }}>✦</div>
       </div>
 
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: `0 ${isMobile ? 14 : 32}px` }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: `0 ${isMobile ? 14 : 32}px 8px`, minHeight: `calc(100% - ${isMobile ? 140 : 220}px)` }}>
         <div style={{ display: 'flex', alignItems: isMobile ? 'flex-start' : 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, marginTop: isMobile ? 8 : 12, marginBottom: 24 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
             <div style={{

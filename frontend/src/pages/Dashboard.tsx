@@ -123,7 +123,7 @@ export default function Dashboard() {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          minHeight: '60vh',
+          minHeight: '100%',
           gap: 20,
           textAlign: 'center',
           padding: '60px 32px',
@@ -138,7 +138,7 @@ export default function Dashboard() {
 
   if (loading) {
     return (
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '48px clamp(16px, 4vw, 32px)' }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '24px clamp(16px, 4vw, 32px) 16px', minHeight: '100%' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 40 }}>
           {[1, 2, 3].map((i) => (
             <div key={i} className="skeleton" style={{ height: 100, borderRadius: 4 }} />
@@ -158,7 +158,7 @@ export default function Dashboard() {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            minHeight: '60vh',
+            minHeight: '100%',
             gap: 24,
             textAlign: 'center',
             padding: '60px 32px',
@@ -183,7 +183,7 @@ export default function Dashboard() {
   const avatarUrl = resolveContentUrl(creator.avatar_shelby_cid)
 
   return (
-    <div style={{ maxWidth: 1100, margin: '0 auto', padding: '24px clamp(16px, 4vw, 32px) 8px' }}>
+    <div style={{ maxWidth: 1100, margin: '0 auto', padding: '20px clamp(16px, 4vw, 32px) 8px', minHeight: '100%' }}>
       <div
         style={{
           display: 'flex',

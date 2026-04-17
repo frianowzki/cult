@@ -73,7 +73,7 @@ export default function Feed() {
 
   if (!connected) {
     return (
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '56px clamp(16px, 4vw, 32px)', textAlign: 'center' }}>
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px clamp(16px, 4vw, 32px) 16px', textAlign: 'center', minHeight: '100%' }}>
         <div className="section-eyebrow">Feed</div>
         <h2 style={{ marginBottom: 12 }}>Connect wallet to view your feed</h2>
         <p>Follow creators first, then their newest posts will show up here.</p>
@@ -82,7 +82,7 @@ export default function Feed() {
   }
 
   return (
-    <div style={{ maxWidth: 1100, margin: '0 auto', padding: '32px clamp(16px, 4vw, 32px) 12px' }}>
+    <div style={{ maxWidth: 1100, margin: '0 auto', padding: '24px clamp(16px, 4vw, 32px) 12px', minHeight: '100%' }}>
       <div style={{ marginBottom: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'end', gap: 16, flexWrap: 'wrap' }}>
         <div>
           <div className="section-eyebrow">Feed</div>

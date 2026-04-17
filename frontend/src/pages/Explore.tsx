@@ -40,7 +40,7 @@ export default function Explore() {
   })
 
   return (
-    <div style={{ maxWidth: 1280, margin: '0 auto', padding: '32px clamp(16px, 4vw, 32px)' }}>
+    <div style={{ maxWidth: 1280, margin: '0 auto', padding: '24px clamp(16px, 4vw, 32px) 16px', minHeight: '100%' }}>
       {/* Header */}
       <div style={{ marginBottom: 48 }}>
         <div className="section-eyebrow">Discover</div>

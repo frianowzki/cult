@@ -221,6 +221,16 @@ export default function Layout() {
   return (
     <>
       <DynamicBackground />
+      <div
+        style={{
+          minHeight: '100vh',
+          height: '100dvh',
+          display: 'grid',
+          gridTemplateRows: 'auto minmax(0, 1fr) auto',
+          position: 'relative',
+          zIndex: 1,
+        }}
+      >
       <header
         style={{
           position: 'sticky',
@@ -310,7 +320,7 @@ export default function Layout() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-        style={{ minHeight: 'calc(100vh - 60px)', position: 'relative', zIndex: 1 }}
+        style={{ minHeight: 0, position: 'relative', zIndex: 1, overflow: 'auto' }}
       >
         <Outlet />
       </motion.main>
@@ -373,7 +383,7 @@ export default function Layout() {
       <footer
         style={{
           borderTop: '1px solid var(--border)',
-          padding: '16px 32px',
+          padding: '12px 24px',
           display: isMobile ? 'flex' : 'grid',
           gridTemplateColumns: isMobile ? 'none' : '1fr auto 1fr',
           flexDirection: isMobile ? 'column' : 'row',
@@ -438,6 +448,7 @@ export default function Layout() {
 
         <p style={{ fontSize: 12, color: 'var(--text-3)', textAlign: isMobile ? 'center' : 'right', marginTop: isMobile ? 8 : 0 }}>Built on Aptos Testnet · Powered by Shelby Serves · Created by Frianowzki</p>
       </footer>
+      </div>
     </>
   )
 }
