@@ -1199,7 +1199,7 @@ public entry fun post_comment(
     creator_addr: address,
     content_id: u64,
     text: String,
-) acquires ContentStore, FanSubscriptions, FanPurchases, CommentStore, GlobalCommentStore {
+) acquires ContentStore, FanSubscriptions, FanPurchases, CommentStore, GlobalCommentStore, CreatorProfile {
     let fan_addr = signer::address_of(fan);
 
     // max 500 chars
@@ -1273,18 +1273,21 @@ public entry fun post_comment(
 
     // Store globally so all users can see comments (for free content; access control for paid content is in frontend)
     if (!exists<GlobalCommentStore>(creator_addr)) {
-        // Creator must call init_global_comment_store() once (added below)
-        assert!(false, E_NOT_INITIALIZED);
+        let creator_profile = borrow_global<CreatorProfile>(creator_addr);
+        assert!(creator_profile.creator_addr == creator_addr, E_CREATOR_NOT_FOUND);
+        assert!(exists<GlobalCommentStore>(creator_addr), E_NOT_INITIALIZED);
     };
     let global_store = borrow_global_mut<GlobalCommentStore>(creator_addr);
+    let global_comment_id = global_store.comment_count;
+    let now = timestamp::now_seconds();
     vector::push_back(&mut global_store.comments, Comment {
-        id: comment_id,
+        id: global_comment_id,
         fan_addr,
         content_id,
         text: *&text,
-        posted_at: timestamp::now_seconds(),
+        posted_at: now,
     });
-    global_store.comment_count = global_store.comment_count + 1;
+    global_store.comment_count = global_comment_id + 1;
 }
 
 public entry fun delete_comment(
@@ -1319,23 +1322,10 @@ public entry fun delete_comment_v2(
     comment_id: u64,
 ) acquires CommentStore, GlobalCommentStore {
     let fan_addr = signer::address_of(fan);
+    let removed_text = string::utf8(b"");
+    let removed_posted_at = 0u64;
+    let found_global = false;
 
-    // Delete from personal store if exists
-    if (exists<CommentStore>(fan_addr)) {
-        let comment_store = borrow_global_mut<CommentStore>(fan_addr);
-        let len = vector::length(&comment_store.comments);
-        let i = 0u64;
-        while (i < len) {
-            let c = vector::borrow(&comment_store.comments, i);
-            if (c.id == comment_id && c.fan_addr == fan_addr) {
-                vector::remove(&mut comment_store.comments, i);
-                break;
-            };
-            i = i + 1;
-        };
-    }
-
-    // Delete from global store
     if (exists<GlobalCommentStore>(creator_addr)) {
         let global_store = borrow_global_mut<GlobalCommentStore>(creator_addr);
         let glen = vector::length(&global_store.comments);
@@ -1343,11 +1333,29 @@ public entry fun delete_comment_v2(
         while (j < glen) {
             let gc = vector::borrow(&global_store.comments, j);
             if (gc.id == comment_id && gc.fan_addr == fan_addr && gc.content_id == content_id) {
+                removed_text = gc.text;
+                removed_posted_at = gc.posted_at;
                 vector::remove(&mut global_store.comments, j);
-                global_store.comment_count = global_store.comment_count - 1;
+                found_global = true;
                 break;
             };
             j = j + 1;
+        };
+    };
+
+    assert!(found_global, E_CONTENT_NOT_FOUND);
+
+    if (exists<CommentStore>(fan_addr)) {
+        let comment_store = borrow_global_mut<CommentStore>(fan_addr);
+        let len = vector::length(&comment_store.comments);
+        let i = 0u64;
+        while (i < len) {
+            let c = vector::borrow(&comment_store.comments, i);
+            if (c.fan_addr == fan_addr && c.content_id == content_id && c.text == removed_text && c.posted_at == removed_posted_at) {
+                vector::remove(&mut comment_store.comments, i);
+                break;
+            };
+            i = i + 1;
         };
     }
 }

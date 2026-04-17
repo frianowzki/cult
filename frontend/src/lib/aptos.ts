@@ -560,6 +560,25 @@ export function buildDeleteCommentPayload(creatorAddr: string, contentId: number
   }
 }
 
+export function buildInitGlobalCommentStorePayload() {
+  return {
+    function: `${CONTRACT_ADDRESS}::${MODULE_NAME}::init_global_comment_store` as `${string}::${string}::${string}`,
+    typeArguments: [] as [],
+    functionArguments: [],
+  }
+}
+
+export async function hasGlobalCommentStore(creatorAddr: string): Promise<boolean> {
+  try {
+    await aptos.getAccountResource({
+      accountAddress: creatorAddr,
+      resourceType: `${CONTRACT_ADDRESS}::${MODULE_NAME}::GlobalCommentStore`,
+    })
+    return true
+  } catch {
+    return false
+  }
+}
 
 export async function getFanComments(
   fanAddr: string,
