@@ -177,7 +177,7 @@ export default function CreatorPage() {
   const bannerUrl = resolveContentUrl(creator.banner_shelby_cid)
 
   return (
-    <div style={{ minHeight: '100%' }}>
+    <div style={{ minHeight: '100%', marginTop: isMobile ? -116 : -60, paddingTop: isMobile ? 116 : 60 }}>
       <div style={{ height: isMobile ? 140 : 'clamp(140px, 28vw, 220px)', background: bannerUrl ? `url(${bannerUrl}) center/cover no-repeat` : 'linear-gradient(135deg, #1a1510 0%, #2a2015 50%, #1a1510 100%)', position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(6,6,6,0.08) 0%, rgba(6,6,6,0.18) 30%, rgba(6,6,6,0.58) 78%, var(--bg) 100%)' }} />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, rgba(8,8,8,0.35) 0%, transparent 28%, transparent 72%, rgba(8,8,8,0.35) 100%)' }} />
