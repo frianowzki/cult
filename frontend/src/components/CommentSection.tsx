@@ -6,7 +6,7 @@ import {
   buildDeleteCommentPayload,
   buildPostCommentPayload,
   getCommentsForContent,
-  getCreatorProfile,
+  resolveDisplayIdentity,
   type CommentItem,
 } from '../lib/aptos'
 import { ACCESS_LEVELS } from '../lib/constants'
@@ -56,8 +56,8 @@ export default function CommentSection({ creatorAddr, contentId, accessLevel, ha
       const entries = await Promise.all(
         unresolved.map(async (addr) => {
           if (addr === creatorAddr) return [addr, 'Creator'] as const
-          const profile = await getCreatorProfile(addr)
-          return [addr, profile?.display_name || ''] as const
+          const identity = await resolveDisplayIdentity(addr)
+          return [addr, identity.name || ''] as const
         })
       )
 

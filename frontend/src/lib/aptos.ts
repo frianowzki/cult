@@ -38,6 +38,15 @@ export interface CreatorProfile {
   created_at: number
 }
 
+export interface UserProfile {
+  user_addr: string
+  display_name: string
+  bio: string
+  avatar_shelby_cid: string
+  created_at: number
+  updated_at: number
+}
+
 export interface Content {
   id: number
   content_type: number
@@ -79,6 +88,50 @@ export async function getCreatorProfile(creatorAddr: string): Promise<CreatorPro
     return profile
   } catch {
     return null
+  }
+}
+
+export async function getUserProfile(userAddr: string): Promise<UserProfile | null> {
+  try {
+    const result = await aptos.view({
+      payload: {
+        function: `${CONTRACT_ADDRESS}::${MODULE_NAME}::get_user_profile`,
+        typeArguments: [],
+        functionArguments: [userAddr],
+      },
+    })
+
+    const profile = result?.[0] as UserProfile | undefined
+    if (!profile?.display_name) return null
+    return profile
+  } catch {
+    return null
+  }
+}
+
+export async function resolveDisplayIdentity(userAddr: string): Promise<{ name: string | null; avatarCid: string | null; kind: 'creator' | 'user' | 'address' }> {
+  const creator = await getCreatorProfile(userAddr)
+  if (creator) {
+    return {
+      name: creator.display_name || creator.handle || null,
+      avatarCid: creator.avatar_shelby_cid || null,
+      kind: 'creator',
+    }
+  }
+
+  const user = await getUserProfile(userAddr)
+  if (user) {
+    return {
+      name: user.display_name || null,
+      avatarCid: user.avatar_shelby_cid || null,
+      kind: 'user',
+    }
+  }
+
+  return {
+    name: null,
+    avatarCid: null,
+    kind: 'address',
   }
 }
 
@@ -557,6 +610,30 @@ export function buildDeleteCommentPayload(creatorAddr: string, contentId: number
     function: `${CONTRACT_ADDRESS}::${MODULE_NAME}::delete_comment_v2`,
     typeArguments: [],
     functionArguments: [creatorAddr, contentId.toString(), commentId.toString()],
+  }
+}
+
+export function buildRegisterUserProfilePayload(params: {
+  displayName: string
+  bio: string
+  avatarCid: string
+}) {
+  return {
+    function: `${CONTRACT_ADDRESS}::${MODULE_NAME}::register_user_profile` as `${string}::${string}::${string}`,
+    typeArguments: [] as [],
+    functionArguments: [params.displayName, params.bio, params.avatarCid],
+  }
+}
+
+export function buildUpdateUserProfilePayload(params: {
+  displayName: string
+  bio: string
+  avatarCid: string
+}) {
+  return {
+    function: `${CONTRACT_ADDRESS}::${MODULE_NAME}::update_user_profile` as `${string}::${string}::${string}`,
+    typeArguments: [] as [],
+    functionArguments: [params.displayName, params.bio, params.avatarCid],
   }
 }
 
