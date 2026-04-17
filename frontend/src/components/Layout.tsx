@@ -228,7 +228,6 @@ export default function Layout() {
           display: 'grid',
           gridTemplateRows: 'auto minmax(0, 1fr) auto',
           position: 'relative',
-          zIndex: 1,
         }}
       >
       <header
@@ -320,7 +319,7 @@ export default function Layout() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-        style={{ minHeight: 0, position: 'relative', zIndex: 1, overflow: 'auto' }}
+        style={{ minHeight: 0, position: 'relative', overflow: 'auto' }}
       >
         <Outlet />
       </motion.main>
@@ -393,7 +392,6 @@ export default function Layout() {
           alignItems: 'center',
           gap: isMobile ? 10 : 18,
           position: 'relative',
-          zIndex: 1,
           textAlign: isMobile ? 'center' : 'left',
         }}
       >
