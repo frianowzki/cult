@@ -100,15 +100,23 @@ export default function CreatorPage() {
       setCreator(profile)
       setContents(contentList)
 
-      if (account?.address && contentList.length > 0) {
+      if (account?.address) {
         const status = await getSubscriptionStatus(String(account.address), resolvedCreatorAddr)
         setSubStatus(status)
-        const accessChecks = await Promise.all(
-          contentList.map((c) => canAccessContent(String(account.address), resolvedCreatorAddr, c.id))
-        )
-        const map: Record<number, boolean> = {}
-        contentList.forEach((c, i) => { map[c.id] = accessChecks[i] })
-        setAccessMap(map)
+
+        if (contentList.length > 0) {
+          const accessChecks = await Promise.all(
+            contentList.map((c) => canAccessContent(String(account.address), resolvedCreatorAddr, c.id))
+          )
+          const map: Record<number, boolean> = {}
+          contentList.forEach((c, i) => { map[c.id] = accessChecks[i] })
+          setAccessMap(map)
+        } else {
+          setAccessMap({})
+        }
+      } else {
+        setSubStatus(null)
+        setAccessMap({})
       }
     } catch (e) {
       console.error(e)
