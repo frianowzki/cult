@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CULT Offline</title>
+    <meta name="theme-color" content="#0a0a0a" />
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #090909;
+        --panel: #111111;
+        --border: #2a2520;
+        --text: #f0ece3;
+        --muted: #a59d90;
+        --accent: #c8a96e;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: radial-gradient(circle at top, rgba(200,169,110,0.12), transparent 35%), var(--bg);
+        color: var(--text);
+        font-family: Inter, system-ui, sans-serif;
+        padding: 24px;
+      }
+      .card {
+        width: min(100%, 460px);
+        padding: 28px;
+        border: 1px solid var(--border);
+        background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      }
+      .mark {
+        font-size: 40px;
+        color: var(--accent);
+        margin-bottom: 16px;
+      }
+      h1 {
+        margin: 0 0 10px;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+      }
+      p {
+        margin: 0 0 18px;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+      a {
+        display: inline-block;
+        color: var(--bg);
+        background: var(--accent);
+        padding: 10px 14px;
+        text-decoration: none;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <div class="mark">✦</div>
+      <h1>You're offline</h1>
+      <p>CULT is still installed, but this screen needs a connection to load fresh on-chain data. Reconnect, then try again.</p>
+      <a href="/">Retry</a>
+    </main>
+  </body>
+</html>
