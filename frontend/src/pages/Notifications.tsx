@@ -51,11 +51,19 @@ export default function Notifications() {
 
   return (
     <div style={{ maxWidth: 960, margin: '0 auto', padding: '32px 16px' }}>
-      <div style={{ marginBottom: 24 }}>
-        <div className="section-eyebrow">Notifications</div>
-        <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 300 }}>
-          From creators you follow
-        </h2>
+      <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'end', gap: 16, flexWrap: 'wrap' }}>
+        <div>
+          <div className="section-eyebrow">Notifications</div>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 300, marginBottom: 6 }}>
+            From creators you follow
+          </h2>
+          <p style={{ fontSize: 13, color: 'var(--text-3)', margin: 0 }}>New posts and fresh activity from your circle.</p>
+        </div>
+        {!loading && items.length > 0 && (
+          <span className="mono" style={{ fontSize: 11, color: 'var(--text-3)' }}>
+            {items.length} updates
+          </span>
+        )}
       </div>
 
       {loading ? (
@@ -124,8 +132,11 @@ export default function Notifications() {
                       published new content
                     </p>
 
-                    <div style={{ fontWeight: 600, marginBottom: 8 }}>
-                      {item.contentTitle}
+                    <div style={{ fontWeight: 600, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                      <span>{item.contentTitle}</span>
+                      <span style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 600 }}>
+                        Open →
+                      </span>
                     </div>
 
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>

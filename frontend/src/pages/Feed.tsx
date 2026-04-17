@@ -86,7 +86,8 @@ export default function Feed() {
       <div style={{ marginBottom: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'end', gap: 16, flexWrap: 'wrap' }}>
         <div>
           <div className="section-eyebrow">Feed</div>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 300 }}>From creators you follow</h2>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 300, marginBottom: 6 }}>From creators you follow</h2>
+          <p style={{ fontSize: 13, color: 'var(--text-3)', margin: 0 }}>Latest drops from the people you already care about.</p>
         </div>
         {!loading && (
           <span className="mono" style={{ fontSize: 11, color: 'var(--text-3)' }}>
@@ -178,14 +179,17 @@ export default function Feed() {
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, flexWrap: 'wrap' }}>
                       <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent)', fontSize: 12 }}>
                         {CONTENT_TYPE_ICONS[item.content.content_type]}
                       </span>
                       <div style={{ fontWeight: 700 }}>{item.content.title}</div>
+                      <span style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 600, marginLeft: 'auto' }}>
+                        Open →
+                      </span>
                     </div>
 
-                    <p style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.6 }}>
+                    <p style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.6, margin: 0 }}>
                       {item.content.description || 'No description'}
                     </p>
                   </div>

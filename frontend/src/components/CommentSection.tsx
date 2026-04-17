@@ -9,6 +9,7 @@ import {
   resolveDisplayIdentity,
   type CommentItem,
 } from '../lib/aptos'
+import { resolveContentUrl } from '../lib/shelby'
 import { ACCESS_LEVELS } from '../lib/constants'
 
 interface Props {
@@ -25,7 +26,7 @@ export default function CommentSection({ creatorAddr, contentId, accessLevel, ha
   const [submitting, setSubmitting] = useState(false)
   const [open] = useState(true)
   const [loadingComments, setLoadingComments] = useState(false)
-  const [nameMap, setNameMap] = useState<Record<string, string>>({})
+  const [identityMap, setIdentityMap] = useState<Record<string, { name: string; avatarCid: string | null }>>({})
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const canComment = connected && (accessLevel === ACCESS_LEVELS.FREE || hasAccess)
@@ -50,21 +51,21 @@ export default function CommentSection({ creatorAddr, contentId, accessLevel, ha
 
     async function resolveNames() {
       const addrs = Array.from(new Set(comments.map((c) => c.fanAddr).filter(Boolean)))
-      const unresolved = addrs.filter((addr) => !(addr in nameMap))
+      const unresolved = addrs.filter((addr) => !(addr in identityMap))
       if (unresolved.length === 0) return
 
       const entries = await Promise.all(
         unresolved.map(async (addr) => {
-          if (addr === creatorAddr) return [addr, 'Creator'] as const
+          if (addr === creatorAddr) return [addr, { name: 'Creator', avatarCid: null }] as const
           const identity = await resolveDisplayIdentity(addr)
-          return [addr, identity.name || ''] as const
+          return [addr, { name: identity.name || '', avatarCid: identity.avatarCid || null }] as const
         })
       )
 
       if (!cancelled) {
-        setNameMap((prev) => {
+        setIdentityMap((prev) => {
           const next = { ...prev }
-          for (const [addr, name] of entries) next[addr] = name
+          for (const [addr, identity] of entries) next[addr] = identity
           return next
         })
       }
@@ -74,7 +75,7 @@ export default function CommentSection({ creatorAddr, contentId, accessLevel, ha
     return () => {
       cancelled = true
     }
-  }, [comments, creatorAddr, nameMap])
+  }, [comments, creatorAddr, identityMap])
 
   async function handleDeleteComment(commentId: number) {
     if (!connected || !account?.address) return
@@ -161,8 +162,13 @@ export default function CommentSection({ creatorAddr, contentId, accessLevel, ha
 
   const getDisplayName = (addr: string) => {
     if (addr === String(account?.address)) return 'You'
-    if (addr === creatorAddr) return nameMap[addr] || 'Creator'
-    return nameMap[addr] || shortAddr(addr)
+    if (addr === creatorAddr) return identityMap[addr]?.name || 'Creator'
+    return identityMap[addr]?.name || shortAddr(addr)
+  }
+
+  const getAvatarUrl = (addr: string) => {
+    const avatarCid = identityMap[addr]?.avatarCid
+    return avatarCid ? resolveContentUrl(avatarCid) : ''
   }
 
   return (
@@ -266,13 +272,36 @@ export default function CommentSection({ creatorAddr, contentId, accessLevel, ha
                         borderRadius: 'var(--radius)',
                       }}
                     >
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                        <span style={{
-                          fontFamily: 'var(--font-mono)', fontSize: 10,
-                          color: c.fanAddr === String(account?.address) ? 'var(--accent)' : 'var(--text-3)',
-                        }}>
-                          {getDisplayName(c.fanAddr)}
-                        </span>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                          <div
+                            style={{
+                              width: 24,
+                              height: 24,
+                              borderRadius: '50%',
+                              background: getAvatarUrl(c.fanAddr) ? `url(${getAvatarUrl(c.fanAddr)}) center/cover no-repeat` : 'var(--bg-4)',
+                              border: '1px solid var(--border-light)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: 'var(--accent)',
+                              fontFamily: 'var(--font-mono)',
+                              fontSize: 10,
+                              flexShrink: 0,
+                            }}
+                          >
+                            {!getAvatarUrl(c.fanAddr) && (getDisplayName(c.fanAddr).charAt(0).toUpperCase() || '◌')}
+                          </div>
+                          <span style={{
+                            fontFamily: 'var(--font-mono)', fontSize: 10,
+                            color: c.fanAddr === String(account?.address) ? 'var(--accent)' : 'var(--text-3)',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}>
+                            {getDisplayName(c.fanAddr)}
+                          </span>
+                        </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-3)' }}>
                             {new Date(c.postedAt * 1000).toLocaleDateString()}
