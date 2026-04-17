@@ -42,11 +42,11 @@ export default function DynamicBackground() {
         for (let i = 0; i < data.length; i += 4) {
           const n = Math.sin(i + seed) * 43758.5453
           const noise = ((n - Math.floor(n)) * 255) | 0
-          // warm-tinted noise: slightly more red/green than blue
+          // accent-tinted noise
           data[i] = noise
-          data[i + 1] = (noise * 0.92) | 0
-          data[i + 2] = (noise * 0.75) | 0
-          data[i + 3] = 18  // very translucent
+          data[i + 1] = (noise * 0.55) | 0
+          data[i + 2] = (noise * 0.82) | 0
+          data[i + 3] = 16
         }
         ctx.putImageData(imageData, 0, 0)
         grainFrame++
@@ -107,7 +107,7 @@ export default function DynamicBackground() {
         overflow: 'hidden',
       }}
     >
-      {/* Orb 1 — warm amber, top-left */}
+      {/* Orb 1 — accent bloom, top-left */}
       <div
         ref={orb1}
         style={{
@@ -116,11 +116,11 @@ export default function DynamicBackground() {
           height: '55vw',
           top: '-15%',
           left: '-10%',
-          background: 'radial-gradient(circle, rgba(200,169,110,0.55) 0%, rgba(160,120,60,0.2) 50%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(254,119,201,0.34) 0%, rgba(254,119,201,0.14) 42%, rgba(184,79,144,0.08) 58%, transparent 74%)',
           opacity: 0.32,
         }}
       />
-      {/* Orb 2 — deeper amber/rust, bottom-right */}
+      {/* Orb 2 — accent shadow, bottom-right */}
       <div
         ref={orb2}
         style={{
@@ -129,11 +129,11 @@ export default function DynamicBackground() {
           height: '50vw',
           bottom: '-10%',
           right: '-8%',
-          background: 'radial-gradient(circle, rgba(180,110,60,0.5) 0%, rgba(140,80,40,0.18) 50%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(184,79,144,0.28) 0%, rgba(254,119,201,0.12) 38%, rgba(120,36,86,0.08) 58%, transparent 72%)',
           opacity: 0.22,
         }}
       />
-      {/* Orb 3 — cold ember, center-left mid */}
+      {/* Orb 3 — soft accent haze, center-left mid */}
       <div
         ref={orb3}
         style={{
@@ -142,12 +142,12 @@ export default function DynamicBackground() {
           height: '35vw',
           top: '40%',
           left: '20%',
-          background: 'radial-gradient(circle, rgba(210,160,80,0.35) 0%, rgba(170,120,50,0.12) 50%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(255,168,224,0.18) 0%, rgba(254,119,201,0.1) 42%, rgba(184,79,144,0.06) 58%, transparent 72%)',
           opacity: 0.18,
         }}
       />
 
-      {/* Animated warm grain */}
+      {/* Animated accent grain */}
       <canvas
         ref={grainRef}
         style={{
