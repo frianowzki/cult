@@ -271,7 +271,7 @@ struct UnfollowEvent has drop, store {
         tier3_name: String,
         tier3_price: u64,
         tier3_desc: String,
-    ) acquires CreatorProfile, ContentStore, CreatorRegistry {
+    ) acquires CreatorProfile, ContentStore, CreatorRegistry, GlobalCommentStore {
         let creator_addr = signer::address_of(creator);
 
         let tiers = vector::empty<Tier>();
@@ -320,6 +320,11 @@ struct UnfollowEvent has drop, store {
             move_to(creator, ContentStore {
                 contents: vector::empty<Content>(),
             });
+
+            move_to(creator, GlobalCommentStore {
+                comments: vector::empty<Comment>(),
+                comment_count: 0,
+            });
         } else {
             let profile = borrow_global_mut<CreatorProfile>(creator_addr);
             assert!(string::length(&profile.handle) == 0, E_ALREADY_INITIALIZED);
@@ -342,6 +347,17 @@ struct UnfollowEvent has drop, store {
             } else {
                 move_to(creator, ContentStore {
                     contents: vector::empty<Content>(),
+                });
+            };
+
+            if (exists<GlobalCommentStore>(creator_addr)) {
+                let comment_store = borrow_global_mut<GlobalCommentStore>(creator_addr);
+                comment_store.comments = vector::empty<Comment>();
+                comment_store.comment_count = 0;
+            } else {
+                move_to(creator, GlobalCommentStore {
+                    comments: vector::empty<Comment>(),
+                    comment_count: 0,
                 });
             };
         };
@@ -432,7 +448,7 @@ struct UnfollowEvent has drop, store {
     /// Delete creator profile and remove from registry
         public entry fun delete_creator(
         creator: &signer,
-    ) acquires CreatorProfile, ContentStore, CreatorRegistry {
+    ) acquires CreatorProfile, ContentStore, CreatorRegistry, GlobalCommentStore {
         let creator_addr = signer::address_of(creator);
         assert!(exists<CreatorProfile>(creator_addr), E_NOT_CREATOR);
 
@@ -451,6 +467,12 @@ struct UnfollowEvent has drop, store {
         if (exists<ContentStore>(creator_addr)) {
             let store = borrow_global_mut<ContentStore>(creator_addr);
             store.contents = vector::empty<Content>();
+        };
+
+        if (exists<GlobalCommentStore>(creator_addr)) {
+            let comment_store = borrow_global_mut<GlobalCommentStore>(creator_addr);
+            comment_store.comments = vector::empty<Comment>();
+            comment_store.comment_count = 0;
         };
 
                 if (exists<CreatorRegistry>(@cult)) {
@@ -1199,7 +1221,7 @@ public entry fun post_comment(
     creator_addr: address,
     content_id: u64,
     text: String,
-) acquires ContentStore, FanSubscriptions, FanPurchases, CommentStore, GlobalCommentStore, CreatorProfile {
+) acquires ContentStore, FanSubscriptions, FanPurchases, CommentStore, GlobalCommentStore {
     let fan_addr = signer::address_of(fan);
 
     // max 500 chars
@@ -1272,11 +1294,7 @@ public entry fun post_comment(
     });
 
     // Store globally so all users can see comments (for free content; access control for paid content is in frontend)
-    if (!exists<GlobalCommentStore>(creator_addr)) {
-        let creator_profile = borrow_global<CreatorProfile>(creator_addr);
-        assert!(creator_profile.creator_addr == creator_addr, E_CREATOR_NOT_FOUND);
-        assert!(exists<GlobalCommentStore>(creator_addr), E_NOT_INITIALIZED);
-    };
+    assert!(exists<GlobalCommentStore>(creator_addr), E_NOT_INITIALIZED);
     let global_store = borrow_global_mut<GlobalCommentStore>(creator_addr);
     let global_comment_id = global_store.comment_count;
     let now = timestamp::now_seconds();

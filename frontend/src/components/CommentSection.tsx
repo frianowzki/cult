@@ -4,10 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
 import {
   buildDeleteCommentPayload,
-  buildInitGlobalCommentStorePayload,
   buildPostCommentPayload,
   getCommentsForContent,
-  hasGlobalCommentStore,
   type CommentItem,
 } from '../lib/aptos'
 import { ACCESS_LEVELS } from '../lib/constants'
@@ -92,14 +90,6 @@ export default function CommentSection({ creatorAddr, contentId, accessLevel, ha
     setText('')
 
     try {
-      if (String(account.address) === creatorAddr) {
-        const hasStore = await hasGlobalCommentStore(creatorAddr)
-        if (!hasStore) {
-          const initPayload = buildInitGlobalCommentStorePayload()
-          await signAndSubmitTransaction({ data: initPayload })
-        }
-      }
-
       const payload = buildPostCommentPayload(creatorAddr, contentId, savedText)
       await signAndSubmitTransaction({ data: payload })
       toast.success('Comment posted')
@@ -117,8 +107,6 @@ export default function CommentSection({ creatorAddr, contentId, accessLevel, ha
         toast.error('You need access to comment on this content')
       } else if (msg.includes('TOO_LONG') || msg.includes('22')) {
         toast.error('Comment is too long (max 500 chars)')
-      } else if (msg.includes('E_NOT_INITIALIZED') || msg.includes('1')) {
-        toast.error('Comment store is not initialized for this creator yet')
       } else {
         toast.error('Failed to post comment')
         console.error(e)
