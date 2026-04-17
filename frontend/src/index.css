@@ -29,6 +29,9 @@
   --radius-md: 4px;
 
   --transition: 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  --tracking-tight: -0.022em;
+  --tracking-wide: 0.08em;
+  --copy-max-width: 68ch;
 }
 
 /* ─── Reset ──────────────────────────────────────────────────────────────────── */
@@ -48,8 +51,10 @@ body {
   color: var(--text);
   font-family: var(--font-sans);
   font-size: 15px;
-  line-height: 1.6;
+  line-height: 1.58;
+  letter-spacing: -0.005em;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
   min-height: 100vh;
   overflow-x: hidden;
 }
@@ -142,15 +147,19 @@ body {
 h1, h2, h3, h4, h5 {
   font-family: var(--font-display);
   font-weight: 300;
-  line-height: 1.15;
-  letter-spacing: -0.02em;
+  line-height: 1.1;
+  letter-spacing: var(--tracking-tight);
+  text-wrap: balance;
 }
 
 h1 { font-size: clamp(2.5rem, 6vw, 5rem); }
 h2 { font-size: clamp(1.8rem, 4vw, 3rem); }
 h3 { font-size: clamp(1.3rem, 2.5vw, 1.8rem); }
 
-p { color: var(--text-2); }
+p {
+  color: var(--text-2);
+  max-width: var(--copy-max-width);
+}
 
 a {
   color: inherit;
@@ -166,6 +175,7 @@ a {
 .mono { font-family: var(--font-mono); }
 .display { font-family: var(--font-display); }
 .accent { color: var(--accent); }
+.eyebrow-tight { letter-spacing: var(--tracking-wide); }
 
 /* ─── Button Base ────────────────────────────────────────────────────────────── */
 .btn {
@@ -180,7 +190,7 @@ a {
   font-family: var(--font-sans);
   font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.07em;
   text-transform: uppercase;
   cursor: pointer;
   border-radius: var(--radius);
@@ -256,6 +266,21 @@ a {
 textarea.input {
   resize: vertical;
   min-height: 100px;
+}
+
+@media (max-width: 640px) {
+  body {
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  h1, h2, h3, h4, h5 {
+    line-height: 1.08;
+  }
+
+  .btn {
+    letter-spacing: 0.065em;
+  }
 }
 
 /* ─── Card ────────────────────────────────────────────────────────────────────── */
