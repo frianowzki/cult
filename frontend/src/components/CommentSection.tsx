@@ -6,6 +6,7 @@ import {
   buildDeleteCommentPayload,
   buildPostCommentPayload,
   getCommentsForContent,
+  getCreatorProfile,
   type CommentItem,
 } from '../lib/aptos'
 import { ACCESS_LEVELS } from '../lib/constants'
@@ -24,6 +25,7 @@ export default function CommentSection({ creatorAddr, contentId, accessLevel, ha
   const [submitting, setSubmitting] = useState(false)
   const [open] = useState(true)
   const [loadingComments, setLoadingComments] = useState(false)
+  const [nameMap, setNameMap] = useState<Record<string, string>>({})
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const canComment = connected && (accessLevel === ACCESS_LEVELS.FREE || hasAccess)
@@ -42,6 +44,37 @@ export default function CommentSection({ creatorAddr, contentId, accessLevel, ha
       .then((data) => setComments(data))
       .finally(() => setLoadingComments(false))
   }, [open, creatorAddr, contentId, accessLevel, hasAccess])
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function resolveNames() {
+      const addrs = Array.from(new Set(comments.map((c) => c.fanAddr).filter(Boolean)))
+      const unresolved = addrs.filter((addr) => !(addr in nameMap))
+      if (unresolved.length === 0) return
+
+      const entries = await Promise.all(
+        unresolved.map(async (addr) => {
+          if (addr === creatorAddr) return [addr, 'Creator'] as const
+          const profile = await getCreatorProfile(addr)
+          return [addr, profile?.display_name || ''] as const
+        })
+      )
+
+      if (!cancelled) {
+        setNameMap((prev) => {
+          const next = { ...prev }
+          for (const [addr, name] of entries) next[addr] = name
+          return next
+        })
+      }
+    }
+
+    void resolveNames()
+    return () => {
+      cancelled = true
+    }
+  }, [comments, creatorAddr, nameMap])
 
   async function handleDeleteComment(commentId: number) {
     if (!connected || !account?.address) return
@@ -125,6 +158,12 @@ export default function CommentSection({ creatorAddr, contentId, accessLevel, ha
 
   const shortAddr = (addr: string) =>
     `${addr.slice(0, 6)}…${addr.slice(-4)}`
+
+  const getDisplayName = (addr: string) => {
+    if (addr === String(account?.address)) return 'You'
+    if (addr === creatorAddr) return nameMap[addr] || 'Creator'
+    return nameMap[addr] || shortAddr(addr)
+  }
 
   return (
     <div style={{ marginTop: 16 }}>
@@ -232,7 +271,7 @@ export default function CommentSection({ creatorAddr, contentId, accessLevel, ha
                           fontFamily: 'var(--font-mono)', fontSize: 10,
                           color: c.fanAddr === String(account?.address) ? 'var(--accent)' : 'var(--text-3)',
                         }}>
-                          {c.fanAddr === String(account?.address) ? 'You' : shortAddr(c.fanAddr)}
+                          {getDisplayName(c.fanAddr)}
                         </span>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                           <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--text-3)' }}>
