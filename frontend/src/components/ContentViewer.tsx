@@ -11,18 +11,20 @@ import CommentSection from './CommentSection'
 interface Props {
   content: Content
   hasAccess: boolean
-  creatorAddr: string   // ADD THIS
+  creatorAddr: string
   onClose: () => void
   onDelete?: () => void
+  onEdit?: () => void
   deleting?: boolean
 }
 
 export default function ContentViewer({
   content,
   hasAccess,
-  creatorAddr,   // ADD THIS
+  creatorAddr,
   onClose,
   onDelete,
+  onEdit,
   deleting = false,
 }: Props) {
   
@@ -226,7 +228,12 @@ export default function ContentViewer({
               {content.title}
             </h3>
           </div>
-          <button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            {onEdit && (
+              <button className="btn btn-ghost btn-sm" onClick={onEdit}>Edit</button>
+            )}
+            <button className="btn btn-ghost btn-sm" onClick={onClose}>✕</button>
+          </div>
         </div>
 
         {/* Preview */}

@@ -19,6 +19,7 @@ import { useStore } from '../lib/store'
 import UploadContentModal from '../components/UploadContentModal'
 import EditProfileModal from '../components/EditProfileModal'
 import RegisterCreatorModal from '../components/RegisterCreatorModal'
+import EditContentModal from '../components/EditContentModal'
 import ContentViewer from '../components/ContentViewer'
 
 export default function Dashboard() {
@@ -30,6 +31,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [editModalOpen, setEditModalOpen] = useState(false)
   const [viewingContent, setViewingContent] = useState<Content | null>(null)
+  const [editingContent, setEditingContent] = useState<Content | null>(null)
   const [deletingId, setDeletingId] = useState<number | null>(null)
   const [dashTab, setDashTab] = useState<'posts' | 'following'>('posts')
 
@@ -435,6 +437,16 @@ export default function Dashboard() {
                         </span>
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                          <button
+                            className="btn btn-ghost btn-sm"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setEditingContent(c)
+                            }}
+                            style={{ fontSize: 10 }}
+                          >
+                            Edit
+                          </button>
                           <span style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 600 }}>
                             View →
                           </span>
@@ -458,12 +470,23 @@ export default function Dashboard() {
           onClose={() => setEditModalOpen(false)}
         />
       )}
+      {editingContent && (
+        <EditContentModal
+          content={editingContent}
+          onSuccess={loadData}
+          onClose={() => setEditingContent(null)}
+        />
+      )}
       {viewingContent && (
         <ContentViewer
           content={viewingContent}
           hasAccess={true}
           creatorAddr={String(account?.address || '')}
           onClose={() => setViewingContent(null)}
+          onEdit={() => {
+            setEditingContent(viewingContent)
+            setViewingContent(null)
+          }}
           onDelete={() => void handlePermanentDelete(viewingContent)}
           deleting={deletingId === viewingContent.id}
         />

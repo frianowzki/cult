@@ -509,6 +509,39 @@ struct UnfollowEvent has drop, store {
         });
     }
 
+    /// Edit an existing piece of content metadata and storage refs
+    public entry fun edit_content(
+        creator: &signer,
+        content_id: u64,
+        title: String,
+        description: String,
+        shelby_cid: String,
+        thumbnail_shelby_cid: String,
+        access_level: u8,
+        purchase_price: u64,
+    ) acquires ContentStore {
+        let creator_addr = signer::address_of(creator);
+        assert!(exists<ContentStore>(creator_addr), E_NOT_CREATOR);
+
+        let store = borrow_global_mut<ContentStore>(creator_addr);
+        let len = vector::length(&store.contents);
+        let i = 0u64;
+        while (i < len) {
+            let content = vector::borrow_mut(&mut store.contents, i);
+            if (content.id == content_id) {
+                content.title = title;
+                content.description = description;
+                content.shelby_cid = shelby_cid;
+                content.thumbnail_shelby_cid = thumbnail_shelby_cid;
+                content.access_level = access_level;
+                content.purchase_price = purchase_price;
+                return
+            };
+            i = i + 1;
+        };
+        abort E_CONTENT_NOT_FOUND
+    }
+
     /// Toggle content active/inactive
     public entry fun toggle_content(
         creator: &signer,
@@ -1166,7 +1199,7 @@ public entry fun post_comment(
     creator_addr: address,
     content_id: u64,
     text: String,
-) acquires ContentStore, FanSubscriptions, FanPurchases, CommentStore {
+) acquires ContentStore, FanSubscriptions, FanPurchases, CommentStore, GlobalCommentStore {
     let fan_addr = signer::address_of(fan);
 
     // max 500 chars
@@ -1237,6 +1270,21 @@ public entry fun post_comment(
         comment_id,
         text,
     });
+
+    // Store globally so all users can see comments (for free content; access control for paid content is in frontend)
+    if (!exists<GlobalCommentStore>(creator_addr)) {
+        // Creator must call init_global_comment_store() once (added below)
+        assert!(false, E_NOT_INITIALIZED);
+    };
+    let global_store = borrow_global_mut<GlobalCommentStore>(creator_addr);
+    vector::push_back(&mut global_store.comments, Comment {
+        id: comment_id,
+        fan_addr,
+        content_id,
+        text: *&text,
+        posted_at: timestamp::now_seconds(),
+    });
+    global_store.comment_count = global_store.comment_count + 1;
 }
 
 public entry fun delete_comment(

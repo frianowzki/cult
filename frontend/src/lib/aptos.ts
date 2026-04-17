@@ -96,9 +96,18 @@ export async function getCreatorAddressByHandle(handle: string): Promise<string 
     })
 
     const addr = result?.[0] as string
-    if (!addr || addr === '0x0') return null
-    return addr
-  } catch {
+    if (addr && addr !== '0x0') return addr
+  } catch (e) {
+    console.warn('Direct handle lookup failed, falling back to full list', e)
+  }
+
+  // Fallback: fetch all creators and search (more reliable indexer)
+  try {
+    const creators = await getAllCreators()
+    const found = creators.find(c => c.handle.toLowerCase() === normalized)
+    return found ? found.address : null
+  } catch (e) {
+    console.error('Fallback indexer failed', e)
     return null
   }
 }
@@ -226,6 +235,30 @@ export function buildPublishContentPayload(params: {
     typeArguments: [] as [],
     functionArguments: [
       params.contentType,
+      params.title,
+      params.description,
+      params.shelbyCid,
+      params.thumbnailCid,
+      params.accessLevel,
+      usdToUnitsStr(params.purchasePriceUsd),
+    ],
+  }
+}
+
+export function buildEditContentPayload(params: {
+  contentId: number
+  title: string
+  description: string
+  shelbyCid: string
+  thumbnailCid: string
+  accessLevel: number
+  purchasePriceUsd: number
+}) {
+  return {
+    function: `${CONTRACT_ADDRESS}::${MODULE_NAME}::edit_content` as `${string}::${string}::${string}`,
+    typeArguments: [] as [],
+    functionArguments: [
+      params.contentId.toString(),
       params.title,
       params.description,
       params.shelbyCid,
