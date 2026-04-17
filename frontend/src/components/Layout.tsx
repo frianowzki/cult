@@ -382,15 +382,16 @@ export default function Layout() {
 
       <footer
         style={{
+          width: '100%',
           borderTop: '1px solid var(--border)',
-          padding: '12px 24px',
+          background: 'rgba(8, 8, 7, 0.72)',
+          backdropFilter: 'blur(16px)',
+          padding: isMobile ? '12px 16px calc(12px + env(safe-area-inset-bottom))' : '14px 28px',
           display: isMobile ? 'flex' : 'grid',
-          gridTemplateColumns: isMobile ? 'none' : '1fr auto 1fr',
+          gridTemplateColumns: isMobile ? 'none' : 'minmax(120px, 1fr) auto minmax(260px, 1fr)',
           flexDirection: isMobile ? 'column' : 'row',
-          alignItems: isMobile ? 'center' : 'center',
-          gap: isMobile ? 12 : 16,
-          maxWidth: 1280,
-          margin: '0 auto',
+          alignItems: 'center',
+          gap: isMobile ? 10 : 18,
           position: 'relative',
           zIndex: 1,
           textAlign: isMobile ? 'center' : 'left',
@@ -398,7 +399,7 @@ export default function Layout() {
       >
         <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', color: 'var(--text-3)' }}>CULT</span>
 
-        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 28, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: isMobile ? 18 : 28, flexWrap: 'wrap' }}>
           <a
             href="https://x.com/widyakrnwn"
             target="_blank"
@@ -446,7 +447,7 @@ export default function Layout() {
           </a>
         </div>
 
-        <p style={{ fontSize: 12, color: 'var(--text-3)', textAlign: isMobile ? 'center' : 'right', marginTop: isMobile ? 8 : 0 }}>Built on Aptos Testnet · Powered by Shelby Serves · Created by Frianowzki</p>
+        <p style={{ fontSize: isMobile ? 11 : 12, color: 'var(--text-3)', textAlign: isMobile ? 'center' : 'right', marginTop: isMobile ? 2 : 0, lineHeight: 1.5, maxWidth: isMobile ? 320 : 'none' }}>Built on Aptos Testnet · Powered by Shelby Serves · Created by Frianowzki</p>
       </footer>
       </div>
     </>

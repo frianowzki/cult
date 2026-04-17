@@ -46,20 +46,21 @@ const FEATURES = [
 
 export default function Home() {
   return (
-    <div>
+    <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
       <section
         style={{
-          minHeight: '100vh',
+          minHeight: '100%',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
           textAlign: 'center',
-          padding: '72px 20px 56px',
+          padding: '44px 20px 28px',
           position: 'relative',
           overflow: 'hidden',
-          gap: 40,
+          gap: 28,
           background: '#080807',
+          flex: 1,
         }}
       >
         <div className="cult-hero-bg">
@@ -105,14 +106,14 @@ export default function Home() {
           animate="animate"
           style={{
             position: 'relative',
-            maxWidth: 800,
+            maxWidth: 860,
             width: '100%',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
             margin: '0 auto',
-            transform: 'translateY(-12px)',
+            transform: 'translateY(-8px)',
           }}
         >
           <motion.h1
@@ -121,7 +122,7 @@ export default function Home() {
               fontFamily: 'var(--font-display)',
               fontWeight: 300,
               fontStyle: 'italic',
-              marginBottom: 24,
+              marginBottom: 18,
               color: 'var(--text)',
               textAlign: 'center',
               lineHeight: 1.06,
@@ -134,7 +135,7 @@ export default function Home() {
 
           <motion.p
             variants={stagger.item}
-            style={{ fontSize: '1.1rem', maxWidth: 560, margin: '0 auto 36px', lineHeight: 1.7, textAlign: 'center' }}
+            style={{ fontSize: '1.02rem', maxWidth: 620, margin: '0 auto 28px', lineHeight: 1.65, textAlign: 'center' }}
           >
             CULT is a decentralized creator platform on Aptos. Upload content to Shelby Serves,
             monetize with subscriptions, pay-per-view, and direct tips — all on-chain.
@@ -142,7 +143,7 @@ export default function Home() {
 
           <motion.div
             variants={stagger.item}
-            style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}
+            style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 6 }}
           >
             <Link to="/explore" className="btn btn-primary btn-lg">
               Explore Creators
@@ -153,50 +154,35 @@ export default function Home() {
           </motion.div>
         </motion.div>
 
-      </section>
-
-      <section
-        style={{
-          maxWidth: 1280,
-          margin: '0 auto',
-          padding: '80px 32px',
-          borderTop: '1px solid var(--border)',
-        }}
-      >
-        <div style={{ marginBottom: 56, textAlign: 'center' }}>
-          <div className="section-eyebrow">How it works</div>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 300 }}>
-            Built for the on-chain era
-          </h2>
-        </div>
-
         <div
           style={{
+            width: '100%',
+            maxWidth: 1120,
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
             gap: 1,
             border: '1px solid var(--border)',
+            background: 'rgba(16, 15, 13, 0.72)',
+            backdropFilter: 'blur(12px)',
           }}
         >
-          {FEATURES.map((f, i) => (
+          {FEATURES.slice(0, 4).map((f, i) => (
             <motion.div
               key={f.title}
               initial={{ opacity: 0, y: 16 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.06, duration: 0.4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.18 + i * 0.05, duration: 0.35 }}
               style={{
-                padding: '36px 32px',
-                background: 'var(--bg-2)',
+                padding: '18px 16px',
+                background: 'rgba(16, 15, 13, 0.78)',
                 borderRight: '1px solid var(--border)',
-                borderBottom: '1px solid var(--border)',
               }}
             >
               <div
                 style={{
-                  fontSize: '1.5rem',
+                  fontSize: '1.1rem',
                   color: 'var(--accent)',
-                  marginBottom: 16,
+                  marginBottom: 8,
                   fontFamily: 'var(--font-mono)',
                 }}
               >
@@ -205,35 +191,19 @@ export default function Home() {
               <h3
                 style={{
                   fontFamily: 'var(--font-sans)',
-                  fontSize: '0.95rem',
+                  fontSize: '0.82rem',
                   fontWeight: 700,
                   letterSpacing: '0.04em',
                   color: 'var(--text)',
-                  marginBottom: 8,
+                  marginBottom: 6,
                 }}
               >
                 {f.title}
               </h3>
-              <p style={{ fontSize: 13, lineHeight: 1.6, color: 'var(--text-2)' }}>{f.desc}</p>
+              <p style={{ fontSize: 12, lineHeight: 1.5, color: 'var(--text-2)' }}>{f.desc}</p>
             </motion.div>
           ))}
         </div>
-      </section>
-
-      <section
-        style={{
-          padding: '80px 32px',
-          textAlign: 'center',
-          borderTop: '1px solid var(--border)',
-        }}
-      >
-        <div className="section-eyebrow">Join CULT</div>
-        <h2 style={{ fontFamily: 'var(--font-display)', fontStyle: 'italic', fontWeight: 300, marginBottom: 32 }}>
-          Ready to build your circle?
-        </h2>
-        <Link to="/dashboard" className="btn btn-primary btn-lg">
-          Register as Creator
-        </Link>
       </section>
     </div>
   )
