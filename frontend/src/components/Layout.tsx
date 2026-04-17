@@ -445,7 +445,7 @@ export default function Layout() {
           </a>
         </div>
 
-        <p style={{ fontSize: isMobile ? 11 : 12, color: 'var(--text-3)', textAlign: isMobile ? 'center' : 'right', marginTop: isMobile ? 2 : 0, lineHeight: 1.5, maxWidth: isMobile ? 320 : 'none' }}>Built on Aptos Testnet · Powered by Shelby Serves · Created by Frianowzki</p>
+        <p style={{ fontSize: isMobile ? 11 : 12, color: 'var(--text-3)', textAlign: isMobile ? 'center' : 'right', marginTop: isMobile ? 2 : 0, lineHeight: 1.5, maxWidth: isMobile ? 320 : 'none' }}>Built on Aptos Testnet • Powered by Shelby Serves</p>
       </footer>
       </div>
     </>
