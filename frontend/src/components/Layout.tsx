@@ -235,11 +235,11 @@ export default function Layout() {
           position: 'sticky',
           top: 0,
           zIndex: 100,
-          background: 'linear-gradient(180deg, rgba(42, 24, 36, 0.68) 0%, rgba(18, 14, 18, 0.62) 38%, rgba(10, 9, 9, 0.58) 100%)',
-          backdropFilter: 'blur(30px) saturate(185%) brightness(1.04)',
-          WebkitBackdropFilter: 'blur(30px) saturate(185%) brightness(1.04)',
-          borderBottom: '1px solid rgba(255, 255, 255, 0.08)',
-          boxShadow: '0 14px 40px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(254, 119, 201, 0.08)',
+          background: 'linear-gradient(180deg, rgba(26, 18, 24, 0.44) 0%, rgba(14, 11, 14, 0.34) 42%, rgba(8, 8, 7, 0.24) 100%)',
+          backdropFilter: 'blur(26px) saturate(170%) brightness(1.03)',
+          WebkitBackdropFilter: 'blur(26px) saturate(170%) brightness(1.03)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.06)',
+          boxShadow: '0 10px 34px rgba(0, 0, 0, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 -1px 0 rgba(254, 119, 201, 0.05)',
         }}
       >
         {isMobile ? (
