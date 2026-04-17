@@ -596,14 +596,35 @@ export async function getFanComments(
 // Since comments are stored per-fan, we need to query each fan address.
 // For the MVP we query the current user's own comments + passed fan addresses.
 export async function getCommentsForContent(
-  fanAddresses: string[],
+  creatorAddr: string,
   contentId: number,
 ): Promise<CommentItem[]> {
   try {
-    const all = await Promise.all(
-      fanAddresses.map((addr) => getFanComments(addr, contentId))
-    )
-    return all.flat().sort((a, b) => a.postedAt - b.postedAt)
+    const result = await aptos.view({
+      payload: {
+        function: `${CONTRACT_ADDRESS}::${MODULE_NAME}::get_comments_for_content`,
+        typeArguments: [],
+        functionArguments: [creatorAddr, contentId.toString()],
+      },
+    })
+
+    const raw = result[0] as Array<{
+      id: string
+      fan_addr: string
+      content_id: string
+      text: string
+      posted_at: string
+    }>
+
+    return raw
+      .map((c) => ({
+        id: Number(c.id),
+        fanAddr: c.fan_addr,
+        contentId: Number(c.content_id),
+        text: c.text,
+        postedAt: Number(c.posted_at),
+      }))
+      .sort((a, b) => a.postedAt - b.postedAt)
   } catch {
     return []
   }

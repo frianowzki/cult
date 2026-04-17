@@ -5,7 +5,7 @@ import toast from 'react-hot-toast'
 import {
   buildDeleteCommentPayload,
   buildPostCommentPayload,
-  getFanComments,
+  getCommentsForContent,
   type CommentItem,
 } from '../lib/aptos'
 import { ACCESS_LEVELS } from '../lib/constants'
@@ -29,14 +29,19 @@ export default function CommentSection({ creatorAddr, contentId, accessLevel, ha
   const canComment = connected && (accessLevel === ACCESS_LEVELS.FREE || hasAccess)
   const MAX_CHARS = 500
 
-  // load own comments when section opens
+  // load shared comments for this content
   useEffect(() => {
-    if (!open || !connected || !account?.address) return
+    if (!open) return
+    if (accessLevel !== ACCESS_LEVELS.FREE && !hasAccess) {
+      setComments([])
+      return
+    }
+
     setLoadingComments(true)
-    getFanComments(String(account.address), contentId)
+    getCommentsForContent(creatorAddr, contentId)
       .then((data) => setComments(data))
       .finally(() => setLoadingComments(false))
-  }, [open, account?.address, connected, contentId])
+  }, [open, creatorAddr, contentId, accessLevel, hasAccess])
 
   async function handleDeleteComment(commentId: number) {
     if (!connected || !account?.address) return
@@ -88,8 +93,8 @@ export default function CommentSection({ creatorAddr, contentId, accessLevel, ha
       const payload = buildPostCommentPayload(creatorAddr, contentId, savedText)
       await signAndSubmitTransaction({ data: payload })
       toast.success('Comment posted')
-      // refresh from chain to get real id
-      const fresh = await getFanComments(String(account.address), contentId)
+      // refresh shared thread from chain
+      const fresh = await getCommentsForContent(creatorAddr, contentId)
       setComments(fresh)
     } catch (e: unknown) {
       // revert optimistic
@@ -192,6 +197,12 @@ export default function CommentSection({ creatorAddr, contentId, accessLevel, ha
                   {!connected
                     ? 'Connect wallet to comment'
                     : 'Subscribe or purchase to comment'}
+                </div>
+              )}
+
+              {!canComment && accessLevel === ACCESS_LEVELS.FREE && (
+                <div style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 12 }}>
+                  Comments are visible to everyone on free content.
                 </div>
               )}
 
