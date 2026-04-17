@@ -237,19 +237,19 @@ export default function Layout() {
           top: 0,
           zIndex: 100,
           background: isCreatorPage
-            ? 'linear-gradient(180deg, rgba(18, 14, 18, 0.32) 0%, rgba(14, 11, 14, 0.24) 24%, rgba(10, 9, 10, 0.18) 52%, rgba(8, 8, 7, 0.1) 100%)'
+            ? 'linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.05) 18%, rgba(255, 255, 255, 0.03) 46%, rgba(255, 255, 255, 0.02) 100%)'
             : 'linear-gradient(180deg, rgba(26, 18, 24, 0.44) 0%, rgba(14, 11, 14, 0.34) 42%, rgba(8, 8, 7, 0.24) 100%)',
           backdropFilter: isCreatorPage
-            ? 'blur(18px) saturate(145%) brightness(0.98)'
+            ? 'blur(20px) saturate(135%) brightness(1.02)'
             : 'blur(26px) saturate(170%) brightness(1.03)',
           WebkitBackdropFilter: isCreatorPage
-            ? 'blur(18px) saturate(145%) brightness(0.98)'
+            ? 'blur(20px) saturate(135%) brightness(1.02)'
             : 'blur(26px) saturate(170%) brightness(1.03)',
           borderBottom: isCreatorPage
-            ? '1px solid rgba(255, 255, 255, 0.05)'
+            ? '1px solid rgba(255, 255, 255, 0.06)'
             : '1px solid rgba(255, 255, 255, 0.06)',
           boxShadow: isCreatorPage
-            ? '0 8px 22px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 -1px 0 rgba(255, 255, 255, 0.02)'
+            ? '0 8px 24px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(255, 255, 255, 0.02)'
             : '0 10px 34px rgba(0, 0, 0, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 -1px 0 rgba(254, 119, 201, 0.05)',
         }}
       >
