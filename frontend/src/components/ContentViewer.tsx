@@ -214,7 +214,7 @@ export default function ContentViewer({
         exit={{ opacity: 0, scale: 0.96 }}
         transition={{ duration: 0.25 }}
         onClick={(e) => e.stopPropagation()}
-        style={{ maxWidth: 720, width: '100%' }}
+        style={{ maxWidth: 720, width: '100%', display: 'flex', flexDirection: 'column' }}
       >
         {/* Header */}
         <div className="modal-header">
@@ -261,7 +261,7 @@ export default function ContentViewer({
           )}
         </div>
 
-        <div style={{ padding: '18px clamp(16px, 4vw, 32px) 0' }}>
+        <div style={{ padding: '18px clamp(16px, 4vw, 32px) 0', paddingBottom: 12 }}>
           <div
             style={{
               borderTop: '1px solid var(--border)',
@@ -330,7 +330,7 @@ export default function ContentViewer({
           </div>
         </div>
 
-        <div className="modal-footer" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+        <div className="modal-footer" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: 10, marginTop: 'auto' }}>
           <button className="btn" onClick={onClose}>Close</button>
         </div>
       </motion.div>
