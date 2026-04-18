@@ -63,6 +63,8 @@ export interface Content {
   access_level: number
   purchase_price: number
   published_at: number
+  scheduled_for: number
+  is_draft: boolean
   is_active: boolean
 }
 
@@ -70,6 +72,19 @@ export interface SubscriptionStatus {
   isActive: boolean
   tierIndex: number
   expiresAt: number
+}
+
+export interface LegacySubscriptionRecord {
+  creator_addr: string
+  tier_index: number
+  expires_at: number
+  subscribed_at: number
+}
+
+export interface LegacyPurchaseRecord {
+  creator_addr: string
+  content_id: number
+  purchased_at: number
 }
 
 export interface IndexedContentSearchItem {
