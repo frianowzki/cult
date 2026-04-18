@@ -1024,6 +1024,12 @@ export async function getFollowing(fanAddr: string): Promise<string[]> {
   }
 }
 
+export {
+  getLegacyFanSubscriptions,
+  getLegacyFanPurchases,
+  getLegacyFanHistoryFromEvents,
+} from './aptos-read'
+
 export async function getFollowerCount(creatorAddr: string): Promise<number> {
   // Query indexer for accounts that have creatorAddr in their FollowStore
   try {

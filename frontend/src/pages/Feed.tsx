@@ -8,6 +8,7 @@ import {
   getSavedContent,
   getCreatorProfile,
   getCreatorContent,
+  canAccessContent,
   type Content,
   type CreatorProfile,
   type SaveRecord,
@@ -20,6 +21,7 @@ type FeedItem = {
   creatorAddr: string
   creator: CreatorProfile
   content: Content
+  hasAccess: boolean
 }
 
 export default function Feed() {
@@ -58,7 +60,10 @@ export default function Feed() {
               getCreatorContent(creatorAddr),
             ])
             if (!creator) return [] as FeedItem[]
-            return contents.map((content) => ({ creatorAddr, creator, content }))
+            const accessList = await Promise.all(
+              contents.map((content) => canAccessContent(String(account.address), creatorAddr, content.id))
+            )
+            return contents.map((content, index) => ({ creatorAddr, creator, content, hasAccess: accessList[index] }))
           })
         ),
       ])
@@ -94,6 +99,7 @@ export default function Feed() {
               creatorAddr: record.creator_addr,
               creator: creatorData.creator,
               content,
+              hasAccess: false,
               savedAt: record.saved_at,
             }
           })
@@ -204,9 +210,15 @@ export default function Feed() {
                       color: 'var(--text-3)',
                       fontFamily: 'var(--font-mono)',
                       fontSize: '1.8rem',
+                      position: 'relative',
                     }}
                   >
                     {!thumbUrl && CONTENT_TYPE_ICONS[item.content.content_type]}
+                    {!item.hasAccess && item.content.access_level !== 0 && (
+                      <div style={{ position: 'absolute', inset: 0, background: 'rgba(8,8,7,0.56)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '1.8rem' }}>
+                        🔒
+                      </div>
+                    )}
                   </div>
 
                   <div style={{ padding: '16px' }}>
@@ -249,8 +261,8 @@ export default function Feed() {
                         {CONTENT_TYPE_ICONS[item.content.content_type]}
                       </span>
                       <div style={{ fontWeight: 700 }}>{item.content.title}</div>
-                      <span style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 600, marginLeft: 'auto' }}>
-                        Open →
+                      <span style={{ fontSize: 11, color: item.hasAccess ? 'var(--accent)' : 'var(--text-3)', fontWeight: 600, marginLeft: 'auto' }}>
+                        {item.hasAccess || item.content.access_level === 0 ? 'Open →' : 'Locked'}
                       </span>
                     </div>
 
@@ -268,7 +280,7 @@ export default function Feed() {
       {viewingContent && (
         <ContentViewer
           content={viewingContent.content}
-          hasAccess={true}
+          hasAccess={viewingContent.hasAccess || viewingContent.content.access_level === 0}
           creatorAddr={viewingContent.creatorAddr}
           onClose={() => setViewingContent(null)}
         />

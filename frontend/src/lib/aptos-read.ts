@@ -409,6 +409,69 @@ export async function getLegacyFanPurchases(fanAddr: string): Promise<LegacyPurc
   }
 }
 
+export async function getLegacyFanHistoryFromEvents(fanAddr: string): Promise<PurchaseHistoryItem[]> {
+  try {
+    const response = await fetch('https://api.testnet.aptoslabs.com/v1/graphql', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': import.meta.env.VITE_APTOS_API_KEY || '',
+      },
+      body: JSON.stringify({
+        query: `
+          query GetLegacyFanHistory {
+            subscriptions: events(
+              where: {
+                type: { _eq: "${CONTRACT_ADDRESS}::${MODULE_NAME}::SubscribeEvent" }
+                data: { _contains: { fan_addr: "${fanAddr}" } }
+              }
+              order_by: { transaction_version: desc }
+              limit: 100
+            ) {
+              data
+            }
+            purchases: events(
+              where: {
+                type: { _eq: "${CONTRACT_ADDRESS}::${MODULE_NAME}::PurchaseEvent" }
+                data: { _contains: { fan_addr: "${fanAddr}" } }
+              }
+              order_by: { transaction_version: desc }
+              limit: 100
+            ) {
+              data
+            }
+          }
+        `,
+      }),
+    })
+
+    const json = await response.json()
+    const subscriptions = (json?.data?.subscriptions || []).map((event: any) => ({
+      kind: 0,
+      counterparty_addr: event.data?.creator_addr || '',
+      content_id: 0,
+      tier_index: Number(event.data?.tier_index ?? 0),
+      amount_paid: Number(event.data?.amount_paid ?? 0),
+      timestamp: Number(event.data?.expires_at ?? 0) > 0 ? Number(event.data.expires_at) - 30 * 24 * 60 * 60 : 0,
+      expires_at: Number(event.data?.expires_at ?? 0),
+    }))
+
+    const purchases = (json?.data?.purchases || []).map((event: any) => ({
+      kind: 1,
+      counterparty_addr: event.data?.creator_addr || '',
+      content_id: Number(event.data?.content_id ?? 0),
+      tier_index: 255,
+      amount_paid: Number(event.data?.amount_paid ?? 0),
+      timestamp: 0,
+      expires_at: 0,
+    }))
+
+    return [...subscriptions, ...purchases]
+  } catch {
+    return []
+  }
+}
+
 export async function getFanPurchaseHistory(fanAddr: string): Promise<PurchaseHistoryItem[]> {
   try {
     const result = await aptos.view({

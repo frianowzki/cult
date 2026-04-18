@@ -49,6 +49,7 @@ export interface UserProfile {
   display_name: string
   bio: string
   avatar_shelby_cid: string
+  banner_shelby_cid?: string
   created_at: number
   updated_at: number
 }

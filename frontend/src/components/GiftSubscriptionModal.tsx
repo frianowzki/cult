@@ -82,7 +82,7 @@ export default function GiftSubscriptionModal({ creatorAddr, creatorName, tiers,
         <div className="modal-header">
           <div>
             <div className="section-eyebrow">Gift membership</div>
-            <h3 style={{ fontWeight: 300 }}>Gift {creatorName}</h3>
+            <h3 style={{ fontWeight: 300 }}>Gift {creatorName} Membership</h3>
           </div>
           <button className="btn btn-ghost btn-sm" onClick={onClose} disabled={loading}>✕</button>
         </div>

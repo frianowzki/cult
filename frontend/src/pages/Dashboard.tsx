@@ -12,6 +12,9 @@ import {
   getUserProfile,
   getFanPurchaseHistory,
   getCreatorPurchaseHistory,
+  getLegacyFanSubscriptions,
+  getLegacyFanPurchases,
+  getLegacyFanHistoryFromEvents,
   buildToggleContentPayload,
   unitsToUsd,
   type CreatorProfile,
@@ -73,19 +76,61 @@ export default function Dashboard() {
 
     setLoading(true)
     try {
-      const [profile, basicProfile, contentList, ownSubStatus, fanHistory, creatorHistory] = await Promise.all([
+      const [profile, basicProfile, contentList, ownSubStatus, fanHistory, creatorHistory, legacySubscriptions, legacyPurchases, legacyEventHistory] = await Promise.all([
         getCreatorProfile(String(account.address)),
         getUserProfile(String(account.address)),
         getCreatorContent(String(account.address)),
         getSubscriptionStatus(String(account.address), String(account.address)),
         getFanPurchaseHistory(String(account.address)),
         getCreatorPurchaseHistory(String(account.address)),
+        getLegacyFanSubscriptions(String(account.address)),
+        getLegacyFanPurchases(String(account.address)),
+        getLegacyFanHistoryFromEvents(String(account.address)),
       ])
       setCreator(profile)
       setUserProfile(basicProfile)
       setContents(contentList)
       setFanSubscription(ownSubStatus)
-      setFanPurchaseHistory(fanHistory.sort((a, b) => b.timestamp - a.timestamp))
+      const mergedFanHistory = [
+        ...fanHistory,
+        ...legacyEventHistory,
+        ...legacySubscriptions.map((item) => ({
+          kind: 0,
+          counterparty_addr: item.creator_addr,
+          content_id: 0,
+          tier_index: item.tier_index,
+          amount_paid: 0,
+          timestamp: item.subscribed_at,
+          expires_at: item.expires_at,
+        })),
+        ...legacyPurchases.map((item) => ({
+          kind: 1,
+          counterparty_addr: item.creator_addr,
+          content_id: item.content_id,
+          tier_index: 255,
+          amount_paid: 0,
+          timestamp: item.purchased_at,
+          expires_at: 0,
+        })),
+      ]
+
+      const dedupedFanHistory = mergedFanHistory.filter((item: PurchaseHistoryItem, index: number, arr: PurchaseHistoryItem[]) => {
+        const key = `${item.kind}-${item.counterparty_addr}-${item.content_id}-${item.tier_index}-${item.amount_paid}-${item.timestamp}-${item.expires_at}`
+        const firstIndex = arr.findIndex((candidate: PurchaseHistoryItem) => `${candidate.kind}-${candidate.counterparty_addr}-${candidate.content_id}-${candidate.tier_index}-${candidate.amount_paid}-${candidate.timestamp}-${candidate.expires_at}` === key)
+        if (firstIndex !== index) return false
+        if (item.amount_paid !== 0) return true
+        return !arr.some((candidate: PurchaseHistoryItem) => (
+          candidate.kind === item.kind &&
+          candidate.counterparty_addr === item.counterparty_addr &&
+          candidate.content_id === item.content_id &&
+          candidate.tier_index === item.tier_index &&
+          candidate.timestamp === item.timestamp &&
+          candidate.expires_at === item.expires_at &&
+          candidate.amount_paid > 0
+        ))
+      })
+
+      setFanPurchaseHistory(dedupedFanHistory.sort((a, b) => b.timestamp - a.timestamp))
       setCreatorPurchaseHistory(creatorHistory.sort((a, b) => b.timestamp - a.timestamp))
     } finally {
       setLoading(false)

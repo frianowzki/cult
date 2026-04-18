@@ -1,5 +1,6 @@
 import { Outlet, Link, useLocation } from 'react-router-dom'
 import { useEffect, useRef, useState } from 'react'
+import { getCreatorProfile } from '../lib/aptos-read'
 import { useWallet } from '@aptos-labs/wallet-adapter-react'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
@@ -18,13 +19,14 @@ export default function Layout() {
   const [notifOpen, setNotifOpen] = useState(false)
   const [walletPickerOpen, setWalletPickerOpen] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
+  const [isCreator, setIsCreator] = useState(false)
   const walletMenuRef = useRef<HTMLDivElement | null>(null)
   const notifRef = useRef<HTMLDivElement | null>(null)
 
   const nav = [
     { label: 'Explore', to: '/explore' },
     { label: 'Feed', to: '/feed' },
-    { label: 'Dashboard', to: '/dashboard' },
+    ...(connected && account?.address && isCreator ? [{ label: 'Dashboard', to: '/dashboard' }] : []),
     ...(connected && account?.address ? [{ label: 'Profile', to: `/fan/${String(account.address)}` }] : []),
   ]
 
@@ -54,6 +56,24 @@ export default function Layout() {
     window.addEventListener('resize', updateMobile)
     return () => window.removeEventListener('resize', updateMobile)
   }, [])
+
+  useEffect(() => {
+    let mounted = true
+
+    async function checkCreator() {
+      if (!connected || !account?.address) {
+        if (mounted) setIsCreator(false)
+        return
+      }
+      const profile = await getCreatorProfile(String(account.address))
+      if (mounted) setIsCreator(!!profile)
+    }
+
+    void checkCreator()
+    return () => {
+      mounted = false
+    }
+  }, [connected, account?.address])
 
   const handleConnect = async () => {
     if (!wallets?.length) {
