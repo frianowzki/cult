@@ -52,6 +52,7 @@ export interface CreatorProfile {
 
 export interface UserProfile {
   user_addr: string
+  handle: string
   display_name: string
   bio: string
   avatar_shelby_cid: string
@@ -350,6 +351,14 @@ export function buildRenewSubscriptionPayload(creatorAddr: string) {
   }
 }
 
+export function buildGiftSubscriptionPayload(creatorAddr: string, recipientAddr: string, tierIndex: number) {
+  return {
+    function: `${CONTRACT_ADDRESS}::${MODULE_NAME}::gift_subscription` as `${string}::${string}::${string}`,
+    typeArguments: [] as [],
+    functionArguments: [creatorAddr, recipientAddr, tierIndex.toString(), PLATFORM_ADDRESS],
+  }
+}
+
 export function buildPurchaseContentPayload(creatorAddr: string, contentId: number) {
   return {
     function: `${CONTRACT_ADDRESS}::${MODULE_NAME}::purchase_content` as `${string}::${string}::${string}`,
@@ -392,6 +401,17 @@ export function buildUpdateTiersPayload(params: {
 
 // ─── Indexer: fetch all creator profiles ─────────────────────────────────────
 
+export interface IndexedContentSearchItem {
+  id: number
+  title: string
+  description: string
+  content_type: number
+  access_level: number
+  purchase_price: number
+  published_at: number
+  thumbnail_shelby_cid: string
+}
+
 export interface IndexedCreator {
   address: string
   handle: string
@@ -404,6 +424,7 @@ export interface IndexedCreator {
   total_earned: number
   tiers: Tier[]
   created_at: number
+  searchable_content: IndexedContentSearchItem[]
 }
 
 const CREATOR_CACHE_KEY = 'cult:getAllCreators:v1'
@@ -489,6 +510,16 @@ export async function getAllCreators(forceRefresh = false): Promise<IndexedCreat
               total_earned: profile.total_earned,
               tiers: profile.tiers,
               created_at: profile.created_at,
+              searchable_content: contents.map((content) => ({
+                id: content.id,
+                title: content.title,
+                description: content.description,
+                content_type: content.content_type,
+                access_level: content.access_level,
+                purchase_price: content.purchase_price,
+                published_at: content.published_at,
+                thumbnail_shelby_cid: content.thumbnail_shelby_cid,
+              })),
             }
           } catch (err) {
             console.error(`Failed to load creator profile for ${address}:`, err)
@@ -574,6 +605,22 @@ export function buildUnfollowPayload(creatorAddr: string) {
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
+export interface PurchaseHistoryItem {
+  kind: number
+  counterparty_addr: string
+  content_id: number
+  tier_index: number
+  amount_paid: number
+  timestamp: number
+  expires_at: number
+}
+
+export interface SaveRecord {
+  creator_addr: string
+  content_id: number
+  saved_at: number
+}
+
 export interface CommentItem {
   id: number
   fanAddr: string
@@ -640,7 +687,29 @@ export function buildDeleteCommentPayload(creatorAddr: string, contentId: number
   }
 }
 
+export async function getUserAddressByHandle(handle: string): Promise<string | null> {
+  const normalized = handle.trim().toLowerCase().replace(/^@/, '')
+  if (!normalized) return null
+
+  try {
+    const result = await aptos.view({
+      payload: {
+        function: `${CONTRACT_ADDRESS}::${MODULE_NAME}::get_user_by_handle`,
+        typeArguments: [],
+        functionArguments: [normalized],
+      },
+    })
+
+    const addr = result?.[0] as string
+    if (addr && addr !== '0x0') return addr
+    return null
+  } catch {
+    return null
+  }
+}
+
 export function buildRegisterUserProfilePayload(params: {
+  handle: string
   displayName: string
   bio: string
   avatarCid: string
@@ -648,11 +717,12 @@ export function buildRegisterUserProfilePayload(params: {
   return {
     function: `${CONTRACT_ADDRESS}::${MODULE_NAME}::register_user_profile` as `${string}::${string}::${string}`,
     typeArguments: [] as [],
-    functionArguments: [params.displayName, params.bio, params.avatarCid],
+    functionArguments: [params.handle, params.displayName, params.bio, params.avatarCid],
   }
 }
 
 export function buildUpdateUserProfilePayload(params: {
+  handle: string
   displayName: string
   bio: string
   avatarCid: string
@@ -660,7 +730,7 @@ export function buildUpdateUserProfilePayload(params: {
   return {
     function: `${CONTRACT_ADDRESS}::${MODULE_NAME}::update_user_profile` as `${string}::${string}::${string}`,
     typeArguments: [] as [],
-    functionArguments: [params.displayName, params.bio, params.avatarCid],
+    functionArguments: [params.handle, params.displayName, params.bio, params.avatarCid],
   }
 }
 
@@ -858,6 +928,82 @@ export async function getRecentNotifications(fanAddr: string, limit = 10): Promi
   try {
     const all = await getPostNotificationsForFan(fanAddr)
     return all.slice(0, limit)
+  } catch {
+    return []
+  }
+}
+
+export async function getFanPurchaseHistory(fanAddr: string): Promise<PurchaseHistoryItem[]> {
+  try {
+    const result = await aptos.view({
+      payload: {
+        function: `${CONTRACT_ADDRESS}::${MODULE_NAME}::get_fan_purchase_history`,
+        typeArguments: [],
+        functionArguments: [fanAddr],
+      },
+    })
+    return (result?.[0] as PurchaseHistoryItem[]) || []
+  } catch {
+    return []
+  }
+}
+
+export async function getCreatorPurchaseHistory(creatorAddr: string): Promise<PurchaseHistoryItem[]> {
+  try {
+    const result = await aptos.view({
+      payload: {
+        function: `${CONTRACT_ADDRESS}::${MODULE_NAME}::get_creator_purchase_history`,
+        typeArguments: [],
+        functionArguments: [creatorAddr],
+      },
+    })
+    return (result?.[0] as PurchaseHistoryItem[]) || []
+  } catch {
+    return []
+  }
+}
+
+export function buildSaveContentPayload(creatorAddr: string, contentId: number) {
+  return {
+    function: `${CONTRACT_ADDRESS}::${MODULE_NAME}::save_content` as `${string}::${string}::${string}`,
+    typeArguments: [] as [],
+    functionArguments: [creatorAddr, contentId.toString()],
+  }
+}
+
+export function buildUnsaveContentPayload(creatorAddr: string, contentId: number) {
+  return {
+    function: `${CONTRACT_ADDRESS}::${MODULE_NAME}::unsave_content` as `${string}::${string}::${string}`,
+    typeArguments: [] as [],
+    functionArguments: [creatorAddr, contentId.toString()],
+  }
+}
+
+export async function hasSavedContent(fanAddr: string, creatorAddr: string, contentId: number): Promise<boolean> {
+  try {
+    const result = await aptos.view({
+      payload: {
+        function: `${CONTRACT_ADDRESS}::${MODULE_NAME}::has_saved_content`,
+        typeArguments: [],
+        functionArguments: [fanAddr, creatorAddr, contentId.toString()],
+      },
+    })
+    return Boolean(result?.[0])
+  } catch {
+    return false
+  }
+}
+
+export async function getSavedContent(fanAddr: string): Promise<SaveRecord[]> {
+  try {
+    const result = await aptos.view({
+      payload: {
+        function: `${CONTRACT_ADDRESS}::${MODULE_NAME}::get_saved_content`,
+        typeArguments: [],
+        functionArguments: [fanAddr],
+      },
+    })
+    return (result?.[0] as SaveRecord[]) || []
   } catch {
     return []
   }

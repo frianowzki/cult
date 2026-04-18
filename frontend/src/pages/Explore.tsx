@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { unitsToUsd, getAllCreators, type IndexedCreator } from '../lib/aptos'
+import { CONTENT_TYPE_ICONS } from '../lib/constants'
 import { resolveContentUrl } from '../lib/shelby'
 
 const ACCENT_CHARS = ['♪', '◉', '✦', '▶', '◈', '⬡', '◎', '▣', '⊕']
@@ -36,7 +37,18 @@ export default function Explore() {
 
   const filtered = creators.filter((c) => {
     if (!normalizedSearch) return true
-    return c.handle.toLowerCase().includes(normalizedSearch)
+
+    const matchesCreator = [c.handle, c.display_name, c.bio]
+      .filter(Boolean)
+      .some((value) => value.toLowerCase().includes(normalizedSearch))
+
+    if (matchesCreator) return true
+
+    return c.searchable_content.some((content) =>
+      [content.title, content.description]
+        .filter(Boolean)
+        .some((value) => value.toLowerCase().includes(normalizedSearch))
+    )
   })
 
   return (
@@ -52,7 +64,7 @@ export default function Explore() {
             className="input"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search by username"
+            placeholder="Search creators or content"
             style={{ minWidth: 0, width: '100%', maxWidth: 320 }}
           />
           <button className="btn btn-primary btn-sm" onClick={loadCreators}>
@@ -114,7 +126,7 @@ export default function Explore() {
             {creators.length === 0
               ? 'No creators registered yet — be the first!'
               : normalizedSearch
-                ? `No creators found for @${normalizedSearch}`
+                ? `No creators or content found for ${search.trim()}`
                 : 'No creators found'}
           </p>
         </div>
@@ -201,8 +213,44 @@ export default function Explore() {
                     )}
                   </div>
 
+                  {normalizedSearch && creator.searchable_content.some((content) =>
+                    [content.title, content.description]
+                      .filter(Boolean)
+                      .some((value) => value.toLowerCase().includes(normalizedSearch))
+                  ) && (
+                    <div style={{ marginTop: 14, paddingTop: 14, borderTop: '1px solid var(--border)' }}>
+                      <div className="mono" style={{ fontSize: 10, color: 'var(--text-3)', marginBottom: 10 }}>
+                        Matching content
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                        {creator.searchable_content
+                          .filter((content) =>
+                            [content.title, content.description]
+                              .filter(Boolean)
+                              .some((value) => value.toLowerCase().includes(normalizedSearch))
+                          )
+                          .slice(0, 3)
+                          .map((content) => (
+                            <div key={content.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                              <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--accent)', fontSize: 12, marginTop: 1 }}>
+                                {CONTENT_TYPE_ICONS[content.content_type]}
+                              </span>
+                              <div style={{ minWidth: 0 }}>
+                                <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--text)' }}>{content.title}</div>
+                                {content.description && (
+                                  <div style={{ fontSize: 11, color: 'var(--text-3)', lineHeight: 1.5 }}>
+                                    {content.description.length > 96 ? `${content.description.slice(0, 96)}…` : content.description}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Tier pills */}
-                  <div style={{ display: 'flex', gap: 6, marginTop: 14 }}>
+                  <div style={{ display: 'flex', gap: 6, marginTop: 14, flexWrap: 'wrap' }}>
                     {creator.tiers.map((_, ti) => (
                       <span key={ti} className="badge" style={{ fontSize: 10 }}>Tier {ti + 1}</span>
                     ))}

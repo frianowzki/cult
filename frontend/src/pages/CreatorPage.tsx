@@ -27,6 +27,7 @@ import { useStore } from '../lib/store'
 import TipModal from '../components/TipModal'
 import FollowButton from '../components/FollowButton'
 import ContentViewer from '../components/ContentViewer'
+import GiftSubscriptionModal from '../components/GiftSubscriptionModal'
 
 export default function CreatorPage() {
   const { handle } = useParams<{ handle: string }>()
@@ -44,6 +45,7 @@ export default function CreatorPage() {
   const [viewingContent, setViewingContent] = useState<Content | null>(null)
   const [creatorAddr, setCreatorAddr] = useState('')
   const [isMobile, setIsMobile] = useState(false)
+  const [giftModalOpen, setGiftModalOpen] = useState(false)
 
   useEffect(() => {
     function updateViewport() {
@@ -215,6 +217,7 @@ export default function CreatorPage() {
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', paddingBottom: 4, flexWrap: 'wrap' }}>
             <FollowButton creatorAddr={creatorAddr} size="sm" />
             <button className="btn btn-sm" onClick={() => openTipModal(creatorAddr)}>♡ Tip</button>
+            <button className="btn btn-sm" onClick={() => setGiftModalOpen(true)}>Gift</button>
           </div>
         </div>
 
@@ -397,6 +400,15 @@ export default function CreatorPage() {
       </div>
 
       {tipModalOpen && <TipModal creatorAddr={creatorAddr} creatorName={creator.display_name} onClose={() => {}} />}
+      {giftModalOpen && (
+        <GiftSubscriptionModal
+          creatorAddr={creatorAddr}
+          creatorName={creator.display_name}
+          tiers={creator.tiers}
+          onClose={() => setGiftModalOpen(false)}
+          onSuccess={() => void loadCreator(creatorAddr)}
+        />
+      )}
       {viewingContent && (
         <ContentViewer
           content={viewingContent}

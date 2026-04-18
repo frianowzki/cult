@@ -81,6 +81,7 @@ module cult::cult {
         subscriber_count: u64,
         content_count: u64,
         created_at: u64,
+        purchase_history: vector<PurchaseHistoryItem>,
         // Events
         subscribe_events: EventHandle<SubscribeEvent>,
         purchase_events: EventHandle<PurchaseEvent>,
@@ -118,6 +119,7 @@ module cult::cult {
     /// All subscriptions a fan holds (across creators)
     struct FanSubscriptions has key {
         subscriptions: vector<Subscription>,
+        purchase_history: vector<PurchaseHistoryItem>,
     }
 
     /// One-time purchases a fan has made
@@ -130,6 +132,16 @@ module cult::cult {
         creator_addr: address,
         content_id: u64,
         purchased_at: u64,
+    }
+
+    struct PurchaseHistoryItem has store, copy, drop {
+        kind: u8,
+        counterparty_addr: address,
+        content_id: u64,
+        tier_index: u8,
+        amount_paid: u64,
+        timestamp: u64,
+        expires_at: u64,
     }
 
     /// Tracks who a fan is following
@@ -179,6 +191,9 @@ struct FollowerStore has key {
         amount: u64,
         message: String,
     }
+
+    const HISTORY_KIND_SUBSCRIPTION: u8 = 0;
+    const HISTORY_KIND_CONTENT_PURCHASE: u8 = 1;
 
     struct FollowEvent has drop, store {
     fan_addr: address,
@@ -311,6 +326,7 @@ struct UnfollowEvent has drop, store {
                 subscriber_count: 0,
                 content_count: 0,
                 created_at: timestamp::now_seconds(),
+                purchase_history: vector::empty<PurchaseHistoryItem>(),
                 subscribe_events: account::new_event_handle<SubscribeEvent>(creator),
                 purchase_events: account::new_event_handle<PurchaseEvent>(creator),
                 tip_events: account::new_event_handle<TipEvent>(creator),
@@ -613,7 +629,7 @@ struct UnfollowEvent has drop, store {
 
         // Check for existing active subscription
         if (!exists<FanSubscriptions>(fan_addr)) {
-            move_to(fan, FanSubscriptions { subscriptions: vector::empty() });
+            move_to(fan, FanSubscriptions { subscriptions: vector::empty(), purchase_history: vector::empty<PurchaseHistoryItem>() });
         };
 
         let fan_subs = borrow_global_mut<FanSubscriptions>(fan_addr);
@@ -647,6 +663,25 @@ struct UnfollowEvent has drop, store {
             tier_index,
             expires_at,
             subscribed_at: now,
+        });
+
+        vector::push_back(&mut fan_subs.purchase_history, PurchaseHistoryItem {
+            kind: HISTORY_KIND_SUBSCRIPTION,
+            counterparty_addr: creator_addr,
+            content_id: 0,
+            tier_index,
+            amount_paid: price,
+            timestamp: now,
+            expires_at,
+        });
+        vector::push_back(&mut profile.purchase_history, PurchaseHistoryItem {
+            kind: HISTORY_KIND_SUBSCRIPTION,
+            counterparty_addr: fan_addr,
+            content_id: 0,
+            tier_index,
+            amount_paid: price,
+            timestamp: now,
+            expires_at,
         });
 
         // Update creator stats
@@ -707,6 +742,25 @@ struct UnfollowEvent has drop, store {
                     profile.subscriber_count = profile.subscriber_count + 1;
                 };
 
+                vector::push_back(&mut fan_subs.purchase_history, PurchaseHistoryItem {
+                    kind: HISTORY_KIND_SUBSCRIPTION,
+                    counterparty_addr: creator_addr,
+                    content_id: 0,
+                    tier_index: sub.tier_index,
+                    amount_paid: price,
+                    timestamp: now,
+                    expires_at: sub.expires_at,
+                });
+                vector::push_back(&mut profile.purchase_history, PurchaseHistoryItem {
+                    kind: HISTORY_KIND_SUBSCRIPTION,
+                    counterparty_addr: fan_addr,
+                    content_id: 0,
+                    tier_index: sub.tier_index,
+                    amount_paid: price,
+                    timestamp: now,
+                    expires_at: sub.expires_at,
+                });
+
                 profile.total_earned = profile.total_earned + creator_amount;
 
                 let platform_config = borrow_global_mut<PlatformConfig>(platform_addr);
@@ -727,13 +781,96 @@ struct UnfollowEvent has drop, store {
         assert!(found, E_NOT_SUBSCRIBED);
     }
 
+    public entry fun gift_subscription(
+        fan: &signer,
+        creator_addr: address,
+        recipient_addr: address,
+        tier_index: u8,
+        platform_addr: address,
+    ) acquires CreatorProfile, FanSubscriptions, PlatformConfig {
+        assert!(exists<CreatorProfile>(creator_addr), E_CREATOR_NOT_FOUND);
+
+        let sender_addr = signer::address_of(fan);
+        let profile = borrow_global_mut<CreatorProfile>(creator_addr);
+
+        let tier_count = vector::length(&profile.tiers);
+        assert!((tier_index as u64) < tier_count, E_INVALID_TIER);
+
+        let tier = vector::borrow(&profile.tiers, tier_index as u64);
+        let price = tier.price_per_month;
+
+        if (!exists<FanSubscriptions>(recipient_addr)) {
+            abort E_NOT_INITIALIZED
+        };
+
+        let recipient_subs = borrow_global_mut<FanSubscriptions>(recipient_addr);
+        let now = timestamp::now_seconds();
+        let sub_len = vector::length(&recipient_subs.subscriptions);
+        let i = 0u64;
+        while (i < sub_len) {
+            let sub = vector::borrow(&recipient_subs.subscriptions, i);
+            if (sub.creator_addr == creator_addr && sub.expires_at > now) {
+                abort E_ALREADY_SUBSCRIBED
+            };
+            i = i + 1;
+        };
+
+        let platform_fee = price * PLATFORM_FEE_BPS / BPS_DENOMINATOR;
+        let creator_amount = price - platform_fee;
+
+        let metadata = shelby_usd_metadata();
+        primary_fungible_store::transfer(fan, metadata, creator_addr, creator_amount);
+        primary_fungible_store::transfer(fan, metadata, platform_addr, platform_fee);
+
+        let expires_at = now + SUBSCRIPTION_DURATION_SECS;
+        vector::push_back(&mut recipient_subs.subscriptions, Subscription {
+            creator_addr,
+            tier_index,
+            expires_at,
+            subscribed_at: now,
+        });
+        vector::push_back(&mut recipient_subs.purchase_history, PurchaseHistoryItem {
+            kind: HISTORY_KIND_SUBSCRIPTION,
+            counterparty_addr: creator_addr,
+            content_id: 0,
+            tier_index,
+            amount_paid: price,
+            timestamp: now,
+            expires_at,
+        });
+        vector::push_back(&mut profile.purchase_history, PurchaseHistoryItem {
+            kind: HISTORY_KIND_SUBSCRIPTION,
+            counterparty_addr: recipient_addr,
+            content_id: 0,
+            tier_index,
+            amount_paid: price,
+            timestamp: now,
+            expires_at,
+        });
+
+        profile.total_earned = profile.total_earned + creator_amount;
+        profile.subscriber_count = profile.subscriber_count + 1;
+
+        let platform_config = borrow_global_mut<PlatformConfig>(platform_addr);
+        platform_config.total_volume = platform_config.total_volume + price;
+        platform_config.total_fees_collected = platform_config.total_fees_collected + platform_fee;
+
+        event::emit_event(&mut profile.subscribe_events, SubscribeEvent {
+            fan_addr: sender_addr,
+            creator_addr,
+            tier_index,
+            amount_paid: price,
+            expires_at,
+        });
+    }
+
     /// One-time purchase of a specific content item
     public entry fun purchase_content(
         fan: &signer,
         creator_addr: address,
         content_id: u64,
         platform_addr: address,
-    ) acquires CreatorProfile, ContentStore, FanPurchases, PlatformConfig {
+    ) acquires CreatorProfile, ContentStore, FanPurchases, FanSubscriptions, PlatformConfig {
         assert!(exists<CreatorProfile>(creator_addr), E_CREATOR_NOT_FOUND);
 
         let fan_addr = signer::address_of(fan);
@@ -781,13 +918,37 @@ struct UnfollowEvent has drop, store {
         primary_fungible_store::transfer(fan, metadata, creator_addr, creator_amount);
         primary_fungible_store::transfer(fan, metadata, platform_addr, platform_fee);
 
+        let purchased_at = timestamp::now_seconds();
         vector::push_back(&mut fan_purchases.purchases, PurchaseRecord {
             creator_addr,
             content_id,
-            purchased_at: timestamp::now_seconds(),
+            purchased_at,
+        });
+
+        if (!exists<FanSubscriptions>(fan_addr)) {
+            move_to(fan, FanSubscriptions { subscriptions: vector::empty(), purchase_history: vector::empty<PurchaseHistoryItem>() });
+        };
+        let fan_history = borrow_global_mut<FanSubscriptions>(fan_addr);
+        vector::push_back(&mut fan_history.purchase_history, PurchaseHistoryItem {
+            kind: HISTORY_KIND_CONTENT_PURCHASE,
+            counterparty_addr: creator_addr,
+            content_id,
+            tier_index: 255,
+            amount_paid: price,
+            timestamp: purchased_at,
+            expires_at: 0,
         });
 
         let profile = borrow_global_mut<CreatorProfile>(creator_addr);
+        vector::push_back(&mut profile.purchase_history, PurchaseHistoryItem {
+            kind: HISTORY_KIND_CONTENT_PURCHASE,
+            counterparty_addr: fan_addr,
+            content_id,
+            tier_index: 255,
+            amount_paid: price,
+            timestamp: purchased_at,
+            expires_at: 0,
+        });
         profile.total_earned = profile.total_earned + creator_amount;
 
         let platform_config = borrow_global_mut<PlatformConfig>(platform_addr);
@@ -973,6 +1134,26 @@ struct UnfollowEvent has drop, store {
         let config = borrow_global<PlatformConfig>(platform_addr);
         (config.total_volume, config.total_fees_collected)
     }
+
+    #[view]
+    public fun get_fan_purchase_history(fan_addr: address): vector<PurchaseHistoryItem> acquires FanSubscriptions {
+        if (!exists<FanSubscriptions>(fan_addr)) {
+            return vector::empty<PurchaseHistoryItem>()
+        };
+
+        let fan_subs = borrow_global<FanSubscriptions>(fan_addr);
+        *&fan_subs.purchase_history
+    }
+
+    #[view]
+    public fun get_creator_purchase_history(creator_addr: address): vector<PurchaseHistoryItem> acquires CreatorProfile {
+        if (!exists<CreatorProfile>(creator_addr)) {
+            return vector::empty<PurchaseHistoryItem>()
+        };
+
+        let profile = borrow_global<CreatorProfile>(creator_addr);
+        *&profile.purchase_history
+    }
     /// Follow a creator
 public entry fun follow_creator(
     fan: &signer,
@@ -1077,6 +1258,10 @@ const E_NOT_LOVED: u64 = 20;
 const E_NO_ACCESS_TO_REACT: u64 = 21;
 const E_COMMENT_TOO_LONG: u64 = 22;
 const E_CONTENT_NOT_ACTIVE: u64 = 23;
+const E_ALREADY_SAVED: u64 = 24;
+const E_NOT_SAVED: u64 = 25;
+const E_HANDLE_TAKEN: u64 = 26;
+const E_HANDLE_NOT_FOUND: u64 = 27;
 
 // ─── ADD THESE STRUCTS after the existing structs ─────────────────────────────
 
@@ -1089,6 +1274,16 @@ struct LoveRecord has store, copy, drop {
 struct LoveStore has key {
     loves: vector<LoveRecord>,
     love_events: EventHandle<LoveEvent>,
+}
+
+struct SaveRecord has store, copy, drop {
+    creator_addr: address,
+    content_id: u64,
+    saved_at: u64,
+}
+
+struct SaveStore has key {
+    saves: vector<SaveRecord>,
 }
 
 struct Comment has store, copy, drop {
@@ -1214,6 +1409,77 @@ public entry fun unlove_content(
     };
 
     assert!(found, E_NOT_LOVED);
+}
+
+public entry fun save_content(
+    fan: &signer,
+    creator_addr: address,
+    content_id: u64,
+) acquires ContentStore, SaveStore {
+    let fan_addr = signer::address_of(fan);
+    assert!(exists<ContentStore>(creator_addr), E_CREATOR_NOT_FOUND);
+
+    let store = borrow_global<ContentStore>(creator_addr);
+    let len = vector::length(&store.contents);
+    let i = 0u64;
+    let found = false;
+    while (i < len) {
+        let content = vector::borrow(&store.contents, i);
+        if (content.id == content_id) {
+            assert!(content.is_active, E_CONTENT_NOT_ACTIVE);
+            found = true;
+            break
+        };
+        i = i + 1;
+    };
+    assert!(found, E_CONTENT_NOT_FOUND);
+
+    if (!exists<SaveStore>(fan_addr)) {
+        move_to(fan, SaveStore {
+            saves: vector::empty(),
+        });
+    };
+
+    let save_store = borrow_global_mut<SaveStore>(fan_addr);
+    let save_len = vector::length(&save_store.saves);
+    let j = 0u64;
+    while (j < save_len) {
+        let rec = vector::borrow(&save_store.saves, j);
+        assert!(!(rec.creator_addr == creator_addr && rec.content_id == content_id), E_ALREADY_SAVED);
+        j = j + 1;
+    };
+
+    vector::push_back(&mut save_store.saves, SaveRecord {
+        creator_addr,
+        content_id,
+        saved_at: timestamp::now_seconds(),
+    });
+}
+
+public entry fun unsave_content(
+    fan: &signer,
+    creator_addr: address,
+    content_id: u64,
+) acquires SaveStore {
+    let fan_addr = signer::address_of(fan);
+    assert!(exists<SaveStore>(fan_addr), E_NOT_SAVED);
+
+    let save_store = borrow_global_mut<SaveStore>(fan_addr);
+    let len = vector::length(&save_store.saves);
+    let i = 0u64;
+    let found = false;
+
+    while (i < len) {
+        let rec = vector::borrow(&save_store.saves, i);
+        if (rec.creator_addr == creator_addr && rec.content_id == content_id) {
+            vector::remove(&mut save_store.saves, i);
+            found = true;
+            break
+        };
+        i = i + 1;
+    };
+
+    assert!(found, E_NOT_SAVED);
 }
 
 public entry fun post_comment(
@@ -1398,6 +1664,31 @@ public fun has_loved_content(
 }
 
 #[view]
+public fun has_saved_content(
+    fan_addr: address,
+    creator_addr: address,
+    content_id: u64,
+): bool acquires SaveStore {
+    if (!exists<SaveStore>(fan_addr)) return false;
+    let save_store = borrow_global<SaveStore>(fan_addr);
+    let len = vector::length(&save_store.saves);
+    let i = 0u64;
+    while (i < len) {
+        let rec = vector::borrow(&save_store.saves, i);
+        if (rec.creator_addr == creator_addr && rec.content_id == content_id) return true;
+        i = i + 1;
+    };
+    false
+}
+
+#[view]
+public fun get_saved_content(fan_addr: address): vector<SaveRecord> acquires SaveStore {
+    if (!exists<SaveStore>(fan_addr)) return vector::empty();
+    let save_store = borrow_global<SaveStore>(fan_addr);
+    *&save_store.saves
+}
+
+#[view]
 public fun get_fan_comments(
     fan_addr: address,
     content_id: u64,
@@ -1453,10 +1744,15 @@ struct GlobalCommentStore has key {
     comment_count: u64,
 }
 
+struct UserHandleRegistry has key {
+    users: vector<address>,
+}
+
 // ─── User Profile (restored for backward compatibility) ───────────────────────
 
 struct UserProfile has key, copy, drop, store {
     user_addr: address,
+    handle: String,
     display_name: String,
     bio: String,
     avatar_shelby_cid: String,
@@ -1475,17 +1771,64 @@ public fun get_user_profile(user_addr: address): UserProfile acquires UserProfil
     *borrow_global<UserProfile>(user_addr)
 }
 
+#[view]
+public fun get_user_by_handle(handle: String): address acquires UserHandleRegistry, UserProfile {
+    if (!exists<UserHandleRegistry>(@cult)) {
+        return @0x0
+    };
+
+    let registry = borrow_global<UserHandleRegistry>(@cult);
+    let len = vector::length(&registry.users);
+    let i = 0u64;
+    while (i < len) {
+        let addr = *vector::borrow(&registry.users, i);
+        if (exists<UserProfile>(addr)) {
+            let profile = borrow_global<UserProfile>(addr);
+            if (profile.handle == handle && string::length(&profile.handle) > 0) {
+                return addr
+            };
+        };
+        i = i + 1;
+    };
+
+    @0x0
+}
+
+public entry fun init_user_registry(platform: &signer) {
+    let platform_addr = signer::address_of(platform);
+    assert!(exists<PlatformConfig>(platform_addr), E_NOT_INITIALIZED);
+    assert!(!exists<UserHandleRegistry>(platform_addr), E_ALREADY_INITIALIZED);
+    move_to(platform, UserHandleRegistry { users: vector::empty<address>() });
+}
+
 public entry fun register_user_profile(
     user: &signer,
+    handle: String,
     display_name: String,
     bio: String,
     avatar_cid: String,
-) {
+) acquires UserHandleRegistry, UserProfile {
     let user_addr = signer::address_of(user);
     assert!(!exists<UserProfile>(user_addr), E_ALREADY_INITIALIZED);
+    assert!(exists<UserHandleRegistry>(@cult), E_NOT_INITIALIZED);
+
+    let registry = borrow_global_mut<UserHandleRegistry>(@cult);
+    let len = vector::length(&registry.users);
+    let i = 0u64;
+    while (i < len) {
+        let addr = *vector::borrow(&registry.users, i);
+        if (exists<UserProfile>(addr)) {
+            let profile = borrow_global<UserProfile>(addr);
+            assert!(profile.handle != handle, E_HANDLE_TAKEN);
+        };
+        i = i + 1;
+    };
+
+    vector::push_back(&mut registry.users, user_addr);
 
     move_to(user, UserProfile {
         user_addr,
+        handle,
         display_name,
         bio,
         avatar_shelby_cid: avatar_cid,
@@ -1496,14 +1839,29 @@ public entry fun register_user_profile(
 
 public entry fun update_user_profile(
     user: &signer,
+    handle: String,
     display_name: String,
     bio: String,
     avatar_cid: String,
-) acquires UserProfile {
+) acquires UserHandleRegistry, UserProfile {
     let user_addr = signer::address_of(user);
     assert!(exists<UserProfile>(user_addr), E_NOT_INITIALIZED);
+    assert!(exists<UserHandleRegistry>(@cult), E_NOT_INITIALIZED);
+
+    let registry = borrow_global<UserHandleRegistry>(@cult);
+    let len = vector::length(&registry.users);
+    let i = 0u64;
+    while (i < len) {
+        let addr = *vector::borrow(&registry.users, i);
+        if (addr != user_addr && exists<UserProfile>(addr)) {
+            let other = borrow_global<UserProfile>(addr);
+            assert!(other.handle != handle, E_HANDLE_TAKEN);
+        };
+        i = i + 1;
+    };
 
     let profile = borrow_global_mut<UserProfile>(user_addr);
+    profile.handle = handle;
     profile.display_name = display_name;
     profile.bio = bio;
     profile.avatar_shelby_cid = avatar_cid;

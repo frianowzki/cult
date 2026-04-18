@@ -6,6 +6,7 @@ import { getCreatorProfile, type Content } from '../lib/aptos'
 import { resolveContentUrl } from '../lib/shelby'
 import { CONTENT_TYPE_ICONS, CONTENT_TYPE_LABELS, ACCESS_LEVEL_LABELS } from '../lib/constants'
 import LoveButton from './LoveButton'
+import SaveButton from './SaveButton'
 import CommentSection from './CommentSection'
 
 interface Props {
@@ -277,6 +278,10 @@ export default function ContentViewer({
                 contentId={content.id}
                 accessLevel={content.access_level}
                 hasAccess={hasAccess}
+              />
+              <SaveButton
+                creatorAddr={creatorAddr}
+                contentId={content.id}
               />
 
               {hasAccess && contentUrl && canDownload && (

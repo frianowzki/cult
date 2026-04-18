@@ -118,6 +118,7 @@ export default function FanProfile() {
                   <div className="section-eyebrow">Fan</div>
                   <h2 style={{ marginBottom: 4 }}>{profile.display_name}</h2>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    {profile.handle && <span className="badge mono" style={{ fontSize: 10 }}>@{profile.handle}</span>}
                     <span className="badge mono" style={{ fontSize: 10 }}>{shortAddr}</span>
                     {isOwnProfile && <span className="badge badge-accent">You</span>}
                   </div>

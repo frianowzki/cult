@@ -28,6 +28,7 @@ interface Props {
 export default function UserProfileModal({ profile, onSuccess, onClose }: Props) {
   const { account, signAndSubmitTransaction } = useWallet()
   const [loading, setLoading] = useState(false)
+  const [handle, setHandle] = useState(profile?.handle || '')
   const [displayName, setDisplayName] = useState(profile?.display_name || '')
   const [bio, setBio] = useState(profile?.bio || '')
   const [avatarFile, setAvatarFile] = useState<File | null>(null)
@@ -64,6 +65,14 @@ export default function UserProfileModal({ profile, onSuccess, onClose }: Props)
   }
 
   async function handleSubmit() {
+    if (!handle.trim()) {
+      toast.error('Username is required')
+      return
+    }
+    if (!/^[a-z0-9_]{3,20}$/i.test(handle.trim())) {
+      toast.error('Username must be 3-20 letters, numbers, or underscores')
+      return
+    }
     if (!displayName.trim()) {
       toast.error('Display name is required')
       return
@@ -81,8 +90,8 @@ export default function UserProfileModal({ profile, onSuccess, onClose }: Props)
       }
 
       const payload = isEditing
-        ? buildUpdateUserProfilePayload({ displayName: displayName.trim(), bio: bio.trim(), avatarCid })
-        : buildRegisterUserProfilePayload({ displayName: displayName.trim(), bio: bio.trim(), avatarCid })
+        ? buildUpdateUserProfilePayload({ handle: handle.trim().toLowerCase(), displayName: displayName.trim(), bio: bio.trim(), avatarCid })
+        : buildRegisterUserProfilePayload({ handle: handle.trim().toLowerCase(), displayName: displayName.trim(), bio: bio.trim(), avatarCid })
 
       const submitted = await signAndSubmitTransaction({ data: payload })
       await aptos.waitForTransaction({ transactionHash: (submitted as any).hash })
@@ -153,6 +162,16 @@ export default function UserProfileModal({ profile, onSuccess, onClose }: Props)
           </div>
 
           <div className="form-group">
+            <label className="label">Username *</label>
+            <input
+              className="input"
+              value={handle}
+              onChange={(e) => setHandle(e.target.value.replace(/[^a-zA-Z0-9_]/g, ''))}
+              placeholder="yourhandle"
+            />
+          </div>
+
+          <div className="form-group">
             <label className="label">Display Name *</label>
             <input
               className="input"
@@ -176,7 +195,7 @@ export default function UserProfileModal({ profile, onSuccess, onClose }: Props)
 
         <div className="modal-footer">
           <button className="btn" onClick={onClose} disabled={loading}>Cancel</button>
-          <button className="btn btn-primary" onClick={handleSubmit} disabled={loading || !displayName.trim()}>
+          <button className="btn btn-primary" onClick={handleSubmit} disabled={loading || !handle.trim() || !displayName.trim()}>
             {loading ? 'Saving…' : isEditing ? 'Save Profile' : 'Create Profile'}
           </button>
         </div>

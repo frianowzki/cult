@@ -5,10 +5,12 @@ import { motion } from 'framer-motion'
 
 import {
   getFollowing,
+  getSavedContent,
   getCreatorProfile,
   getCreatorContent,
   type Content,
   type CreatorProfile,
+  type SaveRecord,
 } from '../lib/aptos'
 import { CONTENT_TYPE_ICONS, ACCESS_LEVEL_LABELS } from '../lib/constants'
 import { resolveContentUrl } from '../lib/shelby'
@@ -25,6 +27,8 @@ export default function Feed() {
   const [items, setItems] = useState<FeedItem[]>([])
   const [loading, setLoading] = useState(true)
   const [viewingContent, setViewingContent] = useState<FeedItem | null>(null)
+  const [savedItems, setSavedItems] = useState<Array<FeedItem & { savedAt: number }>>([])
+  const [selectedTab, setSelectedTab] = useState<'following' | 'saved'>('following')
 
   useEffect(() => {
     void loadFeed()
@@ -45,22 +49,59 @@ export default function Feed() {
         return
       }
 
-      const creators = await Promise.all(
-        following.map(async (creatorAddr) => {
-          const [creator, contents] = await Promise.all([
-            getCreatorProfile(creatorAddr),
-            getCreatorContent(creatorAddr),
-          ])
-          if (!creator) return [] as FeedItem[]
-          return contents.map((content) => ({ creatorAddr, creator, content }))
-        })
-      )
+      const [followingSaved, creators] = await Promise.all([
+        getSavedContent(String(account.address)),
+        Promise.all(
+          following.map(async (creatorAddr) => {
+            const [creator, contents] = await Promise.all([
+              getCreatorProfile(creatorAddr),
+              getCreatorContent(creatorAddr),
+            ])
+            if (!creator) return [] as FeedItem[]
+            return contents.map((content) => ({ creatorAddr, creator, content }))
+          })
+        ),
+      ])
 
       const merged = creators
         .flat()
         .sort((a, b) => b.content.published_at - a.content.published_at)
 
       setItems(merged)
+
+      const savedRecords = followingSaved as SaveRecord[]
+      if (savedRecords.length === 0) {
+        setSavedItems([])
+      } else {
+        const uniqueCreators = Array.from(new Set(savedRecords.map((record) => record.creator_addr)))
+        const savedCreatorData = await Promise.all(
+          uniqueCreators.map(async (creatorAddr) => {
+            const [creator, contents] = await Promise.all([
+              getCreatorProfile(creatorAddr),
+              getCreatorContent(creatorAddr),
+            ])
+            return creator ? { creatorAddr, creator, contents } : null
+          })
+        )
+
+        const savedResolved = savedRecords
+          .map((record) => {
+            const creatorData = savedCreatorData.find((item) => item?.creatorAddr === record.creator_addr)
+            if (!creatorData) return null
+            const content = creatorData.contents.find((item) => item.id === record.content_id)
+            if (!content) return null
+            return {
+              creatorAddr: record.creator_addr,
+              creator: creatorData.creator,
+              content,
+              savedAt: record.saved_at,
+            }
+          })
+          .filter((item): item is FeedItem & { savedAt: number } => item !== null)
+          .sort((a, b) => b.savedAt - a.savedAt)
+
+        setSavedItems(savedResolved)
+      }
     } catch (e) {
       console.error(e)
       setItems([])
@@ -83,7 +124,7 @@ export default function Feed() {
 
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: '24px clamp(16px, 4vw, 32px) 12px', minHeight: '100%' }}>
-      <div style={{ marginBottom: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'end', gap: 16, flexWrap: 'wrap' }}>
+      <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'end', gap: 16, flexWrap: 'wrap' }}>
         <div>
           <div className="section-eyebrow">Feed</div>
           <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 300, marginBottom: 6 }}>From creators you follow</h2>
@@ -91,9 +132,28 @@ export default function Feed() {
         </div>
         {!loading && (
           <span className="mono" style={{ fontSize: 11, color: 'var(--text-3)' }}>
-            {items.length} posts · {groupedCount} creators
+            {selectedTab === 'following' ? `${items.length} posts · ${groupedCount} creators` : `${savedItems.length} saved`}
           </span>
         )}
+      </div>
+
+      <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '1px solid var(--border)', flexWrap: 'wrap' }}>
+        {(['following', 'saved'] as const).map((tab) => (
+          <button
+            key={tab}
+            className="btn btn-ghost btn-sm"
+            onClick={() => setSelectedTab(tab)}
+            style={{
+              color: selectedTab === tab ? 'var(--accent)' : 'var(--text-3)',
+              borderBottom: selectedTab === tab ? '2px solid var(--accent)' : '2px solid transparent',
+              borderRadius: 0,
+              paddingBottom: 12,
+              textTransform: 'capitalize',
+            }}
+          >
+            {tab}
+          </button>
+        ))}
       </div>
 
       {loading ? (
@@ -106,15 +166,20 @@ export default function Feed() {
             </div>
           ))}
         </div>
-      ) : items.length === 0 ? (
+      ) : selectedTab === 'following' && items.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: '60px 24px', borderStyle: 'dashed' }}>
           <div style={{ fontFamily: 'var(--font-mono)', fontSize: '2.2rem', color: 'var(--text-3)', marginBottom: 12 }}>◌</div>
           <p style={{ marginBottom: 18 }}>Your feed is empty. Follow creators to see their posts here.</p>
           <Link to="/explore" className="btn btn-primary">Explore creators</Link>
         </div>
+      ) : selectedTab === 'saved' && savedItems.length === 0 ? (
+        <div className="card" style={{ textAlign: 'center', padding: '60px 24px', borderStyle: 'dashed' }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '2.2rem', color: 'var(--text-3)', marginBottom: 12 }}>⌑</div>
+          <p style={{ marginBottom: 18 }}>You haven’t saved any content yet.</p>
+        </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {items.map((item, index) => {
+          {(selectedTab === 'following' ? items : savedItems).map((item, index) => {
             const thumbUrl = resolveContentUrl(item.content.thumbnail_shelby_cid)
             const avatarUrl = resolveContentUrl(item.creator.avatar_shelby_cid)
 

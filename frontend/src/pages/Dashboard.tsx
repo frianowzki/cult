@@ -10,10 +10,13 @@ import {
   getCreatorContent,
   getSubscriptionStatus,
   getUserProfile,
+  getFanPurchaseHistory,
+  getCreatorPurchaseHistory,
   buildToggleContentPayload,
   unitsToUsd,
   type CreatorProfile,
   type Content,
+  type PurchaseHistoryItem,
   type SubscriptionStatus,
   type UserProfile,
 } from '../lib/aptos'
@@ -27,6 +30,7 @@ import EditContentModal from '../components/EditContentModal'
 import AutoRenewBanner from '../components/AutoRenewBanner'
 import ContentViewer from '../components/ContentViewer'
 import UserProfileModal from '../components/UserProfileModal'
+import GiftSubscriptionModal from '../components/GiftSubscriptionModal'
 
 export default function Dashboard() {
   const { connected, account, signAndSubmitTransaction } = useWallet()
@@ -48,7 +52,10 @@ export default function Dashboard() {
   const [editingContent, setEditingContent] = useState<Content | null>(null)
   const [deletingId, setDeletingId] = useState<number | null>(null)
   const [fanSubscription, setFanSubscription] = useState<SubscriptionStatus | null>(null)
-  const [dashTab, setDashTab] = useState<'posts' | 'analytics' | 'following'>('posts')
+  const [fanPurchaseHistory, setFanPurchaseHistory] = useState<PurchaseHistoryItem[]>([])
+  const [creatorPurchaseHistory, setCreatorPurchaseHistory] = useState<PurchaseHistoryItem[]>([])
+  const [dashTab, setDashTab] = useState<'posts' | 'analytics' | 'following' | 'history'>('posts')
+  const [giftModalOpen, setGiftModalOpen] = useState(false)
 
   useEffect(() => {
     if (account?.address) {
@@ -66,16 +73,20 @@ export default function Dashboard() {
 
     setLoading(true)
     try {
-      const [profile, basicProfile, contentList, ownSubStatus] = await Promise.all([
+      const [profile, basicProfile, contentList, ownSubStatus, fanHistory, creatorHistory] = await Promise.all([
         getCreatorProfile(String(account.address)),
         getUserProfile(String(account.address)),
         getCreatorContent(String(account.address)),
         getSubscriptionStatus(String(account.address), String(account.address)),
+        getFanPurchaseHistory(String(account.address)),
+        getCreatorPurchaseHistory(String(account.address)),
       ])
       setCreator(profile)
       setUserProfile(basicProfile)
       setContents(contentList)
       setFanSubscription(ownSubStatus)
+      setFanPurchaseHistory(fanHistory.sort((a, b) => b.timestamp - a.timestamp))
+      setCreatorPurchaseHistory(creatorHistory.sort((a, b) => b.timestamp - a.timestamp))
     } finally {
       setLoading(false)
     }
@@ -260,6 +271,9 @@ export default function Dashboard() {
           <button className="btn" onClick={() => setEditModalOpen(true)}>
             ✎ Edit Profile
           </button>
+          <button className="btn" onClick={() => setGiftModalOpen(true)}>
+            Gift Subscription
+          </button>
           <button className="btn btn-primary" onClick={() => setUploadModalOpen(true)}>
             + Publish Content
           </button>
@@ -318,7 +332,7 @@ export default function Dashboard() {
       )}
 
       <div style={{ display: 'flex', gap: 4, marginBottom: 28, borderBottom: '1px solid var(--border)', flexWrap: 'wrap' }}>
-        {(['posts', 'analytics', 'following'] as const).map((tab) => (
+        {(['posts', 'analytics', 'following', 'history'] as const).map((tab) => (
           <button
             key={tab}
             className="btn btn-ghost btn-sm"
@@ -331,12 +345,82 @@ export default function Dashboard() {
               textTransform: 'capitalize',
             }}
           >
-            {tab === 'posts' ? 'Your Content' : tab === 'analytics' ? 'Analytics' : 'Following Feed'}
+            {tab === 'posts' ? 'Your Content' : tab === 'analytics' ? 'Analytics' : tab === 'following' ? 'Following Feed' : 'History'}
           </button>
         ))}
       </div>
 
-      {dashTab === 'following' ? (
+      {dashTab === 'history' ? (
+        <div style={{ display: 'grid', gap: 20, marginBottom: 8 }}>
+          <div className="card" style={{ padding: '22px 24px' }}>
+            <div className="section-eyebrow">Your purchases</div>
+            <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 300, marginBottom: 18 }}>What you bought from other creators</h3>
+            {fanPurchaseHistory.length === 0 ? (
+              <p style={{ color: 'var(--text-3)', margin: 0 }}>You haven’t bought subscriptions or paid posts from other creators yet.</p>
+            ) : (
+              <div style={{ display: 'grid', gap: 10 }}>
+                {fanPurchaseHistory.map((item, index) => (
+                  <div key={`fan-history-${index}`} style={{ padding: '14px 16px', border: '1px solid var(--border)', background: 'var(--bg-2)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: 13 }}>
+                          {item.kind === 0 ? `Subscription, Tier ${item.tier_index + 1}` : `Content purchase, Post #${item.content_id}`}
+                        </div>
+                        <div className="mono" style={{ fontSize: 11, color: 'var(--accent)', marginTop: 4 }}>
+                          {item.counterparty_addr}
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontWeight: 600, color: 'var(--accent)' }}>${unitsToUsd(item.amount_paid)}</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-3)' }}>{item.timestamp ? new Date(item.timestamp * 1000).toLocaleString() : 'Recorded on-chain'}</div>
+                      </div>
+                    </div>
+                    {item.kind === 0 && item.expires_at > 0 && (
+                      <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 8 }}>
+                        Expires {new Date(item.expires_at * 1000).toLocaleString()}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="card" style={{ padding: '22px 24px' }}>
+            <div className="section-eyebrow">Your sales</div>
+            <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 300, marginBottom: 18 }}>What fans bought from you</h3>
+            {creatorPurchaseHistory.length === 0 ? (
+              <p style={{ color: 'var(--text-3)', margin: 0 }}>No subscription or content sales yet.</p>
+            ) : (
+              <div style={{ display: 'grid', gap: 10 }}>
+                {creatorPurchaseHistory.map((item, index) => (
+                  <div key={`creator-history-${index}`} style={{ padding: '14px 16px', border: '1px solid var(--border)', background: 'var(--bg-2)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: 13 }}>
+                          {item.kind === 0 ? `Subscription sale, Tier ${item.tier_index + 1}` : `Content sale, Post #${item.content_id}`}
+                        </div>
+                        <div className="mono" style={{ fontSize: 11, color: 'var(--accent)', marginTop: 4 }}>
+                          {item.counterparty_addr}
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontWeight: 600, color: 'var(--accent)' }}>${unitsToUsd(item.amount_paid)}</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-3)' }}>{item.timestamp ? new Date(item.timestamp * 1000).toLocaleString() : 'Recorded on-chain'}</div>
+                      </div>
+                    </div>
+                    {item.kind === 0 && item.expires_at > 0 && (
+                      <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 8 }}>
+                        Active until {new Date(item.expires_at * 1000).toLocaleString()}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      ) : dashTab === 'following' ? (
         <FollowingFeed />
       ) : dashTab === 'analytics' ? (
         <div style={{ display: 'grid', gap: 20, marginBottom: 8 }}>
@@ -566,6 +650,15 @@ export default function Dashboard() {
           }}
           onDelete={() => void handlePermanentDelete(viewingContent)}
           deleting={deletingId === viewingContent.id}
+        />
+      )}
+      {giftModalOpen && creator && (
+        <GiftSubscriptionModal
+          creatorAddr={String(account?.address || '')}
+          creatorName={creator.display_name}
+          tiers={creator.tiers}
+          onClose={() => setGiftModalOpen(false)}
+          onSuccess={loadData}
         />
       )}
     </div>
