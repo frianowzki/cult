@@ -10,6 +10,7 @@ import Explore from './pages/Explore'
 import Layout from './components/Layout'
 import Feed from './pages/Feed'
 import Notifications from './pages/Notifications'
+import FanProfile from './pages/FanProfile'
 
 export default function App() {
   return (
@@ -43,6 +44,7 @@ export default function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/u/:handle" element={<CreatorPage />} />
             <Route path="/notifications" element={<Notifications />} />
+            <Route path="/fan/:address" element={<FanProfile />} />
           </Route>
         </Routes>
       </HashRouter>

@@ -25,6 +25,7 @@ export default function Layout() {
     { label: 'Explore', to: '/explore' },
     { label: 'Feed', to: '/feed' },
     { label: 'Dashboard', to: '/dashboard' },
+    ...(connected && account?.address ? [{ label: 'Profile', to: `/fan/${String(account.address)}` }] : []),
   ]
 
   useEffect(() => {

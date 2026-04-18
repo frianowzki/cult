@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useWallet } from '@aptos-labs/wallet-adapter-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import toast from 'react-hot-toast'
@@ -301,18 +302,38 @@ export default function CommentSection({ creatorAddr, contentId, accessLevel, ha
                             {!getAvatarUrl(c.fanAddr) && (getDisplayName(c.fanAddr).charAt(0).toUpperCase() || '◌')}
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6, minWidth: 0, flexWrap: 'wrap' }}>
-                            <span style={{
-                              fontFamily: 'var(--font-mono)', fontSize: 10,
-                              color: c.fanAddr === String(account?.address) || isCreatorComment(c.fanAddr) ? 'var(--accent)' : 'var(--text-3)',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                            }}>
-                              {getDisplayName(c.fanAddr)}
-                            </span>
+                            {isCreatorComment(c.fanAddr) ? (
+                              <span style={{
+                                fontFamily: 'var(--font-mono)', fontSize: 10,
+                                color: 'var(--accent)',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                              }}>
+                                {getDisplayName(c.fanAddr)}
+                              </span>
+                            ) : (
+                              <Link
+                                to={`/fan/${c.fanAddr}`}
+                                style={{
+                                  fontFamily: 'var(--font-mono)', fontSize: 10,
+                                  color: c.fanAddr === String(account?.address) ? 'var(--accent)' : 'var(--text-3)',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
+                                }}
+                              >
+                                {getDisplayName(c.fanAddr)}
+                              </Link>
+                            )}
                             {isCreatorComment(c.fanAddr) && (
                               <span className="badge badge-accent" style={{ fontSize: 9, padding: '1px 6px' }}>
                                 ♛ Creator
+                              </span>
+                            )}
+                            {!isCreatorComment(c.fanAddr) && identityMap[c.fanAddr]?.name && (
+                              <span className="badge" style={{ fontSize: 9, padding: '1px 6px' }}>
+                                Fan
                               </span>
                             )}
                           </div>

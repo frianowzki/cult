@@ -146,7 +146,7 @@ export default function Feed() {
 
                   <div style={{ padding: '16px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, marginBottom: 10, flexWrap: 'wrap' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <Link to={`/u/${item.creator.handle}`} style={{ display: 'flex', alignItems: 'center', gap: 10 }} onClick={(e) => e.stopPropagation()}>
                         <div
                           style={{
                             width: 36,
@@ -169,7 +169,7 @@ export default function Feed() {
                           <div style={{ fontWeight: 700, fontSize: 14 }}>{item.creator.display_name}</div>
                           <div className="mono" style={{ fontSize: 11, color: 'var(--accent)' }}>@{item.creator.handle}</div>
                         </div>
-                      </div>
+                      </Link>
 
                       <div style={{ textAlign: 'right' }}>
                         <div className="badge" style={{ fontSize: 9 }}>{ACCESS_LEVEL_LABELS[item.content.access_level]}</div>

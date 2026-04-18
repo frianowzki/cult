@@ -18,6 +18,18 @@ export interface NotificationItem {
   publishedAt: number
 }
 
+export interface CommentActivityItem {
+  id: string
+  creatorAddr: string
+  creatorHandle: string
+  creatorName: string
+  creatorAvatarCid: string
+  contentId: number
+  contentTitle: string
+  text: string
+  postedAt: number
+}
+
 export interface Tier {
   name: string
   price_per_month: number
@@ -790,6 +802,53 @@ export async function getPostNotificationsForFan(fanAddr: string): Promise<Notif
     )
 
     return all.flat().sort((a, b) => b.publishedAt - a.publishedAt)
+  } catch {
+    return []
+  }
+}
+
+export async function getRecentCommentActivityForFan(fanAddr: string, limit = 8): Promise<CommentActivityItem[]> {
+  try {
+    const following = await getFollowing(fanAddr)
+    if (!following.length) return []
+
+    const activity = await Promise.all(
+      following.map(async (creatorAddr) => {
+        try {
+          const [creator, contents] = await Promise.all([
+            getCreatorProfile(creatorAddr),
+            getCreatorContent(creatorAddr),
+          ])
+
+          if (!creator || contents.length === 0) return []
+
+          const commentLists = await Promise.all(
+            contents.map(async (content) => {
+              const comments = await getCommentsForContent(creatorAddr, content.id)
+              return comments
+                .filter((comment) => comment.fanAddr === fanAddr)
+                .map((comment) => ({
+                  id: `${creatorAddr}-${content.id}-${comment.id}`,
+                  creatorAddr,
+                  creatorHandle: creator.handle,
+                  creatorName: creator.display_name,
+                  creatorAvatarCid: creator.avatar_shelby_cid,
+                  contentId: content.id,
+                  contentTitle: content.title,
+                  text: comment.text,
+                  postedAt: comment.postedAt,
+                }))
+            })
+          )
+
+          return commentLists.flat()
+        } catch {
+          return []
+        }
+      })
+    )
+
+    return activity.flat().sort((a, b) => b.postedAt - a.postedAt).slice(0, limit)
   } catch {
     return []
   }

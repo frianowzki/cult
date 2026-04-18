@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { useWallet } from '@aptos-labs/wallet-adapter-react'
 import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
@@ -229,6 +229,11 @@ export default function CreatorPage() {
             <span className="badge badge-accent">Membership active</span>
           ) : (
             <span className="badge">Subscribe or buy individual posts</span>
+          )}
+          {account?.address && (
+            <Link to={`/fan/${String(account.address)}`} className="badge mono" style={{ fontSize: 10 }}>
+              Your fan profile
+            </Link>
           )}
           <span className="badge mono" style={{ fontSize: 10 }}>Built for direct fan support</span>
         </div>
