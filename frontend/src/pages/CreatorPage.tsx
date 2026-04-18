@@ -225,22 +225,6 @@ export default function CreatorPage() {
           <p style={{ maxWidth: 560, marginBottom: 20, color: 'var(--text-2)', lineHeight: 1.65, fontSize: isMobile ? 13 : 15 }}>{creator.bio}</p>
         )}
 
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 28 }}>
-          {!connected ? (
-            <span className="badge">Connect wallet to unlock posts</span>
-          ) : subStatus?.isActive ? (
-            <span className="badge badge-accent">Membership active</span>
-          ) : (
-            <span className="badge">Subscribe or buy individual posts</span>
-          )}
-          {account?.address && (
-            <Link to={`/fan/${String(account.address)}`} className="badge mono" style={{ fontSize: 10 }}>
-              Your fan profile
-            </Link>
-          )}
-          <span className="badge mono" style={{ fontSize: 10 }}>Built for direct fan support</span>
-        </div>
-
         <div style={{ display: 'flex', gap: isMobile ? 14 : 20, flexWrap: 'wrap', marginBottom: 28, paddingBottom: 20, borderBottom: '1px solid var(--border)' }}>
           {[[creator.subscriber_count, 'Subscribers'], [contents.length, 'Posts'], ['$' + unitsToUsd(creator.total_earned), 'Earned']].map(([val, label]) => (
             <div key={String(label)} style={{ minWidth: isMobile ? 84 : 'auto' }}>
