@@ -103,51 +103,46 @@ export default function FanProfile() {
   return (
     <>
       <div style={{ maxWidth: 980, margin: '0 auto', padding: '24px clamp(16px, 4vw, 32px) 28px' }}>
-        <div className="card" style={{ padding: 0, overflow: 'hidden', background: 'linear-gradient(180deg, rgba(20,18,17,0.96) 0%, rgba(13,12,11,0.98) 100%)', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 24px 60px rgba(0,0,0,0.28)' }}>
-          <div style={{ height: 220, position: 'relative', background: 'linear-gradient(135deg, rgba(254,119,201,0.16) 0%, rgba(254,119,201,0.05) 35%, rgba(255,255,255,0.03) 100%)' }}>
-            <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 20% 24%, rgba(254,119,201,0.16), transparent 34%), radial-gradient(circle at 78% 28%, rgba(254,119,201,0.08), transparent 28%)' }} />
-          </div>
+        <div className="card" style={{ padding: '24px clamp(18px, 4vw, 32px) 28px', background: 'linear-gradient(180deg, rgba(20,18,17,0.96) 0%, rgba(13,12,11,0.98) 100%)', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 24px 60px rgba(0,0,0,0.28)', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 16% 18%, rgba(254,119,201,0.14), transparent 26%), radial-gradient(circle at 82% 12%, rgba(254,119,201,0.08), transparent 22%)', pointerEvents: 'none' }} />
 
-          <div style={{ padding: '0 clamp(18px, 4vw, 32px) 28px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'flex-end', flexWrap: 'wrap', marginTop: -44, marginBottom: 20 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-                <div style={{ width: 88, height: 88, borderRadius: '50%', border: '3px solid var(--bg)', background: avatarUrl ? `url(${avatarUrl}) center/cover no-repeat` : 'var(--bg-3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent)', fontFamily: 'var(--font-mono)', fontSize: '1.8rem', overflow: 'hidden' }}>
-                  {!avatarUrl && (profile.display_name.charAt(0).toUpperCase() || '◌')}
-                </div>
-                <div style={{ paddingTop: 18 }}>
-                  <div className="section-eyebrow">Fan</div>
-                  <h2 style={{ marginBottom: 4 }}>{profile.display_name}</h2>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                    {profile.handle && <span className="badge mono" style={{ fontSize: 10 }}>@{profile.handle}</span>}
-                    <span className="badge mono" style={{ fontSize: 10 }}>{shortAddr}</span>
-                    {isOwnProfile && <span className="badge badge-accent">You</span>}
-                  </div>
-                </div>
+          <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap', marginBottom: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+              <div style={{ width: 88, height: 88, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.08)', background: avatarUrl ? `url(${avatarUrl}) center/cover no-repeat` : 'linear-gradient(135deg, rgba(254,119,201,0.22), rgba(254,119,201,0.06))', boxShadow: '0 10px 30px rgba(0,0,0,0.28)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent)', fontFamily: 'var(--font-mono)', fontSize: '1.8rem', overflow: 'hidden' }}>
+                {!avatarUrl && (profile.display_name.charAt(0).toUpperCase() || '◌')}
               </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                {isOwnProfile && (
-                  <button className="btn btn-sm btn-primary" onClick={() => setEditing(true)}>
-                    Edit profile
-                  </button>
+              <div style={{ minWidth: 0 }}>
+                <div className="section-eyebrow">Fan</div>
+                <h2 style={{ marginBottom: 6, lineHeight: 1 }}>{profile.display_name}</h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: profile.bio ? 10 : 0 }}>
+                  {profile.handle && <span className="badge mono" style={{ fontSize: 10 }}>@{profile.handle}</span>}
+                  <span className="badge mono" style={{ fontSize: 10 }}>{shortAddr}</span>
+                  {isOwnProfile && <span className="badge badge-accent">You</span>}
+                </div>
+                {profile.bio && (
+                  <p style={{ maxWidth: 620, color: 'var(--text-2)', lineHeight: 1.7, margin: 0 }}>{profile.bio}</p>
                 )}
-                <Link className="btn btn-sm" to="/explore">Explore creators</Link>
               </div>
             </div>
 
-            {profile.bio && (
-              <p style={{ maxWidth: 620, marginBottom: 20, color: 'var(--text-2)', lineHeight: 1.7 }}>{profile.bio}</p>
-            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              {isOwnProfile && (
+                <button className="btn btn-sm btn-primary" onClick={() => setEditing(true)}>
+                  Edit profile
+                </button>
+              )}
+              <Link className="btn btn-sm" to="/explore">Explore creators</Link>
+            </div>
+          </div>
 
-            <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', paddingTop: 18, borderTop: '1px solid var(--border)' }}>
-              <div>
-                <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', color: 'var(--text)', lineHeight: 1 }}>{followingCount}</div>
-                <div style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 4, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Following</div>
-              </div>
-              <div>
-                <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', color: 'var(--text)', lineHeight: 1 }}>{new Date(profile.created_at * 1000).getFullYear()}</div>
-                <div style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 4, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Joined</div>
-              </div>
+          <div style={{ position: 'relative', display: 'flex', gap: 24, flexWrap: 'wrap', paddingTop: 18, borderTop: '1px solid var(--border)' }}>
+            <div>
+              <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', color: 'var(--text)', lineHeight: 1 }}>{followingCount}</div>
+              <div style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 4, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Following</div>
+            </div>
+            <div>
+              <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', color: 'var(--text)', lineHeight: 1 }}>{new Date(profile.created_at * 1000).getFullYear()}</div>
+              <div style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 4, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Joined</div>
             </div>
           </div>
         </div>
