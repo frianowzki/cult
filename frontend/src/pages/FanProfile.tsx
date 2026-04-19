@@ -12,8 +12,6 @@ import {
   type CreatorProfile,
   type UserProfile,
 } from '../lib/aptos'
-
-type FanProfileWithBanner = UserProfile & { banner_shelby_cid?: string }
 import { resolveContentUrl } from '../lib/shelby'
 import UserProfileModal from '../components/UserProfileModal'
 
@@ -25,7 +23,7 @@ export default function FanProfile() {
   const viewerAddress = String(account?.address || '')
   const isOwnProfile = !!viewerAddress && viewerAddress.toLowerCase() === normalizedAddress.toLowerCase()
 
-  const [profile, setProfile] = useState<FanProfileWithBanner | null>(null)
+  const [profile, setProfile] = useState<UserProfile | null>(null)
   const [followingCount, setFollowingCount] = useState(0)
   const [supportedCreators, setSupportedCreators] = useState<CreatorProfile[]>([])
   const [recentComments, setRecentComments] = useState<CommentActivityItem[]>([])
@@ -68,7 +66,6 @@ export default function FanProfile() {
   }
 
   const avatarUrl = profile?.avatar_shelby_cid ? resolveContentUrl(profile.avatar_shelby_cid) : ''
-  const bannerUrl = profile?.banner_shelby_cid ? resolveContentUrl(profile.banner_shelby_cid) : ''
   const shortAddr = normalizedAddress
     ? `${normalizedAddress.slice(0, 6)}…${normalizedAddress.slice(-4)}`
     : ''
@@ -107,8 +104,8 @@ export default function FanProfile() {
     <>
       <div style={{ maxWidth: 980, margin: '0 auto', padding: '24px clamp(16px, 4vw, 32px) 28px' }}>
         <div className="card" style={{ padding: 0, overflow: 'hidden', background: 'linear-gradient(180deg, rgba(20,18,17,0.96) 0%, rgba(13,12,11,0.98) 100%)', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 24px 60px rgba(0,0,0,0.28)' }}>
-          <div style={{ height: 220, position: 'relative', background: bannerUrl ? `linear-gradient(180deg, rgba(5,5,5,0.12), rgba(5,5,5,0.44)), url(${bannerUrl}) center/cover no-repeat` : 'linear-gradient(135deg, rgba(254,119,201,0.16) 0%, rgba(254,119,201,0.05) 35%, rgba(255,255,255,0.03) 100%)' }}>
-            <div style={{ position: 'absolute', inset: 0, background: bannerUrl ? 'linear-gradient(180deg, rgba(8,8,7,0.08) 0%, rgba(8,8,7,0.52) 100%)' : 'radial-gradient(circle at 20% 24%, rgba(254,119,201,0.16), transparent 34%), radial-gradient(circle at 78% 28%, rgba(254,119,201,0.08), transparent 28%)' }} />
+          <div style={{ height: 220, position: 'relative', background: 'linear-gradient(135deg, rgba(254,119,201,0.16) 0%, rgba(254,119,201,0.05) 35%, rgba(255,255,255,0.03) 100%)' }}>
+            <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 20% 24%, rgba(254,119,201,0.16), transparent 34%), radial-gradient(circle at 78% 28%, rgba(254,119,201,0.08), transparent 28%)' }} />
           </div>
 
           <div style={{ padding: '0 clamp(18px, 4vw, 32px) 28px' }}>
@@ -140,12 +137,6 @@ export default function FanProfile() {
 
             {profile.bio && (
               <p style={{ maxWidth: 620, marginBottom: 20, color: 'var(--text-2)', lineHeight: 1.7 }}>{profile.bio}</p>
-            )}
-
-            {!bannerUrl && (
-              <div style={{ marginBottom: 20, fontSize: 12, color: 'var(--text-3)' }}>
-                Fan banner is supported when present in profile data.
-              </div>
             )}
 
             <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap', paddingTop: 18, borderTop: '1px solid var(--border)' }}>
