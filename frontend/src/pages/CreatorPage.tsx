@@ -180,6 +180,10 @@ export default function CreatorPage() {
     }))
     .sort((a, b) => b.sales - a.sales)[0]
 
+  const featuredPost = popularPaidPost?.sales
+    ? popularPaidPost.content
+    : contents.slice().sort((a, b) => b.published_at - a.published_at)[0]
+
   if (loading) return <LoadingSkeleton />
 
   if (!creator) {
@@ -267,6 +271,22 @@ export default function CreatorPage() {
         )}
 
         <div style={{ display: 'flex', gap: isMobile ? 14 : 20, flexWrap: 'wrap', marginBottom: 28, paddingBottom: 20, borderBottom: '1px solid var(--border)' }}>
+          {featuredPost && (
+            <div className="card" style={{ width: '100%', padding: isMobile ? '16px' : '18px 20px', marginBottom: 4, background: 'linear-gradient(180deg, rgba(254,119,201,0.06), rgba(254,119,201,0.01))', border: '1px solid rgba(254,119,201,0.16)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>
+                <div>
+                  <div className="section-eyebrow">Featured post</div>
+                  <div style={{ fontWeight: 700, margin: '6px 0 6px' }}>{featuredPost.title}</div>
+                  <div style={{ fontSize: 13, color: 'var(--text-2)' }}>
+                    {featuredPost === popularPaidPost?.content ? 'Best converting premium post right now.' : 'Latest highlighted post from this creator.'}
+                  </div>
+                </div>
+                <button className="btn btn-sm btn-primary" onClick={() => setViewingContent(featuredPost)}>
+                  Open featured post
+                </button>
+              </div>
+            </div>
+          )}
           {[[creator.subscriber_count, 'Subscribers'], [contents.length, 'Posts'], ['$' + unitsToUsd(creator.total_earned), 'Earned']].map(([val, label]) => (
             <div key={String(label)} style={{ minWidth: isMobile ? 84 : 'auto' }}>
               <div style={{ fontFamily: 'var(--font-display)', fontSize: isMobile ? '1.35rem' : '1.6rem', fontWeight: 300, color: 'var(--text)', lineHeight: 1 }}>{val}</div>
@@ -431,6 +451,24 @@ export default function CreatorPage() {
                   ) : null}
                 </div>
               )}
+            </div>
+
+            <div className="card" style={{ padding: '16px', background: 'var(--bg-2)', marginBottom: 18 }}>
+              <div className="section-eyebrow">Tier comparison</div>
+              <div style={{ display: 'grid', gap: 10, marginTop: 10 }}>
+                {creator.tiers.map((tier, i) => (
+                  <div key={`compare-${i}`} style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) auto auto', gap: 10, alignItems: 'center', fontSize: 12, paddingBottom: 10, borderBottom: i === creator.tiers.length - 1 ? 'none' : '1px solid var(--border)' }}>
+                    <div>
+                      <div style={{ fontWeight: 700 }}>{tier.name}</div>
+                      <div style={{ color: 'var(--text-3)' }}>{tier.description || 'Membership access'}</div>
+                    </div>
+                    <div className="mono" style={{ color: 'var(--accent)' }}>${unitsToUsd(tier.price_per_month)}/mo</div>
+                    <div style={{ color: i === 0 ? 'var(--accent)' : 'var(--text-3)', fontWeight: i === 0 ? 700 : 500 }}>
+                      {i === 0 ? 'Best entry' : `Tier ${i + 1}`}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div className="section-eyebrow" style={{ marginBottom: 16 }}>Membership Tiers</div>
