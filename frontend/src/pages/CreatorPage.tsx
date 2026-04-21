@@ -164,6 +164,10 @@ export default function CreatorPage() {
     return c.content_type === typeMap[selectedTab]
   }), [contents, selectedTab])
 
+  const lockedCount = filteredContent.filter((content) => !(accessMap[content.id] ?? (content.access_level === ACCESS_LEVELS.FREE))).length
+  const cheapestTier = creator?.tiers?.[0] || null
+  const featuredLockedPost = filteredContent.find((content) => !(accessMap[content.id] ?? (content.access_level === ACCESS_LEVELS.FREE)))
+
   if (loading) return <LoadingSkeleton />
 
   if (!creator) {
@@ -223,6 +227,31 @@ export default function CreatorPage() {
 
         {creator.bio && (
           <p style={{ maxWidth: 560, marginBottom: 20, color: 'var(--text-2)', lineHeight: 1.65, fontSize: isMobile ? 13 : 15 }}>{creator.bio}</p>
+        )}
+
+        {!subStatus?.isActive && creator.tiers.length > 0 && (
+          <div className="card" style={{ padding: isMobile ? '16px' : '18px 20px', marginBottom: 24, background: 'linear-gradient(180deg, rgba(254,119,201,0.07), rgba(254,119,201,0.02))', border: '1px solid rgba(254,119,201,0.18)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap', alignItems: 'center' }}>
+              <div>
+                <div className="section-eyebrow">Membership</div>
+                <div style={{ fontWeight: 700, marginBottom: 6 }}>Unlock {lockedCount} locked post{lockedCount === 1 ? '' : 's'} and ongoing drops</div>
+                <div style={{ fontSize: 13, color: 'var(--text-2)' }}>
+                  {cheapestTier ? `Start with ${cheapestTier.name} for $${unitsToUsd(cheapestTier.price_per_month)}/mo.` : 'Subscribe to unlock member content.'}
+                  {featuredLockedPost ? ` Best entry point right now: ${featuredLockedPost.title}.` : ''}
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                {cheapestTier && (
+                  <button className="btn btn-primary btn-sm" onClick={() => handleSubscribe(0)} disabled={subscribing !== null}>
+                    {subscribing === 0 ? 'Processing…' : `Join ${cheapestTier.name}`}
+                  </button>
+                )}
+                <button className="btn btn-sm" onClick={() => setSelectedTab('all')}>
+                  Browse posts
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
         <div style={{ display: 'flex', gap: isMobile ? 14 : 20, flexWrap: 'wrap', marginBottom: 28, paddingBottom: 20, borderBottom: '1px solid var(--border)' }}>
@@ -347,6 +376,18 @@ export default function CreatorPage() {
           <aside style={{ position: isMobile ? 'static' : 'sticky', top: 80 }}>
             <div className="section-eyebrow" style={{ marginBottom: 16 }}>Membership Tiers</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {!subStatus?.isActive && creator.tiers.length > 0 && (
+                <div className="card" style={{ padding: '16px', background: 'var(--bg-2)', border: '1px solid rgba(254,119,201,0.18)' }}>
+                  <div className="section-eyebrow">Best next step</div>
+                  <div style={{ fontWeight: 700, margin: '6px 0 8px' }}>Start with {creator.tiers[0].name}</div>
+                  <p style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 12 }}>
+                    Low friction first. Convert with the cheapest tier, then upsell later through consistent drops.
+                  </p>
+                  <button className="btn btn-primary btn-sm" style={{ width: '100%' }} onClick={() => handleSubscribe(0)} disabled={subscribing !== null}>
+                    {subscribing === 0 ? 'Processing…' : `Subscribe for ${unitsToUsd(creator.tiers[0].price_per_month)} USD/mo`}
+                  </button>
+                </div>
+              )}
               {creator.tiers.map((tier, i) => {
                 const isCurrentTier = subStatus?.isActive && subStatus.tierIndex === i
                 const isLowerTier = subStatus?.isActive && subStatus.tierIndex > i

@@ -267,6 +267,18 @@ export default function Dashboard() {
 
   const avatarUrl = resolveContentUrl(creator.avatar_shelby_cid)
 
+  const paidSales = creatorPurchaseHistory.filter((item) => item.kind === 1)
+  const subSales = creatorPurchaseHistory.filter((item) => item.kind === 0)
+  const totalSalesRevenue = creatorPurchaseHistory.reduce((sum, item) => sum + item.amount_paid, 0)
+  const avgRevenuePerSale = creatorPurchaseHistory.length ? totalSalesRevenue / creatorPurchaseHistory.length : 0
+  const topPaidPost = contents
+    .map((content) => ({
+      content,
+      sales: paidSales.filter((item) => item.content_id === content.id).length,
+      revenue: paidSales.filter((item) => item.content_id === content.id).reduce((sum, item) => sum + item.amount_paid, 0),
+    }))
+    .sort((a, b) => b.revenue - a.revenue || b.sales - a.sales)[0]
+
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: '20px clamp(16px, 4vw, 32px) 8px', minHeight: '100%' }}>
       <div
@@ -395,7 +407,56 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {dashTab === 'history' ? (
+      {dashTab === 'analytics' ? (
+        <div style={{ display: 'grid', gap: 20, marginBottom: 8 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
+            {[
+              { label: 'Sales Revenue', value: `$${unitsToUsd(totalSalesRevenue)}`, hint: `${creatorPurchaseHistory.length} total conversions` },
+              { label: 'Subscription Revenue', value: `$${unitsToUsd(subSales.reduce((sum, item) => sum + item.amount_paid, 0))}`, hint: `${subSales.length} membership sales` },
+              { label: 'Paid Post Revenue', value: `$${unitsToUsd(paidSales.reduce((sum, item) => sum + item.amount_paid, 0))}`, hint: `${paidSales.length} paid unlocks` },
+              { label: 'Avg Revenue / Sale', value: `$${unitsToUsd(avgRevenuePerSale)}`, hint: 'Across subscriptions and paid posts' },
+            ].map((stat) => (
+              <div key={stat.label} className="card" style={{ padding: '20px 22px' }}>
+                <div className="section-eyebrow">Analytics</div>
+                <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem', lineHeight: 1, margin: '8px 0 6px' }}>{stat.value}</div>
+                <div style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 8 }}>{stat.label}</div>
+                <div style={{ fontSize: 12, color: 'var(--text-2)' }}>{stat.hint}</div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
+            <div className="card" style={{ padding: '22px 24px' }}>
+              <div className="section-eyebrow">Best monetizing post</div>
+              <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 300, marginBottom: 14 }}>Top paid content</h3>
+              {topPaidPost && topPaidPost.revenue > 0 ? (
+                <>
+                  <div style={{ fontWeight: 700, marginBottom: 6 }}>{topPaidPost.content.title}</div>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
+                    <span className="badge">{topPaidPost.sales} sales</span>
+                    <span className="badge badge-accent">${unitsToUsd(topPaidPost.revenue)}</span>
+                    <span className="badge">{ACCESS_LEVEL_LABELS[topPaidPost.content.access_level]}</span>
+                  </div>
+                  <p style={{ margin: 0, fontSize: 12, color: 'var(--text-2)' }}>This is currently your strongest paid conversion asset. Push fans here from social and notifications.</p>
+                </>
+              ) : (
+                <p style={{ margin: 0, color: 'var(--text-3)' }}>No paid post revenue yet. Your first conversion target should be one clear flagship paid post.</p>
+              )}
+            </div>
+
+            <div className="card" style={{ padding: '22px 24px' }}>
+              <div className="section-eyebrow">Conversion advice</div>
+              <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 300, marginBottom: 14 }}>What to do next</h3>
+              <div style={{ display: 'grid', gap: 10, fontSize: 13, color: 'var(--text-2)' }}>
+                <div>• Put one strongest paid post near the top, don’t spread value too thin.</div>
+                <div>• Make tier descriptions outcome-driven, not vague.</div>
+                <div>• If followers see locked posts often, push them toward one obvious membership tier.</div>
+                <div>• Use notifications to bring fans back, then convert with your best locked post.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : dashTab === 'history' ? (
         <div style={{ display: 'grid', gap: 20, marginBottom: 8 }}>
           <div className="card" style={{ padding: '22px 24px' }}>
             <div className="section-eyebrow">Your purchases</div>
@@ -467,43 +528,6 @@ export default function Dashboard() {
         </div>
       ) : dashTab === 'following' ? (
         <FollowingFeed />
-      ) : dashTab === 'analytics' ? (
-        <div style={{ display: 'grid', gap: 20, marginBottom: 8 }}>
-          <div className="card" style={{ padding: '22px 24px' }}>
-            <div className="section-eyebrow">Analytics</div>
-            <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 300, marginBottom: 18 }}>Creator overview</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
-              {[
-                { label: 'Lifetime earnings', value: `$${unitsToUsd(creator.total_earned)}` },
-                { label: 'Subscribers', value: creator.subscriber_count },
-                { label: 'Published posts', value: creator.content_count || contents.length },
-                { label: 'Average earnings / post', value: contents.length > 0 ? `$${(Number(unitsToUsd(creator.total_earned)) / contents.length).toFixed(2)}` : '$0.00' },
-              ].map((item) => (
-                <div key={item.label} style={{ padding: '16px', border: '1px solid var(--border)', background: 'var(--bg-2)' }}>
-                  <div style={{ fontSize: 11, color: 'var(--text-3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 10 }}>{item.label}</div>
-                  <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.7rem', fontWeight: 300 }}>{item.value}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="card" style={{ padding: '22px 24px' }}>
-            <div className="section-eyebrow">Content mix</div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
-              {[
-                { label: 'Video', count: contents.filter((c) => c.content_type === 0).length },
-                { label: 'Image', count: contents.filter((c) => c.content_type === 1).length },
-                { label: 'Audio', count: contents.filter((c) => c.content_type === 2).length },
-                { label: 'Article', count: contents.filter((c) => c.content_type === 3).length },
-              ].map((item) => (
-                <div key={item.label} style={{ padding: '16px', border: '1px solid var(--border)', background: 'var(--bg-2)' }}>
-                  <div style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 8 }}>{item.label}</div>
-                  <div style={{ fontSize: '1.4rem', color: 'var(--accent)', fontFamily: 'var(--font-display)' }}>{item.count}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
       ) : (
         <div style={{ marginBottom: 8 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
