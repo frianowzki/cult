@@ -278,6 +278,19 @@ export default function Dashboard() {
       revenue: paidSales.filter((item) => item.content_id === content.id).reduce((sum, item) => sum + item.amount_paid, 0),
     }))
     .sort((a, b) => b.revenue - a.revenue || b.sales - a.sales)[0]
+  const freePosts = contents.filter((content) => content.access_level === 0)
+  const memberPosts = contents.filter((content) => content.access_level > 0 && content.access_level !== 4)
+  const oneOffPosts = contents.filter((content) => content.access_level === 4)
+  const recurringRevenue = subSales.reduce((sum, item) => sum + item.amount_paid, 0)
+  const oneOffRevenue = paidSales.reduce((sum, item) => sum + item.amount_paid, 0)
+  const postsWithSales = contents
+    .map((content) => ({
+      content,
+      sales: paidSales.filter((item) => item.content_id === content.id).length,
+      revenue: paidSales.filter((item) => item.content_id === content.id).reduce((sum, item) => sum + item.amount_paid, 0),
+    }))
+    .filter((item) => item.sales > 0 || item.revenue > 0)
+    .sort((a, b) => b.revenue - a.revenue || b.sales - a.sales)
 
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: '20px clamp(16px, 4vw, 32px) 8px', minHeight: '100%' }}>
@@ -425,6 +438,39 @@ export default function Dashboard() {
             ))}
           </div>
 
+          <div className="card" style={{ padding: '22px 24px' }}>
+            <div className="section-eyebrow">Funnel breakdown</div>
+            <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 300, marginBottom: 14 }}>Where conversion is coming from</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14, marginBottom: 16 }}>
+              {[
+                { label: 'Free posts', value: freePosts.length, hint: 'Top-of-funnel discovery' },
+                { label: 'Member posts', value: memberPosts.length, hint: 'Recurring-value inventory' },
+                { label: 'Buy-once posts', value: oneOffPosts.length, hint: 'One-time conversion assets' },
+                { label: 'Selling posts', value: postsWithSales.length, hint: 'Posts with actual paid conversions' },
+              ].map((item) => (
+                <div key={item.label} style={{ padding: '14px 16px', border: '1px solid var(--border)', background: 'var(--bg-2)' }}>
+                  <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.45rem', lineHeight: 1, marginBottom: 6 }}>{item.value}</div>
+                  <div style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 6 }}>{item.label}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-2)' }}>{item.hint}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display: 'grid', gap: 10 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 13 }}>
+                <span style={{ color: 'var(--text-2)' }}>Recurring revenue</span>
+                <strong>${unitsToUsd(recurringRevenue)}</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 13 }}>
+                <span style={{ color: 'var(--text-2)' }}>One-off revenue</span>
+                <strong>${unitsToUsd(oneOffRevenue)}</strong>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 13 }}>
+                <span style={{ color: 'var(--text-2)' }}>Revenue mix</span>
+                <strong>{totalSalesRevenue > 0 ? `${Math.round((recurringRevenue / totalSalesRevenue) * 100)}% recurring / ${Math.round((oneOffRevenue / totalSalesRevenue) * 100)}% one-off` : 'No sales yet'}</strong>
+              </div>
+            </div>
+          </div>
+
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
             <div className="card" style={{ padding: '22px 24px' }}>
               <div className="section-eyebrow">Best monetizing post</div>
@@ -452,7 +498,28 @@ export default function Dashboard() {
                 <div>• Make tier descriptions outcome-driven, not vague.</div>
                 <div>• If followers see locked posts often, push them toward one obvious membership tier.</div>
                 <div>• Use notifications to bring fans back, then convert with your best locked post.</div>
+                <div>• Right now you have {freePosts.length} free, {memberPosts.length} member-only, and {oneOffPosts.length} one-time paid posts. Balance discovery against monetization.</div>
               </div>
+            </div>
+
+            <div className="card" style={{ padding: '22px 24px' }}>
+              <div className="section-eyebrow">Converting posts</div>
+              <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 300, marginBottom: 14 }}>What is actually selling</h3>
+              {postsWithSales.length > 0 ? (
+                <div style={{ display: 'grid', gap: 10 }}>
+                  {postsWithSales.slice(0, 4).map((item) => (
+                    <div key={item.content.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, paddingBottom: 10, borderBottom: '1px solid var(--border)' }}>
+                      <div>
+                        <div style={{ fontWeight: 600, fontSize: 13 }}>{item.content.title}</div>
+                        <div style={{ fontSize: 11, color: 'var(--text-3)' }}>{item.sales} sale{item.sales === 1 ? '' : 's'} • {ACCESS_LEVEL_LABELS[item.content.access_level]}</div>
+                      </div>
+                      <div style={{ fontWeight: 700, color: 'var(--accent)' }}>${unitsToUsd(item.revenue)}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p style={{ margin: 0, color: 'var(--text-3)' }}>No converting posts yet. You need one cleaner flagship paid offer.</p>
+              )}
             </div>
           </div>
         </div>
