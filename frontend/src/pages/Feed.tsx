@@ -356,11 +356,14 @@ export default function Feed() {
                         </div>
                       </Link>
 
-                      <div style={{ textAlign: 'right' }}>
+                      <div style={{ textAlign: 'right', display: 'grid', gap: 6, justifyItems: 'end' }}>
                         <div className="badge" style={{ fontSize: 9 }}>{ACCESS_LEVEL_LABELS[item.content.access_level]}</div>
-                        <div style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 6 }}>
+                        <div style={{ fontSize: 10, color: 'var(--text-3)' }}>
                           {new Date(item.content.published_at * 1000).toLocaleDateString()}
                         </div>
+                        <Link to={`/u/${item.creator.handle}`} className="btn btn-sm" onClick={(e) => e.stopPropagation()}>
+                          Visit creator
+                        </Link>
                       </div>
                     </div>
 
@@ -382,11 +385,9 @@ export default function Feed() {
                       <span style={{ fontSize: 11, color: 'var(--text-3)' }}>
                         {connected ? (item.hasAccess || item.content.access_level === 0 ? 'Tap to open' : 'Locked preview') : 'Free preview'}
                       </span>
-                      {!connected && (
-                        <Link to={`/u/${item.creator.handle}`} className="btn btn-sm" onClick={(e) => e.stopPropagation()}>
-                          View creator
-                        </Link>
-                      )}
+                      <Link to={`/u/${item.creator.handle}`} style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 600 }} onClick={(e) => e.stopPropagation()}>
+                        See profile and offers →
+                      </Link>
                     </div>
                   </div>
                 </div>
