@@ -214,6 +214,13 @@ export default function CreatorPage() {
   const featuredPost = popularPaidPost?.sales
     ? popularPaidPost.content
     : contents.slice().sort((a, b) => b.published_at - a.published_at)[0]
+  const bestConversionMessage = !subStatus?.isActive
+    ? popularPaidPost?.sales && popularPaidPost.content.access_level === ACCESS_LEVELS.PURCHASE
+      ? `Most fans start by unlocking ${popularPaidPost.content.title}.`
+      : cheapestTier
+        ? `Best first move: join ${cheapestTier.name} for ongoing access.`
+        : 'Best first move: browse the strongest post and decide fast.'
+    : 'You already have access. Browse the newest drops.'
 
   if (loading) return <LoadingSkeleton />
 
@@ -279,24 +286,43 @@ export default function CreatorPage() {
 
         {!subStatus?.isActive && creator.tiers.length > 0 && (
           <div className="card" style={{ padding: isMobile ? '16px' : '18px 20px', marginBottom: 24, background: 'linear-gradient(180deg, rgba(254,119,201,0.07), rgba(254,119,201,0.02))', border: '1px solid rgba(254,119,201,0.18)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap', alignItems: 'center' }}>
-              <div>
-                <div className="section-eyebrow">Membership</div>
-                <div style={{ fontWeight: 700, marginBottom: 6 }}>Unlock {lockedCount} locked post{lockedCount === 1 ? '' : 's'} and ongoing drops</div>
-                <div style={{ fontSize: 13, color: 'var(--text-2)' }}>
-                  {cheapestTier ? `Start with ${cheapestTier.name} for $${unitsToUsd(cheapestTier.price_per_month)}/mo.` : 'Subscribe to unlock member content.'}
-                  {featuredLockedPost ? ` Best entry point right now: ${featuredLockedPost.title}.` : ''}
+            <div style={{ display: 'grid', gap: 14 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap', alignItems: 'center' }}>
+                <div>
+                  <div className="section-eyebrow">Membership</div>
+                  <div style={{ fontWeight: 700, marginBottom: 6 }}>Unlock {lockedCount} locked post{lockedCount === 1 ? '' : 's'} and ongoing drops</div>
+                  <div style={{ fontSize: 13, color: 'var(--text-2)' }}>
+                    {cheapestTier ? `Start with ${cheapestTier.name} for $${unitsToUsd(cheapestTier.price_per_month)}/mo.` : 'Subscribe to unlock member content.'}
+                    {featuredLockedPost ? ` Best entry point right now: ${featuredLockedPost.title}.` : ''}
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {cheapestTier && (
+                    <button className="btn btn-primary btn-sm" onClick={() => handleSubscribe(0)} disabled={subscribing !== null}>
+                      {subscribing === 0 ? 'Processing…' : `Join ${cheapestTier.name}`}
+                    </button>
+                  )}
+                  <button className="btn btn-sm" onClick={handleBrowsePosts}>
+                    Browse posts
+                  </button>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                {cheapestTier && (
-                  <button className="btn btn-primary btn-sm" onClick={() => handleSubscribe(0)} disabled={subscribing !== null}>
-                    {subscribing === 0 ? 'Processing…' : `Join ${cheapestTier.name}`}
-                  </button>
-                )}
-                <button className="btn btn-sm" onClick={handleBrowsePosts}>
-                  Browse posts
-                </button>
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 1.2fr) minmax(240px, 0.8fr)', gap: 12 }}>
+                <div style={{ padding: '12px 14px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)' }}>
+                  <div className="section-eyebrow">Best next step</div>
+                  <div style={{ fontWeight: 700, margin: '6px 0 6px' }}>{bestConversionMessage}</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-2)' }}>
+                    {lockedCount > 0 ? `There are ${lockedCount} locked posts ready once you convert.` : 'This creator is set up for direct support and future drops.'}
+                  </div>
+                </div>
+                <div style={{ padding: '12px 14px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)' }}>
+                  <div className="section-eyebrow">Why convert now</div>
+                  <div style={{ display: 'grid', gap: 6, fontSize: 12, color: 'var(--text-2)' }}>
+                    <div>• instant access instead of browsing locked previews</div>
+                    <div>• support the creator directly</div>
+                    <div>• keep unlocks and history tied to your wallet</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -472,7 +498,7 @@ export default function CreatorPage() {
                 <div className="section-eyebrow">Share this creator</div>
                 <div style={{ fontWeight: 700, margin: '6px 0 8px' }}>Bring people straight to the page that converts</div>
                 <p style={{ fontSize: 12, color: 'var(--text-2)', margin: '0 0 12px' }}>
-                  Send fans here for the clearest path into follows, tips, memberships, and paid unlocks.
+                  Send fans here when they are already interested. This page is built to turn curiosity into follows, tips, memberships, and paid unlocks.
                 </p>
                 <div style={{ display: 'grid', gap: 8 }}>
                   <button className="btn btn-sm btn-primary" style={{ width: '100%' }} onClick={() => void handleShareCreator()}>

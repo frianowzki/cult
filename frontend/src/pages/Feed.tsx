@@ -389,9 +389,6 @@ export default function Feed() {
                         <div style={{ fontSize: 10, color: 'var(--text-3)' }}>
                           {new Date(item.content.published_at * 1000).toLocaleDateString()}
                         </div>
-                        <Link to={`/u/${item.creator.handle}`} className="btn btn-sm" onClick={(e) => e.stopPropagation()}>
-                          Visit creator
-                        </Link>
                       </div>
                     </div>
 
