@@ -164,33 +164,87 @@ Views (no gas):
 
 ```
 cult/
+├── README.md
+├── package-lock.json
 ├── move/
 │   ├── Move.toml
-│   └── sources/
-│       └── cult.move          ← Main smart contract
+│   ├── .aptos/
+│   │   └── config.yaml
+│   ├── sources/
+│   │   └── cult.move
+│   └── build/
+│       └── cult/
+│           ├── BuildInfo.yaml
+│           ├── bytecode_modules/
+│           ├── source_maps/
+│           └── sources/
 │
 └── frontend/
     ├── .env.example
+    ├── .env
+    ├── .env.local
+    ├── .gitignore
+    ├── .npmrc
     ├── index.html
     ├── package.json
+    ├── package-lock.json
+    ├── tsconfig.json
+    ├── tsconfig.node.json
+    ├── vercel.json
     ├── vite.config.ts
+    ├── api/
+    │   ├── delete-shelby-blob.js
+    │   └── scheduled-publish.js
+    ├── public/
+    │   ├── icon-192.png
+    │   ├── icon-512.png
+    │   ├── manifest.json
+    │   ├── offline.html
+    │   └── sw.js
     └── src/
         ├── main.tsx
         ├── App.tsx
-        ├── index.css             ← Design system (Cormorant + Syne Mono)
+        ├── index.css
+        ├── polyfills.ts
+        ├── vite-env.d.ts
+        ├── hooks/
+        ├── wallet/
+        │   └── WalletProvider.tsx
         ├── lib/
-        │   ├── aptos.ts          ← Contract calls + type defs
-        │   ├── shelby.ts         ← Shelby upload/token helpers
-        │   ├── store.ts          ← Zustand global state
-        │   └── constants.ts      ← Contract addresses, enums
+        │   ├── aptos-core.ts
+        │   ├── aptos-read.ts
+        │   ├── aptos-write.ts
+        │   ├── aptos-types.ts
+        │   ├── aptos.ts
+        │   ├── shelby-read.ts
+        │   ├── shelby-write.ts
+        │   ├── shelby.ts
+        │   ├── store.ts
+        │   └── constants.ts
         ├── pages/
-        │   ├── Home.tsx          ← Landing page
-        │   ├── Explore.tsx       ← Creator discovery grid
-        │   ├── CreatorPage.tsx   ← Public creator profile + content
-        │   └── Dashboard.tsx     ← Creator management panel
+        │   ├── Home.tsx
+        │   ├── Explore.tsx
+        │   ├── CreatorPage.tsx
+        │   ├── Dashboard.tsx
+        │   ├── FanProfile.tsx
+        │   ├── Feed.tsx
+        │   └── Notifications.tsx
         └── components/
-            ├── Layout.tsx              ← Nav + footer wrapper
-            ├── RegisterCreatorModal.tsx ← 2-step creator onboarding
-            ├── UploadContentModal.tsx   ← Shelby upload + on-chain publish
-            └── TipModal.tsx            ← Direct APT tip flow
+            ├── AutoRenewBanner.tsx
+            ├── CommentSection.tsx
+            ├── ContentViewer.tsx
+            ├── DynamicBackground.tsx
+            ├── EditContentModal.tsx
+            ├── EditProfileModal.tsx
+            ├── FollowButton.tsx
+            ├── FollowingFeed.tsx
+            ├── GiftSubscriptionModal.tsx
+            ├── Layout.tsx
+            ├── LoveButton.tsx
+            ├── NotificationsPopup.tsx
+            ├── RegisterCreatorModal.tsx
+            ├── SaveButton.tsx
+            ├── TipModal.tsx
+            ├── UploadContentModal.tsx
+            └── UserProfileModal.tsx
 ```
