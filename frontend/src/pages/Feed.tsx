@@ -246,33 +246,41 @@ export default function Feed() {
                         <video
                           src={contentUrl}
                           muted
+                          autoPlay
+                          loop
                           playsInline
                           preload="metadata"
-                          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', background: '#000' }}
                         />
                       ) : item.content.content_type === 1 ? (
                         <img
                           src={contentUrl}
                           alt={item.content.title}
-                          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                          style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', background: 'var(--bg)' }}
                         />
                       ) : item.content.content_type === 2 ? (
-                        <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, padding: 20 }}>
+                        <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, padding: 24, background: 'linear-gradient(180deg, rgba(254,119,201,0.10), rgba(254,119,201,0.02))' }}>
                           {thumbUrl ? (
                             <img
                               src={thumbUrl}
                               alt={item.content.title}
-                              style={{ width: '100%', height: '100%', maxHeight: '75%', objectFit: 'cover', borderRadius: 0, display: 'block' }}
+                              style={{ width: '100%', height: '100%', maxHeight: '68%', objectFit: 'contain', borderRadius: 0, display: 'block' }}
                             />
                           ) : (
-                            <span style={{ fontSize: '3rem', color: 'var(--accent)' }}>♪</span>
+                            <span style={{ fontSize: '3.25rem', color: 'var(--accent)' }}>♪</span>
                           )}
-                          <span style={{ fontSize: 12, color: 'var(--text-2)' }}>Audio preview available</span>
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ fontWeight: 700, marginBottom: 4 }}>Audio post</div>
+                            <span style={{ fontSize: 12, color: 'var(--text-2)' }}>Tap to listen</span>
+                          </div>
                         </div>
                       ) : (
-                        <div style={{ width: '100%', height: '100%', padding: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'left', fontFamily: 'var(--font-sans)', fontSize: 14, lineHeight: 1.6, color: 'var(--text-2)' }}>
-                          <div style={{ display: '-webkit-box', WebkitLineClamp: 10, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                            {item.content.description || item.content.title}
+                        <div style={{ width: '100%', height: '100%', padding: 22, display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-start', textAlign: 'left', fontFamily: 'var(--font-sans)', fontSize: 14, lineHeight: 1.7, color: 'var(--text)', background: 'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00)), var(--bg-2)' }}>
+                          <div>
+                            <div style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: 10 }}>Article preview</div>
+                            <div style={{ display: '-webkit-box', WebkitLineClamp: 8, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                              {item.content.description || item.content.title}
+                            </div>
                           </div>
                         </div>
                       )
