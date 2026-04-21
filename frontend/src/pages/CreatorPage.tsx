@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { useWallet } from '@aptos-labs/wallet-adapter-react'
 import { motion } from 'framer-motion'
@@ -49,6 +49,7 @@ export default function CreatorPage() {
   const [creatorAddr, setCreatorAddr] = useState('')
   const [isMobile, setIsMobile] = useState(false)
   const [giftModalOpen, setGiftModalOpen] = useState(false)
+  const postsSectionRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     function updateViewport() {
@@ -194,6 +195,11 @@ export default function CreatorPage() {
     }
   }
 
+  function handleBrowsePosts() {
+    setSelectedTab('all')
+    postsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
   const filteredContent = useMemo(() => contents.filter((c) => {
     if (selectedTab === 'all') return true
     const typeMap: Record<string, number> = { video: 0, image: 1, audio: 2, article: 3 }
@@ -299,7 +305,7 @@ export default function CreatorPage() {
                     {subscribing === 0 ? 'Processing…' : `Join ${cheapestTier.name}`}
                   </button>
                 )}
-                <button className="btn btn-sm" onClick={() => setSelectedTab('all')}>
+                <button className="btn btn-sm" onClick={handleBrowsePosts}>
                   Browse posts
                 </button>
               </div>
@@ -332,7 +338,7 @@ export default function CreatorPage() {
           ))}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 1fr)', gap: 24, alignItems: 'start' }}>
+        <div ref={postsSectionRef} style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 1fr)', gap: 24, alignItems: 'start' }}>
           <div>
             <div style={{ display: 'flex', gap: 4, marginBottom: 18, borderBottom: '1px solid var(--border)', overflowX: 'auto', paddingBottom: 2 }}>
               {(['all', 'video', 'image', 'audio', 'article'] as const).map((tab) => (

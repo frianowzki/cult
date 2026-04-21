@@ -76,6 +76,11 @@ export default function UploadContentModal({ onSuccess }: Props) {
     setThumbnailPreview(URL.createObjectURL(f))
   }
 
+  function handleRemoveThumbnail() {
+    setThumbnail(null)
+    setThumbnailPreview('')
+  }
+
   const onProgress: ProgressCallback = (step, percent) => {
     setUploadStep(step)
     setUploadPercent(percent)
@@ -234,9 +239,14 @@ export default function UploadContentModal({ onSuccess }: Props) {
                   style={{ width: 60, height: 40, objectFit: 'cover', borderRadius: 'var(--radius)', border: '1px solid var(--border)' }} />
               )}
               <label className="btn btn-sm" style={{ cursor: 'pointer' }}>
-                Choose image
+                {thumbnailPreview ? 'Change image' : 'Choose image'}
                 <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleThumbnailChange} />
               </label>
+              {thumbnailPreview && (
+                <button type="button" className="btn btn-sm" onClick={handleRemoveThumbnail}>
+                  Remove thumbnail
+                </button>
+              )}
             </div>
           </div>
 
