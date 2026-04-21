@@ -9,6 +9,7 @@ export interface NotificationItem {
   contentTitle: string
   accessLevel: number
   publishedAt: number
+  isRead?: boolean
 }
 
 export interface CommentActivityItem {

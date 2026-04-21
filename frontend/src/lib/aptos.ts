@@ -16,6 +16,7 @@ export interface NotificationItem {
   contentTitle: string
   accessLevel: number
   publishedAt: number
+  isRead?: boolean
 }
 
 export interface CommentActivityItem {
@@ -1028,6 +1029,11 @@ export {
   getLegacyFanSubscriptions,
   getLegacyFanPurchases,
   getLegacyFanHistoryFromEvents,
+} from './aptos-read'
+
+export {
+  getLastNotificationsSeenAt,
+  markNotificationsSeen,
 } from './aptos-read'
 
 export async function getFollowerCount(creatorAddr: string): Promise<number> {

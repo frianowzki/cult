@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useWallet } from '@aptos-labs/wallet-adapter-react'
 
-import { getRecentNotifications, type NotificationItem } from '../lib/aptos'
+import { getRecentNotifications, markNotificationsSeen, type NotificationItem } from '../lib/aptos'
 import { resolveContentUrl } from '../lib/shelby'
 import { ACCESS_LEVEL_LABELS } from '../lib/constants'
 
@@ -27,7 +27,7 @@ export default function NotificationsPopup({ onClose, onUnreadCount }: Props) {
       setLoading(true)
       const data = await getRecentNotifications(String(account.address), 8)
       setNotifications(data)
-      onUnreadCount?.(data.length)
+      onUnreadCount?.(data.filter((item) => !item.isRead).length)
       setLoading(false)
     }
 
@@ -42,13 +42,28 @@ export default function NotificationsPopup({ onClose, onUnreadCount }: Props) {
     )
   }
 
+  function handleMarkAllRead() {
+    if (!account?.address) return
+    markNotificationsSeen(String(account.address))
+    const next = notifications.map((item) => ({ ...item, isRead: true }))
+    setNotifications(next)
+    onUnreadCount?.(0)
+  }
+
   return (
     <div style={{ padding: '12px 0' }}>
       <div style={{ padding: '8px 16px', fontSize: 12, color: 'var(--text-3)', borderBottom: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
         <span>Recent activity</span>
-        {!loading && notifications.length > 0 && (
-          <span className="mono" style={{ fontSize: 10, color: 'var(--accent)' }}>{notifications.length}</span>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          {!loading && notifications.some((item) => !item.isRead) && (
+            <button className="btn btn-ghost btn-sm" style={{ padding: 0, fontSize: 10 }} onClick={handleMarkAllRead}>
+              Mark all read
+            </button>
+          )}
+          {!loading && notifications.length > 0 && (
+            <span className="mono" style={{ fontSize: 10, color: 'var(--accent)' }}>{notifications.filter((item) => !item.isRead).length} new</span>
+          )}
+        </div>
       </div>
 
       {loading ? (
@@ -73,6 +88,7 @@ export default function NotificationsPopup({ onClose, onUnreadCount }: Props) {
                   textDecoration: 'none',
                   color: 'inherit',
                   borderBottom: '1px solid var(--border)',
+                  background: item.isRead ? 'transparent' : 'rgba(254,119,201,0.05)',
                 }}
               >
                 <div
@@ -87,7 +103,9 @@ export default function NotificationsPopup({ onClose, onUnreadCount }: Props) {
                 />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 2 }}>{item.creatorName}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 4 }}>published new content</div>
+                  <div style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 4 }}>
+                    published new content {!item.isRead && <span style={{ color: 'var(--accent)', fontWeight: 700 }}>• new</span>}
+                  </div>
                   <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--accent)', marginBottom: 2, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
                     <span>{item.contentTitle}</span>
                     <span style={{ fontSize: 10, color: 'var(--text-3)' }}>→</span>

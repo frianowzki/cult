@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { useWallet } from '@aptos-labs/wallet-adapter-react'
 import { motion } from 'framer-motion'
 
-import { getPostNotificationsForFan, type NotificationItem } from '../lib/aptos'
+import { getPostNotificationsForFan, getLastNotificationsSeenAt, markNotificationsSeen, type NotificationItem } from '../lib/aptos'
 import { ACCESS_LEVEL_LABELS } from '../lib/constants'
 import { resolveContentUrl } from '../lib/shelby'
 
@@ -25,8 +25,9 @@ export default function Notifications() {
 
     setLoading(true)
     try {
+      const lastSeen = getLastNotificationsSeenAt(String(account.address))
       const data = await getPostNotificationsForFan(String(account.address))
-      setItems(data)
+      setItems(data.map((item) => ({ ...item, isRead: item.publishedAt * 1000 <= lastSeen })))
     } catch (e) {
       console.error(e)
       setItems([])
@@ -34,6 +35,12 @@ export default function Notifications() {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    if (connected && account?.address) {
+      markNotificationsSeen(String(account.address))
+    }
+  }, [connected, account?.address])
 
   if (!connected) {
     return (
@@ -61,7 +68,7 @@ export default function Notifications() {
         </div>
         {!loading && items.length > 0 && (
           <span className="mono" style={{ fontSize: 11, color: 'var(--text-3)' }}>
-            {items.length} updates
+            {items.filter((item) => !item.isRead).length} new · {items.length} updates
           </span>
         )}
       </div>
@@ -96,7 +103,7 @@ export default function Notifications() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.03 }}
                 className="card"
-                style={{ padding: '16px 18px' }}
+                style={{ padding: '16px 18px', background: item.isRead ? undefined : 'rgba(254,119,201,0.04)' }}
               >
                 <Link
                   to={`/u/${item.creatorHandle}`}
@@ -129,7 +136,7 @@ export default function Notifications() {
                     </div>
 
                     <p style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.6, marginBottom: 8 }}>
-                      published new content
+                      published new content {!item.isRead && <span style={{ color: 'var(--accent)', fontWeight: 700 }}>• new</span>}
                     </p>
 
                     <div style={{ fontWeight: 600, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>

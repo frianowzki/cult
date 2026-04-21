@@ -649,10 +649,34 @@ export async function getRecentCommentActivityForFan(fanAddr: string, limit = 8)
   }
 }
 
+function getNotificationSeenKey(fanAddr: string) {
+  return `cult:notifications:lastSeen:${fanAddr.toLowerCase()}`
+}
+
+export function getLastNotificationsSeenAt(fanAddr: string): number {
+  if (typeof window === 'undefined') return 0
+  try {
+    return Number(window.localStorage.getItem(getNotificationSeenKey(fanAddr)) || '0') || 0
+  } catch {
+    return 0
+  }
+}
+
+export function markNotificationsSeen(fanAddr: string, timestamp?: number) {
+  if (typeof window === 'undefined') return
+  try {
+    window.localStorage.setItem(getNotificationSeenKey(fanAddr), String(timestamp || Date.now()))
+  } catch {}
+}
+
 export async function getRecentNotifications(fanAddr: string, limit = 10): Promise<NotificationItem[]> {
   try {
     const all = await getPostNotificationsForFan(fanAddr)
-    return all.slice(0, limit)
+    const lastSeen = getLastNotificationsSeenAt(fanAddr)
+    return all.slice(0, limit).map((item) => ({
+      ...item,
+      isRead: item.publishedAt * 1000 <= lastSeen,
+    }))
   } catch {
     return []
   }
