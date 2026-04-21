@@ -25,6 +25,28 @@ type FeedItem = {
   hasAccess: boolean
 }
 
+function rankFeedItems(feedItems: FeedItem[], isPublicFeed: boolean) {
+  const now = Date.now() / 1000
+
+  return feedItems
+    .map((item) => {
+      const hoursOld = Math.max(1, (now - item.content.published_at) / 3600)
+      const recencyScore = 1000 / Math.sqrt(hoursOld)
+      const creatorScore = Math.min(item.creator.subscriber_count, 250) * 0.8
+      const earningsScore = Math.min(item.creator.total_earned / 100000000, 200) * 0.15
+      const freeBoost = isPublicFeed && item.content.access_level === 0 ? 25 : 0
+      const mediaBoost = item.content.content_type === 0 ? 18 : item.content.content_type === 1 ? 12 : item.content.content_type === 2 ? 8 : 4
+      const titleBoost = item.content.title.trim().length > 0 ? 6 : 0
+
+      return {
+        ...item,
+        __rank: recencyScore + creatorScore + earningsScore + freeBoost + mediaBoost + titleBoost,
+      }
+    })
+    .sort((a, b) => b.__rank - a.__rank || b.content.published_at - a.content.published_at)
+    .map(({ __rank, ...item }) => item)
+}
+
 const FEED_PAGE_SIZE = 12
 
 export default function Feed() {
@@ -71,9 +93,7 @@ export default function Feed() {
           })
         )
 
-        const publicFeed = publicFeedGroups
-          .flat()
-          .sort((a, b) => b.content.published_at - a.content.published_at)
+        const publicFeed = rankFeedItems(publicFeedGroups.flat(), true)
 
         setItems(publicFeed)
         setSavedItems([])
@@ -102,9 +122,7 @@ export default function Feed() {
           ),
         ])
 
-        const merged = creators
-          .flat()
-          .sort((a, b) => b.content.published_at - a.content.published_at)
+        const merged = rankFeedItems(creators.flat(), false)
 
         setItems(merged)
 
