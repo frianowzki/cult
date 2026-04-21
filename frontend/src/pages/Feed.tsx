@@ -213,6 +213,7 @@ export default function Feed() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: 16 }}>
           {(selectedTab === 'following' ? items : savedItems).map((item, index) => {
             const thumbUrl = resolveContentUrl(item.content.thumbnail_shelby_cid)
+            const contentUrl = resolveContentUrl(item.content.shelby_cid)
             const avatarUrl = resolveContentUrl(item.creator.avatar_shelby_cid)
 
             return (
@@ -228,7 +229,7 @@ export default function Feed() {
                 <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100%' }}>
                   <div
                     style={{
-                      background: thumbUrl ? `url(${thumbUrl}) center/cover no-repeat` : 'var(--bg-3)',
+                      background: 'var(--bg-3)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -238,9 +239,49 @@ export default function Feed() {
                       position: 'relative',
                       aspectRatio: '4 / 5',
                       borderBottom: '1px solid var(--border)',
+                      overflow: 'hidden',
                     }}
                   >
-                    {!thumbUrl && CONTENT_TYPE_ICONS[item.content.content_type]}
+                    {item.content.access_level === 0 && contentUrl ? (
+                      item.content.content_type === 0 ? (
+                        <video
+                          src={contentUrl}
+                          muted
+                          playsInline
+                          preload="metadata"
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                        />
+                      ) : item.content.content_type === 1 ? (
+                        <img
+                          src={contentUrl}
+                          alt={item.content.title}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                        />
+                      ) : item.content.content_type === 2 ? (
+                        <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10, padding: 20 }}>
+                          {thumbUrl ? (
+                            <img
+                              src={thumbUrl}
+                              alt={item.content.title}
+                              style={{ width: '100%', height: '100%', maxHeight: '75%', objectFit: 'cover', borderRadius: 0, display: 'block' }}
+                            />
+                          ) : (
+                            <span style={{ fontSize: '3rem', color: 'var(--accent)' }}>♪</span>
+                          )}
+                          <span style={{ fontSize: 12, color: 'var(--text-2)' }}>Audio preview available</span>
+                        </div>
+                      ) : (
+                        <div style={{ width: '100%', height: '100%', padding: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'left', fontFamily: 'var(--font-sans)', fontSize: 14, lineHeight: 1.6, color: 'var(--text-2)' }}>
+                          <div style={{ display: '-webkit-box', WebkitLineClamp: 10, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                            {item.content.description || item.content.title}
+                          </div>
+                        </div>
+                      )
+                    ) : thumbUrl ? (
+                      <div style={{ position: 'absolute', inset: 0, background: `url(${thumbUrl}) center/cover no-repeat` }} />
+                    ) : (
+                      CONTENT_TYPE_ICONS[item.content.content_type]
+                    )}
                     {!item.hasAccess && item.content.access_level !== 0 && (
                       <div style={{ position: 'absolute', inset: 0, background: 'rgba(8,8,7,0.56)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '1.8rem' }}>
                         🔒
