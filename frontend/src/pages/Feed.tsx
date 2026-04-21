@@ -25,6 +25,8 @@ type FeedItem = {
   hasAccess: boolean
 }
 
+const FEED_PAGE_SIZE = 12
+
 export default function Feed() {
   const { account, connected } = useWallet()
   const [items, setItems] = useState<FeedItem[]>([])
@@ -32,6 +34,7 @@ export default function Feed() {
   const [viewingContent, setViewingContent] = useState<FeedItem | null>(null)
   const [savedItems, setSavedItems] = useState<Array<FeedItem & { savedAt: number }>>([])
   const [selectedTab, setSelectedTab] = useState<'following' | 'saved'>('following')
+  const [visibleCount, setVisibleCount] = useState(FEED_PAGE_SIZE)
 
   useEffect(() => {
     void loadFeed()
@@ -149,7 +152,17 @@ export default function Feed() {
   }
 
   const groupedCount = useMemo(() => new Set(items.map((item) => item.creatorAddr)).size, [items])
+  const activeItems = selectedTab === 'following' ? items : savedItems
+  const visibleItems = activeItems.slice(0, visibleCount)
+  const hasMoreItems = visibleCount < activeItems.length
 
+  useEffect(() => {
+    setVisibleCount(FEED_PAGE_SIZE)
+  }, [selectedTab, items.length, savedItems.length, connected])
+
+  function handleLoadMore() {
+    setVisibleCount((count) => count + FEED_PAGE_SIZE)
+  }
 
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: '24px clamp(16px, 4vw, 32px) 12px', minHeight: '100%' }}>
@@ -209,8 +222,9 @@ export default function Feed() {
           <p style={{ marginBottom: 18 }}>You haven’t saved any content yet.</p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: 16 }}>
-          {(selectedTab === 'following' ? items : savedItems).map((item, index) => {
+        <div style={{ display: 'grid', gap: 18 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: 16 }}>
+            {visibleItems.map((item, index) => {
             const thumbUrl = resolveContentUrl(item.content.thumbnail_shelby_cid)
             const contentUrl = resolveContentUrl(item.content.shelby_cid)
             const avatarUrl = resolveContentUrl(item.creator.avatar_shelby_cid)
@@ -359,7 +373,16 @@ export default function Feed() {
                 </div>
               </motion.div>
             )
-          })}
+            })}
+          </div>
+
+          {hasMoreItems && (
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <button className="btn" onClick={handleLoadMore}>
+                Load more
+              </button>
+            </div>
+          )}
         </div>
       )}
 
