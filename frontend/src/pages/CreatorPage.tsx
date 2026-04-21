@@ -163,6 +163,37 @@ export default function CreatorPage() {
     }
   }
 
+  async function handleCopyCreatorLink() {
+    const url = typeof window !== 'undefined' ? window.location.href : `https://www.joincult.xyz/c/${creator?.handle || handle}`
+    try {
+      await navigator.clipboard.writeText(url)
+      toast.success('Creator link copied')
+    } catch {
+      toast.error('Could not copy link')
+    }
+  }
+
+  async function handleShareCreator() {
+    const url = typeof window !== 'undefined' ? window.location.href : `https://www.joincult.xyz/c/${creator?.handle || handle}`
+    const text = `Check out ${creator?.display_name || creator?.handle || 'this creator'} on CULT`
+
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: creator?.display_name || creator?.handle || 'CULT creator', text, url })
+        return
+      } catch {
+        // fall through to copy behavior
+      }
+    }
+
+    try {
+      await navigator.clipboard.writeText(url)
+      toast.success('Share link copied')
+    } catch {
+      toast.error('Could not share link')
+    }
+  }
+
   const filteredContent = useMemo(() => contents.filter((c) => {
     if (selectedTab === 'all') return true
     const typeMap: Record<string, number> = { video: 0, image: 1, audio: 2, article: 3 }
@@ -242,6 +273,8 @@ export default function CreatorPage() {
             <FollowButton creatorAddr={creatorAddr} size="sm" />
             <button className="btn btn-sm" onClick={() => openTipModal(creatorAddr)}>♡ Tip</button>
             <button className="btn btn-sm" onClick={() => setGiftModalOpen(true)}>Gift</button>
+            <button className="btn btn-sm" onClick={() => void handleCopyCreatorLink()}>Copy link</button>
+            <button className="btn btn-sm" onClick={() => void handleShareCreator()}>Share</button>
           </div>
         </div>
 
@@ -438,6 +471,22 @@ export default function CreatorPage() {
                 ) : (
                   <p style={{ fontSize: 12, color: 'var(--text-2)', margin: 0 }}>No public supporter activity yet. Early supporters set the tone.</p>
                 )}
+              </div>
+
+              <div className="card" style={{ padding: '16px', background: 'var(--bg-2)' }}>
+                <div className="section-eyebrow">Share this creator</div>
+                <div style={{ fontWeight: 700, margin: '6px 0 8px' }}>Bring people straight to the page that converts</div>
+                <p style={{ fontSize: 12, color: 'var(--text-2)', margin: '0 0 12px' }}>
+                  Send fans here for the clearest path into follows, tips, memberships, and paid unlocks.
+                </p>
+                <div style={{ display: 'grid', gap: 8 }}>
+                  <button className="btn btn-sm btn-primary" style={{ width: '100%' }} onClick={() => void handleShareCreator()}>
+                    Share creator page
+                  </button>
+                  <button className="btn btn-sm" style={{ width: '100%' }} onClick={() => void handleCopyCreatorLink()}>
+                    Copy direct link
+                  </button>
+                </div>
               </div>
 
               {!subStatus?.isActive && popularPaidPost && popularPaidPost.sales > 0 && (
