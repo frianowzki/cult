@@ -155,6 +155,7 @@ export default function Feed() {
   const activeItems = selectedTab === 'following' ? items : savedItems
   const visibleItems = activeItems.slice(0, visibleCount)
   const hasMoreItems = visibleCount < activeItems.length
+  const shouldShowLoggedOutCta = !connected && visibleItems.length >= 4
 
   useEffect(() => {
     setVisibleCount(FEED_PAGE_SIZE)
@@ -224,12 +225,12 @@ export default function Feed() {
       ) : (
         <div style={{ display: 'grid', gap: 18 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))', gap: 16 }}>
-            {visibleItems.map((item, index) => {
+            {visibleItems.flatMap((item, index) => {
             const thumbUrl = resolveContentUrl(item.content.thumbnail_shelby_cid)
             const contentUrl = resolveContentUrl(item.content.shelby_cid)
             const avatarUrl = resolveContentUrl(item.creator.avatar_shelby_cid)
 
-            return (
+            const cards = [(
               <motion.div
                 key={`${item.creatorAddr}-${item.content.id}`}
                 initial={{ opacity: 0, y: 8 }}
@@ -372,7 +373,35 @@ export default function Feed() {
                   </div>
                 </div>
               </motion.div>
-            )
+            )]
+
+            if (!connected && index === 3 && shouldShowLoggedOutCta) {
+              cards.push(
+                <motion.div
+                  key="logged-out-feed-cta"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="card"
+                  style={{ padding: '22px 20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: 420, background: 'linear-gradient(180deg, rgba(254,119,201,0.08), rgba(254,119,201,0.02))', border: '1px solid rgba(254,119,201,0.18)' }}
+                >
+                  <div>
+                    <div className="section-eyebrow">Want the full CULT experience?</div>
+                    <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 300, marginBottom: 12 }}>Free posts are open. Wallet unlocks the rest.</h3>
+                    <div style={{ display: 'grid', gap: 10, fontSize: 13, color: 'var(--text-2)' }}>
+                      <div>• follow creators and build a real feed</div>
+                      <div>• unlock paid posts and memberships</div>
+                      <div>• save content and keep your history</div>
+                    </div>
+                  </div>
+                  <div style={{ display: 'grid', gap: 10, marginTop: 18 }}>
+                    <Link to="/explore" className="btn btn-primary">Explore creators</Link>
+                    <span style={{ fontSize: 11, color: 'var(--text-3)' }}>You can already browse free posts without connecting.</span>
+                  </div>
+                </motion.div>
+              )
+            }
+
+            return cards
             })}
           </div>
 
