@@ -10,6 +10,7 @@ import {
   getCreatorContent,
   getAllCreators,
   canAccessContent,
+  getCommentsForContent,
   type Content,
   type CreatorProfile,
   type SaveRecord,
@@ -170,15 +171,21 @@ export default function Feed() {
     }
   }
 
+  const groupedCount = useMemo(() => new Set(items.map((item) => item.creatorAddr)).size, [items])
+  const activeItems = selectedTab === 'following' ? items : savedItems
+  const visibleItems = activeItems.slice(0, visibleCount)
+
   useEffect(() => {
     let cancelled = false
 
     async function loadEngagement() {
+      const uncachedItems = visibleItems.filter((item) => engagementMap[`${item.creatorAddr}-${item.content.id}`] === undefined)
+      if (uncachedItems.length === 0) return
+
       const entries = await Promise.all(
-        items.slice(0, 24).map(async (item) => {
+        uncachedItems.map(async (item) => {
           try {
-            const mod = await import('../lib/aptos')
-            const comments = await mod.getCommentsForContent(item.creatorAddr, item.content.id)
+            const comments = await getCommentsForContent(item.creatorAddr, item.content.id)
             return [`${item.creatorAddr}-${item.content.id}`, comments.length] as const
           } catch {
             return [`${item.creatorAddr}-${item.content.id}`, 0] as const
@@ -186,8 +193,11 @@ export default function Feed() {
         })
       )
 
-      if (!cancelled) {
-        setEngagementMap(Object.fromEntries(entries))
+      if (!cancelled && entries.length > 0) {
+        setEngagementMap((prev) => ({
+          ...prev,
+          ...Object.fromEntries(entries),
+        }))
       }
     }
 
@@ -195,11 +205,7 @@ export default function Feed() {
     return () => {
       cancelled = true
     }
-  }, [items])
-
-  const groupedCount = useMemo(() => new Set(items.map((item) => item.creatorAddr)).size, [items])
-  const activeItems = selectedTab === 'following' ? items : savedItems
-  const visibleItems = activeItems.slice(0, visibleCount)
+  }, [visibleItems, engagementMap])
   const hasMoreItems = visibleCount < activeItems.length
   const shouldShowLoggedOutCta = !connected && visibleItems.length >= 4
 
@@ -216,8 +222,8 @@ export default function Feed() {
       <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'end', gap: 16, flexWrap: 'wrap' }}>
         <div>
           <div className="section-eyebrow">Feed</div>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 300, marginBottom: 6 }}>{connected ? 'From creators you follow' : 'Discover free posts'}</h2>
-          <p style={{ fontSize: 13, color: 'var(--text-3)', margin: 0 }}>{connected ? 'Latest drops from the people you already care about.' : 'Public free content, browsable before connecting a wallet.'}</p>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 300, marginBottom: 6 }}>{connected ? 'From creators you follow' : 'Discover creators contents here'}</h2>
+          <p style={{ fontSize: 13, color: 'var(--text-3)', margin: 0 }}>{connected ? 'Latest drops from the people you already care about.' : 'Discover creators contents here.'}</p>
         </div>
         {!loading && (
           <span className="mono" style={{ fontSize: 11, color: 'var(--text-3)' }}>
