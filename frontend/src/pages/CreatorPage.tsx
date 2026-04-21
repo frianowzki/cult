@@ -8,6 +8,7 @@ import {
   getCreatorProfile,
   getCreatorContent,
   getSubscriptionStatus,
+  getCreatorPurchaseHistory,
   canAccessContent,
   buildSubscribePayload,
   buildPurchaseContentPayload,
@@ -15,6 +16,7 @@ import {
   unitsToUsd,
   type CreatorProfile,
   type Content,
+  type PurchaseHistoryItem,
 } from '../lib/aptos'
 import {
   CONTENT_TYPE_LABELS,
@@ -37,6 +39,7 @@ export default function CreatorPage() {
   const [creator, setCreator] = useState<CreatorProfile | null>(null)
   const [contents, setContents] = useState<Content[]>([])
   const [subStatus, setSubStatus] = useState<{ isActive: boolean; tierIndex: number; expiresAt: number } | null>(null)
+  const [salesHistory, setSalesHistory] = useState<PurchaseHistoryItem[]>([])
   const [accessMap, setAccessMap] = useState<Record<number, boolean>>({})
   const [loading, setLoading] = useState(true)
   const [selectedTab, setSelectedTab] = useState<'all' | 'video' | 'image' | 'audio' | 'article'>('all')
@@ -95,12 +98,14 @@ export default function CreatorPage() {
   async function loadCreator(resolvedCreatorAddr: string) {
     setLoading(true)
     try {
-      const [profile, contentList] = await Promise.all([
+      const [profile, contentList, history] = await Promise.all([
         getCreatorProfile(resolvedCreatorAddr),
         getCreatorContent(resolvedCreatorAddr),
+        getCreatorPurchaseHistory(resolvedCreatorAddr),
       ])
       setCreator(profile)
       setContents(contentList)
+      setSalesHistory(history)
 
       if (account?.address) {
         const status = await getSubscriptionStatus(String(account.address), resolvedCreatorAddr)
@@ -167,6 +172,13 @@ export default function CreatorPage() {
   const lockedCount = filteredContent.filter((content) => !(accessMap[content.id] ?? (content.access_level === ACCESS_LEVELS.FREE))).length
   const cheapestTier = creator?.tiers?.[0] || null
   const featuredLockedPost = filteredContent.find((content) => !(accessMap[content.id] ?? (content.access_level === ACCESS_LEVELS.FREE)))
+  const recentSupporters = salesHistory.slice().sort((a, b) => b.timestamp - a.timestamp).slice(0, 4)
+  const popularPaidPost = contents
+    .map((content) => ({
+      content,
+      sales: salesHistory.filter((item) => item.kind === 1 && item.content_id === content.id).length,
+    }))
+    .sort((a, b) => b.sales - a.sales)[0]
 
   if (loading) return <LoadingSkeleton />
 
@@ -348,9 +360,16 @@ export default function CreatorPage() {
                                 ▶ View
                               </button>
                             ) : content.access_level === ACCESS_LEVELS.PURCHASE ? (
-                              <button className="btn btn-sm btn-primary" onClick={() => handlePurchase(content.id)} disabled={purchasing === content.id} style={{ whiteSpace: 'nowrap', fontSize: 10, padding: '8px 10px' }}>
-                                {purchasing === content.id ? '…' : `Buy ${unitsToUsd(content.purchase_price)} USD`}
-                              </button>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                                <button className="btn btn-sm btn-primary" onClick={() => handlePurchase(content.id)} disabled={purchasing === content.id} style={{ whiteSpace: 'nowrap', fontSize: 10, padding: '8px 10px' }}>
+                                  {purchasing === content.id ? '…' : `Buy ${unitsToUsd(content.purchase_price)} USD`}
+                                </button>
+                                {cheapestTier && cheapestTier.price_per_month <= content.purchase_price && (
+                                  <span style={{ fontSize: 10, color: 'var(--accent)', fontWeight: 600 }}>
+                                    Better value: subscribe from {unitsToUsd(cheapestTier.price_per_month)} USD/mo
+                                  </span>
+                                )}
+                              </div>
                             ) : connected ? (
                               <button
                                 className="btn btn-sm"
@@ -374,6 +393,46 @@ export default function CreatorPage() {
           </div>
 
           <aside style={{ position: isMobile ? 'static' : 'sticky', top: 80 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 18 }}>
+              <div className="card" style={{ padding: '16px', background: 'var(--bg-2)' }}>
+                <div className="section-eyebrow">Social proof</div>
+                <div style={{ fontWeight: 700, margin: '6px 0 10px' }}>
+                  {creator.subscriber_count > 0 ? `${creator.subscriber_count} people subscribed` : 'Be the first subscriber'}
+                </div>
+                {recentSupporters.length > 0 ? (
+                  <div style={{ display: 'grid', gap: 8 }}>
+                    {recentSupporters.map((item, index) => (
+                      <div key={`${item.counterparty_addr}-${index}`} style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontSize: 12 }}>
+                        <span className="mono" style={{ color: 'var(--accent)' }}>{item.counterparty_addr.slice(0, 6)}…{item.counterparty_addr.slice(-4)}</span>
+                        <span style={{ color: 'var(--text-2)' }}>{item.kind === 0 ? `Joined Tier ${item.tier_index + 1}` : `Unlocked post #${item.content_id}`}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p style={{ fontSize: 12, color: 'var(--text-2)', margin: 0 }}>No public supporter activity yet. Early supporters set the tone.</p>
+                )}
+              </div>
+
+              {!subStatus?.isActive && popularPaidPost && popularPaidPost.sales > 0 && (
+                <div className="card" style={{ padding: '16px', background: 'var(--bg-2)', border: '1px solid rgba(254,119,201,0.18)' }}>
+                  <div className="section-eyebrow">Popular paid unlock</div>
+                  <div style={{ fontWeight: 700, margin: '6px 0 8px' }}>{popularPaidPost.content.title}</div>
+                  <p style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 12 }}>
+                    Already unlocked {popularPaidPost.sales} time{popularPaidPost.sales === 1 ? '' : 's'}. Good proof that fans pay for this creator’s premium drops.
+                  </p>
+                  {popularPaidPost.content.access_level === ACCESS_LEVELS.PURCHASE ? (
+                    <button className="btn btn-primary btn-sm" style={{ width: '100%' }} onClick={() => handlePurchase(popularPaidPost.content.id)} disabled={purchasing === popularPaidPost.content.id}>
+                      {purchasing === popularPaidPost.content.id ? 'Processing…' : `Buy for ${unitsToUsd(popularPaidPost.content.purchase_price)} USD`}
+                    </button>
+                  ) : cheapestTier ? (
+                    <button className="btn btn-primary btn-sm" style={{ width: '100%' }} onClick={() => handleSubscribe(0)} disabled={subscribing !== null}>
+                      {subscribing === 0 ? 'Processing…' : `Subscribe from ${unitsToUsd(cheapestTier.price_per_month)} USD/mo`}
+                    </button>
+                  ) : null}
+                </div>
+              )}
+            </div>
+
             <div className="section-eyebrow" style={{ marginBottom: 16 }}>Membership Tiers</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {!subStatus?.isActive && creator.tiers.length > 0 && (
