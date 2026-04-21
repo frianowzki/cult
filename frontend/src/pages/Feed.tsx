@@ -222,8 +222,8 @@ export default function Feed() {
       <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'end', gap: 16, flexWrap: 'wrap' }}>
         <div>
           <div className="section-eyebrow">Feed</div>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 300, marginBottom: 6 }}>{connected ? 'From creators you follow' : 'Discover creators contents here'}</h2>
-          <p style={{ fontSize: 13, color: 'var(--text-3)', margin: 0 }}>{connected ? 'Latest drops from the people you already care about.' : 'Discover creators contents here.'}</p>
+          <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 300, marginBottom: connected ? 6 : 0 }}>{connected ? 'From creators you follow' : 'Discover CULT contents.'}</h2>
+          {connected && <p style={{ fontSize: 13, color: 'var(--text-3)', margin: 0 }}>Latest drops from the people you already care about.</p>}
         </div>
         {!loading && (
           <span className="mono" style={{ fontSize: 11, color: 'var(--text-3)' }}>
