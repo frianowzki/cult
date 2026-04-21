@@ -173,6 +173,10 @@ export default function CreatorPage() {
   const cheapestTier = creator?.tiers?.[0] || null
   const featuredLockedPost = filteredContent.find((content) => !(accessMap[content.id] ?? (content.access_level === ACCESS_LEVELS.FREE)))
   const recentSupporters = salesHistory.slice().sort((a, b) => b.timestamp - a.timestamp).slice(0, 4)
+  const supporterWall = salesHistory
+    .slice()
+    .sort((a, b) => b.amount_paid - a.amount_paid || b.timestamp - a.timestamp)
+    .slice(0, 6)
   const popularPaidPost = contents
     .map((content) => ({
       content,
@@ -380,13 +384,16 @@ export default function CreatorPage() {
                                 ▶ View
                               </button>
                             ) : content.access_level === ACCESS_LEVELS.PURCHASE ? (
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexWrap: 'wrap' }}>
                                 <button className="btn btn-sm btn-primary" onClick={() => handlePurchase(content.id)} disabled={purchasing === content.id} style={{ whiteSpace: 'nowrap', fontSize: 10, padding: '8px 10px' }}>
                                   {purchasing === content.id ? '…' : `Buy ${unitsToUsd(content.purchase_price)} USD`}
                                 </button>
+                                <span style={{ fontSize: 10, color: 'var(--text-3)', textAlign: 'right' }}>
+                                  One-time unlock for this post only.
+                                </span>
                                 {cheapestTier && cheapestTier.price_per_month <= content.purchase_price && (
-                                  <span style={{ fontSize: 10, color: 'var(--accent)', fontWeight: 600 }}>
-                                    Better value: subscribe from {unitsToUsd(cheapestTier.price_per_month)} USD/mo
+                                  <span style={{ fontSize: 10, color: 'var(--accent)', fontWeight: 600, textAlign: 'right' }}>
+                                    Better value if you want more: subscribe from {unitsToUsd(cheapestTier.price_per_month)} USD/mo
                                   </span>
                                 )}
                               </div>
@@ -441,14 +448,40 @@ export default function CreatorPage() {
                     Already unlocked {popularPaidPost.sales} time{popularPaidPost.sales === 1 ? '' : 's'}. Good proof that fans pay for this creator’s premium drops.
                   </p>
                   {popularPaidPost.content.access_level === ACCESS_LEVELS.PURCHASE ? (
-                    <button className="btn btn-primary btn-sm" style={{ width: '100%' }} onClick={() => handlePurchase(popularPaidPost.content.id)} disabled={purchasing === popularPaidPost.content.id}>
-                      {purchasing === popularPaidPost.content.id ? 'Processing…' : `Buy for ${unitsToUsd(popularPaidPost.content.purchase_price)} USD`}
-                    </button>
+                    <>
+                      <button className="btn btn-primary btn-sm" style={{ width: '100%' }} onClick={() => handlePurchase(popularPaidPost.content.id)} disabled={purchasing === popularPaidPost.content.id}>
+                        {purchasing === popularPaidPost.content.id ? 'Processing…' : `Buy for ${unitsToUsd(popularPaidPost.content.purchase_price)} USD`}
+                      </button>
+                      {cheapestTier && cheapestTier.price_per_month <= popularPaidPost.content.purchase_price && (
+                        <p style={{ fontSize: 11, color: 'var(--accent)', margin: '10px 0 0' }}>
+                          If you expect to want more than one post, the cheapest membership is the smarter buy.
+                        </p>
+                      )}
+                    </>
                   ) : cheapestTier ? (
                     <button className="btn btn-primary btn-sm" style={{ width: '100%' }} onClick={() => handleSubscribe(0)} disabled={subscribing !== null}>
                       {subscribing === 0 ? 'Processing…' : `Subscribe from ${unitsToUsd(cheapestTier.price_per_month)} USD/mo`}
                     </button>
                   ) : null}
+                </div>
+              )}
+
+              {supporterWall.length > 0 && (
+                <div className="card" style={{ padding: '16px', background: 'var(--bg-2)' }}>
+                  <div className="section-eyebrow">Top supporters</div>
+                  <div style={{ display: 'grid', gap: 8, marginTop: 10 }}>
+                    {supporterWall.map((item, index) => (
+                      <div key={`supporter-${item.counterparty_addr}-${item.timestamp}-${index}`} style={{ display: 'flex', justifyContent: 'space-between', gap: 10, fontSize: 12, alignItems: 'center' }}>
+                        <div style={{ minWidth: 0 }}>
+                          <div className="mono" style={{ color: 'var(--accent)' }}>{item.counterparty_addr.slice(0, 6)}…{item.counterparty_addr.slice(-4)}</div>
+                          <div style={{ color: 'var(--text-3)', fontSize: 11 }}>
+                            {item.kind === 0 ? `Tier ${item.tier_index + 1} member` : `Unlocked post #${item.content_id}`}
+                          </div>
+                        </div>
+                        <div style={{ fontWeight: 700 }}>${unitsToUsd(item.amount_paid)}</div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
