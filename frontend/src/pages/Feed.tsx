@@ -57,6 +57,7 @@ export default function Feed() {
   const [savedItems, setSavedItems] = useState<Array<FeedItem & { savedAt: number }>>([])
   const [selectedTab, setSelectedTab] = useState<'following' | 'saved'>('following')
   const [visibleCount, setVisibleCount] = useState(FEED_PAGE_SIZE)
+  const [engagementMap, setEngagementMap] = useState<Record<string, number>>({})
 
   useEffect(() => {
     void loadFeed()
@@ -168,6 +169,33 @@ export default function Feed() {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadEngagement() {
+      const entries = await Promise.all(
+        items.slice(0, 24).map(async (item) => {
+          try {
+            const mod = await import('../lib/aptos')
+            const comments = await mod.getCommentsForContent(item.creatorAddr, item.content.id)
+            return [`${item.creatorAddr}-${item.content.id}`, comments.length] as const
+          } catch {
+            return [`${item.creatorAddr}-${item.content.id}`, 0] as const
+          }
+        })
+      )
+
+      if (!cancelled) {
+        setEngagementMap(Object.fromEntries(entries))
+      }
+    }
+
+    void loadEngagement()
+    return () => {
+      cancelled = true
+    }
+  }, [items])
 
   const groupedCount = useMemo(() => new Set(items.map((item) => item.creatorAddr)).size, [items])
   const activeItems = selectedTab === 'following' ? items : savedItems
@@ -380,6 +408,15 @@ export default function Feed() {
                     <p style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.6, margin: 0, display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                       {item.content.description || 'No description'}
                     </p>
+
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+                      <span className="badge" style={{ fontSize: 10 }}>
+                        {engagementMap[`${item.creatorAddr}-${item.content.id}`] ?? 0} comments
+                      </span>
+                      {item.content.access_level === 0 && (
+                        <span className="badge" style={{ fontSize: 10 }}>Open discussion</span>
+                      )}
+                    </div>
 
                     <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                       <span style={{ fontSize: 11, color: 'var(--text-3)' }}>
