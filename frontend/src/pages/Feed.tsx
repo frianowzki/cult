@@ -42,9 +42,10 @@ export default function Feed() {
     try {
       if (!connected || !account?.address) {
         const creators = await getAllCreators()
-        const publicFeed = creators
-          .flatMap((creator) =>
-            creator.searchable_content
+        const publicFeedGroups = await Promise.all(
+          creators.map(async (creator) => {
+            const contents = await getCreatorContent(creator.address)
+            return contents
               .filter((content) => content.access_level === 0)
               .map((content) => ({
                 creatorAddr: creator.address,
@@ -61,16 +62,14 @@ export default function Feed() {
                   content_count: creator.content_count,
                   created_at: creator.created_at,
                 },
-                content: {
-                  ...content,
-                  shelby_cid: '',
-                  is_active: true,
-                  scheduled_for: 0,
-                  is_draft: false,
-                } as Content,
+                content,
                 hasAccess: true,
               }))
-          )
+          })
+        )
+
+        const publicFeed = publicFeedGroups
+          .flat()
           .sort((a, b) => b.content.published_at - a.content.published_at)
 
         setItems(publicFeed)
