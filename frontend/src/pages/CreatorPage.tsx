@@ -164,16 +164,6 @@ export default function CreatorPage() {
     }
   }
 
-  async function handleCopyCreatorLink() {
-    const url = typeof window !== 'undefined' ? window.location.href : `https://www.joincult.xyz/c/${creator?.handle || handle}`
-    try {
-      await navigator.clipboard.writeText(url)
-      toast.success('Creator link copied')
-    } catch {
-      toast.error('Could not copy link')
-    }
-  }
-
   async function handleShareCreator() {
     const url = typeof window !== 'undefined' ? window.location.href : `https://www.joincult.xyz/c/${creator?.handle || handle}`
     const text = `Check out ${creator?.display_name || creator?.handle || 'this creator'} on CULT`
@@ -279,7 +269,6 @@ export default function CreatorPage() {
             <FollowButton creatorAddr={creatorAddr} size="sm" />
             <button className="btn btn-sm" onClick={() => openTipModal(creatorAddr)}>♡ Tip</button>
             <button className="btn btn-sm" onClick={() => setGiftModalOpen(true)}>Gift</button>
-            <button className="btn btn-sm" onClick={() => void handleCopyCreatorLink()}>Copy link</button>
             <button className="btn btn-sm" onClick={() => void handleShareCreator()}>Share</button>
           </div>
         </div>
@@ -488,9 +477,6 @@ export default function CreatorPage() {
                 <div style={{ display: 'grid', gap: 8 }}>
                   <button className="btn btn-sm btn-primary" style={{ width: '100%' }} onClick={() => void handleShareCreator()}>
                     Share creator page
-                  </button>
-                  <button className="btn btn-sm" style={{ width: '100%' }} onClick={() => void handleCopyCreatorLink()}>
-                    Copy direct link
                   </button>
                 </div>
               </div>
