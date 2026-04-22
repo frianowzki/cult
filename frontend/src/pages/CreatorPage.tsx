@@ -235,6 +235,17 @@ export default function CreatorPage() {
     )
   }
 
+  const heroPrimaryLine = creator.subscriber_count > 0
+    ? `${creator.subscriber_count} subscriber${creator.subscriber_count === 1 ? '' : 's'} already backing ${creator.display_name}.`
+    : 'Early supporters can set the tone here.'
+  const heroSecondaryLine = lockedCount > 0
+    ? cheapestTier
+      ? `Unlock ${lockedCount} locked post${lockedCount === 1 ? '' : 's'} from ${unitsToUsd(cheapestTier.price_per_month)} USD/mo.`
+      : `Unlock ${lockedCount} locked post${lockedCount === 1 ? '' : 's'} and support this creator directly.`
+    : purchaseOnlyCount > 0
+      ? `${purchaseOnlyCount} paid unlock${purchaseOnlyCount === 1 ? '' : 's'} ready for one-time conversion.`
+      : 'Browse the strongest posts, tip directly, or share the page.'
+
   const avatarUrl = resolveContentUrl(creator.avatar_shelby_cid)
   const bannerUrl = resolveContentUrl(creator.banner_shelby_cid)
   const creatorHeroBackground = bannerUrl
@@ -253,43 +264,64 @@ export default function CreatorPage() {
       </div>
 
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: `0 ${isMobile ? 14 : 32}px 8px`, minHeight: `calc(100% - ${isMobile ? 140 : 220}px)` }}>
-        <div style={{ display: 'flex', alignItems: isMobile ? 'flex-start' : 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, marginTop: isMobile ? 8 : 12, marginBottom: 24 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-            <div style={{
-              width: isMobile ? 72 : 88, height: isMobile ? 72 : 88, borderRadius: '50%',
-              border: '3px solid var(--bg)',
-              background: avatarUrl ? `url(${avatarUrl}) center/cover no-repeat` : 'var(--bg-3)',
-              backgroundPosition: 'center',
-              backgroundSize: 'cover',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '2rem', color: 'var(--text-3)', flexShrink: 0,
-              overflow: 'hidden', position: 'relative', zIndex: 2,
-            }}>
-              {!avatarUrl && '✦'}
-            </div>
-            <div style={{ paddingBottom: 4, paddingTop: isMobile ? 8 : 18, minWidth: 0 }}>
-              <h2 style={{ fontSize: isMobile ? '1.45rem' : '1.8rem', fontWeight: 300, marginBottom: 2, lineHeight: 1.1, wordBreak: 'break-word' }}>{creator.display_name}</h2>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                <span className="mono" style={{ fontSize: 12, color: 'var(--accent)' }}>@{creator.handle}</span>
-                {subStatus?.isActive && (
-                  <span className="badge badge-accent" style={{ marginLeft: 0 }}>
-                    ✦ {creator.tiers[subStatus.tierIndex]?.name || 'Subscribed'}
-                  </span>
+        <div className="card" style={{ marginTop: isMobile ? 8 : 12, marginBottom: 24, padding: isMobile ? '16px' : '20px 22px', background: theme === 'light' ? 'linear-gradient(180deg, rgba(255,255,255,0.74), rgba(254,119,201,0.05))' : 'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(254,119,201,0.03))', border: '1px solid rgba(254,119,201,0.14)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 1.15fr) auto', gap: 18, alignItems: 'start' }}>
+            <div style={{ display: 'grid', gap: 14 }}>
+              <div style={{ display: 'flex', alignItems: isMobile ? 'flex-start' : 'center', gap: 14, flexWrap: 'wrap' }}>
+                <div style={{
+                  width: isMobile ? 72 : 88, height: isMobile ? 72 : 88, borderRadius: '50%',
+                  border: '3px solid var(--bg)',
+                  background: avatarUrl ? `url(${avatarUrl}) center/cover no-repeat` : 'var(--bg-3)',
+                  backgroundPosition: 'center',
+                  backgroundSize: 'cover',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '2rem', color: 'var(--text-3)', flexShrink: 0,
+                  overflow: 'hidden', position: 'relative', zIndex: 2,
+                }}>
+                  {!avatarUrl && '✦'}
+                </div>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <h2 style={{ fontSize: isMobile ? '1.55rem' : '2rem', fontWeight: 300, marginBottom: 4, lineHeight: 1.05, wordBreak: 'break-word' }}>{creator.display_name}</h2>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
+                    <span className="mono" style={{ fontSize: 12, color: 'var(--accent)' }}>@{creator.handle}</span>
+                    {subStatus?.isActive && (
+                      <span className="badge badge-accent" style={{ marginLeft: 0 }}>
+                        ✦ {creator.tiers[subStatus.tierIndex]?.name || 'Subscribed'}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                    <span className="badge">{contents.length} post{contents.length === 1 ? '' : 's'}</span>
+                    <span className="badge">{creator.subscriber_count} subscriber{creator.subscriber_count === 1 ? '' : 's'}</span>
+                    {popularPaidPost?.sales ? <span className="badge badge-accent">{popularPaidPost.sales} paid unlock{popularPaidPost.sales === 1 ? '' : 's'}</span> : null}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gap: 8 }}>
+                <div style={{ fontWeight: 700, fontSize: isMobile ? 14 : 15 }}>{heroPrimaryLine}</div>
+                <div style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.6 }}>{heroSecondaryLine}</div>
+                {creator.bio && (
+                  <p style={{ maxWidth: 640, margin: 0, color: 'var(--text-2)', lineHeight: 1.65, fontSize: isMobile ? 13 : 15 }}>{creator.bio}</p>
                 )}
               </div>
             </div>
-          </div>
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center', paddingBottom: 4, flexWrap: 'wrap' }}>
-            <FollowButton creatorAddr={creatorAddr} size="sm" />
-            <button className="btn btn-sm" onClick={() => openTipModal(creatorAddr)}>♡ Tip</button>
-            <button className="btn btn-sm" onClick={() => setGiftModalOpen(true)}>Gift</button>
-            <button className="btn btn-sm" onClick={() => void handleShareCreator()}>Share</button>
+
+            <div style={{ display: 'grid', gap: 10, minWidth: isMobile ? '100%' : 220 }}>
+              <div style={{ display: 'grid', gap: 8 }}>
+                <FollowButton creatorAddr={creatorAddr} size="sm" />
+                <button className="btn btn-primary btn-sm" onClick={handleBrowsePosts}>
+                  Browse posts
+                </button>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 8 }}>
+                <button className="btn btn-sm" onClick={() => openTipModal(creatorAddr)}>Tip</button>
+                <button className="btn btn-sm" onClick={() => setGiftModalOpen(true)}>Gift</button>
+                <button className="btn btn-sm" onClick={() => void handleShareCreator()}>Share</button>
+              </div>
+            </div>
           </div>
         </div>
-
-        {creator.bio && (
-          <p style={{ maxWidth: 560, marginBottom: 20, color: 'var(--text-2)', lineHeight: 1.65, fontSize: isMobile ? 13 : 15 }}>{creator.bio}</p>
-        )}
 
         {!subStatus?.isActive && creator.tiers.length > 0 && (
           <div className="card" style={{ padding: isMobile ? '16px' : '18px 20px', marginBottom: 24, background: 'linear-gradient(180deg, rgba(254,119,201,0.07), rgba(254,119,201,0.02))', border: '1px solid rgba(254,119,201,0.18)' }}>

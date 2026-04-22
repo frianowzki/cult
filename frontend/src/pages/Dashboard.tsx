@@ -291,6 +291,32 @@ export default function Dashboard() {
     }))
     .filter((item) => item.sales > 0 || item.revenue > 0)
     .sort((a, b) => b.revenue - a.revenue || b.sales - a.sales)
+  const creatorNextMove = contents.length === 0
+    ? 'Publish one strong free post first, then one clear paid post right after it.'
+    : freePosts.length === 0
+      ? 'You need at least one free post. Discovery is too weak without a public entry point.'
+      : oneOffPosts.length === 0
+        ? 'You need one flagship paid unlock. Give fans a simple first purchase.'
+        : memberPosts.length === 0
+          ? 'You need member-only inventory. Subscriptions are weak without recurring-value posts.'
+          : postsWithSales.length === 0
+            ? 'Your offers exist, but nothing is converting yet. Push one flagship paid post harder.'
+            : recurringRevenue < oneOffRevenue
+              ? 'One-off sales are working. Add stronger member-only reasons to upgrade into recurring revenue.'
+              : 'Recurring revenue is working. Keep feeding it with consistent member-only drops.'
+  const creatorGuidance = [
+    freePosts.length === 0
+      ? 'Add one free post this week so new fans have a no-friction discovery entry point.'
+      : `Keep at least ${Math.max(1, Math.min(3, freePosts.length))} free post${Math.max(1, Math.min(3, freePosts.length)) === 1 ? '' : 's'} visible to keep discovery alive.`,
+    oneOffPosts.length === 0
+      ? 'Create one premium post with obvious standalone value, then push that as the flagship unlock.'
+      : topPaidPost?.revenue
+        ? `Your best paid post is ${topPaidPost.content.title}. Push traffic there instead of spreading attention thin.`
+        : 'Choose one premium post and make it the obvious first paid conversion.',
+    memberPosts.length === 0
+      ? 'Add member-only posts so subscriptions feel like ongoing access, not just a donation.'
+      : `You already have ${memberPosts.length} member-only post${memberPosts.length === 1 ? '' : 's'}. Keep that lane active so memberships feel alive.`,
+  ]
 
   return (
     <div style={{ maxWidth: 1100, margin: '0 auto', padding: '20px clamp(16px, 4vw, 32px) 8px', minHeight: '100%' }}>
@@ -347,6 +373,25 @@ export default function Dashboard() {
           <button className="btn btn-primary" onClick={() => setUploadModalOpen(true)}>
             + Publish Content
           </button>
+        </div>
+      </div>
+
+      <div className="card" style={{ padding: '18px 20px', marginBottom: 18, background: 'linear-gradient(180deg, rgba(254,119,201,0.07), rgba(254,119,201,0.02))', border: '1px solid rgba(254,119,201,0.16)' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.15fr) minmax(0, 0.85fr)', gap: 16 }}>
+          <div>
+            <div className="section-eyebrow">Creator guidance</div>
+            <div style={{ fontWeight: 700, margin: '6px 0 8px' }}>{creatorNextMove}</div>
+            <div style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.6 }}>
+              Best current mix: {freePosts.length} free, {memberPosts.length} member-only, {oneOffPosts.length} buy-once. Revenue is {totalSalesRevenue > 0 ? `${Math.round((recurringRevenue / Math.max(totalSalesRevenue, 1)) * 100)}% recurring and ${Math.round((oneOffRevenue / Math.max(totalSalesRevenue, 1)) * 100)}% one-off.` : 'still at zero, so the next post matters a lot.'}
+            </div>
+          </div>
+          <div style={{ display: 'grid', gap: 8 }}>
+            {creatorGuidance.map((tip, index) => (
+              <div key={`creator-guidance-${index}`} style={{ fontSize: 12, color: 'var(--text-2)', padding: '10px 12px', border: '1px solid var(--border)', background: 'rgba(255,255,255,0.02)' }}>
+                • {tip}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
