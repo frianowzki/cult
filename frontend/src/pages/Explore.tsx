@@ -7,6 +7,40 @@ import { resolveContentUrl } from '../lib/shelby'
 
 const ACCENT_CHARS = ['♪', '◉', '✦', '▶', '◈', '⬡', '◎', '▣', '⊕']
 
+function rankCreators(creators: IndexedCreator[], normalizedSearch: string) {
+  const now = Date.now() / 1000
+
+  return creators
+    .map((creator) => {
+      const ageDays = Math.max(1, (now - creator.created_at) / 86400)
+      const subscriberScore = Math.min(creator.subscriber_count, 250) * 2.2
+      const contentScore = Math.min(creator.content_count, 80) * 1.1
+      const earningsScore = Math.min(creator.total_earned / 100000000, 400) * 0.18
+      const freshnessScore = 220 / Math.sqrt(ageDays)
+      const searchableScore = creator.searchable_content.length > 0 ? 18 : 0
+      const hasTiersScore = creator.tiers.length > 0 ? 16 : 0
+      const searchBoost = normalizedSearch
+        ? ([creator.handle, creator.display_name, creator.bio]
+            .filter(Boolean)
+            .some((value) => value.toLowerCase().includes(normalizedSearch))
+            ? 140
+            : creator.searchable_content.some((content) =>
+                [content.title, content.description]
+                  .filter(Boolean)
+                  .some((value) => value.toLowerCase().includes(normalizedSearch))
+              )
+              ? 90
+              : 0)
+        : 0
+
+      return {
+        ...creator,
+        __rank: subscriberScore + contentScore + earningsScore + freshnessScore + searchableScore + hasTiersScore + searchBoost,
+      }
+    })
+    .sort((a, b) => b.__rank - a.__rank || b.subscriber_count - a.subscriber_count || b.content_count - a.content_count)
+}
+
 export default function Explore() {
   const [search, setSearch] = useState('')
   const [creators, setCreators] = useState<IndexedCreator[]>([])
@@ -35,7 +69,7 @@ export default function Explore() {
 
   const normalizedSearch = search.trim().toLowerCase().replace(/^@/, '')
 
-  const filtered = creators.filter((c) => {
+  const filtered = rankCreators(creators.filter((c) => {
     if (!normalizedSearch) return true
 
     const matchesCreator = [c.handle, c.display_name, c.bio]
@@ -49,7 +83,7 @@ export default function Explore() {
         .filter(Boolean)
         .some((value) => value.toLowerCase().includes(normalizedSearch))
     )
-  })
+  }), normalizedSearch)
 
   return (
     <div style={{ maxWidth: 1280, margin: '0 auto', padding: '24px clamp(16px, 4vw, 32px) 16px', minHeight: '100%' }}>
@@ -183,11 +217,20 @@ export default function Explore() {
 
                   {/* Bio */}
                   <p style={{
-                    fontSize: 13, color: 'var(--text-2)', lineHeight: 1.6, marginBottom: 20,
+                    fontSize: 13, color: 'var(--text-2)', lineHeight: 1.6, marginBottom: 16,
                     display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
                   }}>
                     {creator.bio || 'No bio yet.'}
                   </p>
+
+                  <div style={{ marginBottom: 16, padding: '10px 12px', border: '1px solid rgba(254,119,201,0.14)', background: 'rgba(254,119,201,0.04)' }}>
+                    <div className="section-eyebrow" style={{ marginBottom: 6 }}>Why open this creator</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-2)', lineHeight: 1.55 }}>
+                      {creator.tiers.length > 0
+                        ? `Membership starts at ${unitsToUsd(creator.tiers[0].price_per_month)} USD/mo, with ${creator.content_count} post${creator.content_count === 1 ? '' : 's'} already on the page.`
+                        : `${creator.content_count} post${creator.content_count === 1 ? '' : 's'} live${creator.subscriber_count > 0 ? ` and ${creator.subscriber_count} subscriber${creator.subscriber_count === 1 ? '' : 's'} already backing them.` : '.'}`}
+                    </div>
+                  </div>
 
                   {/* Stats */}
                   <div style={{ display: 'flex', gap: 16, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
@@ -250,10 +293,11 @@ export default function Explore() {
                   )}
 
                   {/* Tier pills */}
-                  <div style={{ display: 'flex', gap: 6, marginTop: 14, flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: 6, marginTop: 14, flexWrap: 'wrap', alignItems: 'center' }}>
                     {creator.tiers.map((_, ti) => (
                       <span key={ti} className="badge" style={{ fontSize: 10 }}>Tier {ti + 1}</span>
                     ))}
+                    <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--accent)', fontWeight: 700 }}>Open creator page →</span>
                   </div>
                 </Link>
               </motion.div>

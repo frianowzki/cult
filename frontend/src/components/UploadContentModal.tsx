@@ -171,6 +171,19 @@ export default function UploadContentModal({ onSuccess }: Props) {
   }
 
   const isLoading = uploading || submitting
+  const accessGuidance = accessLevel === ACCESS_LEVELS.FREE
+    ? 'Use free posts for reach. Best for discovery, samples, and warming up new fans.'
+    : accessLevel === ACCESS_LEVELS.PURCHASE
+      ? 'Use one-time paid posts for clear standalone value, like a flagship drop or premium file.'
+      : `Use ${ACCESS_LEVEL_LABELS[accessLevel]} when this should pull fans toward ongoing membership, not just a one-off buy.`
+  const pricingGuidance = (() => {
+    const price = parseFloat(purchasePrice) || 0
+    if (accessLevel !== ACCESS_LEVELS.PURCHASE) return ''
+    if (price <= 0) return 'Set a real price. Zero-value paid posts kill trust.'
+    if (price < 1) return 'Very cheap. Good for low-friction sampling, weak for premium positioning.'
+    if (price <= 5) return 'Solid entry price for a first paid unlock.'
+    return 'Premium-priced. Make sure the title and description justify it clearly.'
+  })()
 
   return (
     <div className="modal-overlay" onClick={() => !isLoading && setUploadModalOpen(false)}>
@@ -273,6 +286,9 @@ export default function UploadContentModal({ onSuccess }: Props) {
                 </button>
               ))}
             </div>
+            <div style={{ marginTop: 10, padding: '10px 12px', border: '1px solid rgba(254,119,201,0.14)', background: 'rgba(254,119,201,0.04)', fontSize: 12, color: 'var(--text-2)', lineHeight: 1.55 }}>
+              {accessGuidance}
+            </div>
           </div>
 
           {accessLevel === ACCESS_LEVELS.PURCHASE && (
@@ -281,6 +297,18 @@ export default function UploadContentModal({ onSuccess }: Props) {
               <input className="input" type="number" min="0" step="0.1"
                 value={purchasePrice} onChange={(e) => setPurchasePrice(e.target.value)}
                 style={{ maxWidth: 200 }} />
+              <div style={{ marginTop: 10, padding: '10px 12px', border: '1px solid var(--border)', background: 'var(--bg-3)', fontSize: 12, color: 'var(--text-2)', lineHeight: 1.55 }}>
+                {pricingGuidance}
+              </div>
+            </div>
+          )}
+
+          {!uploading && !submitting && (
+            <div style={{ marginTop: 4, padding: '12px 14px', border: '1px solid var(--border)', background: 'var(--bg-3)', fontSize: 12, color: 'var(--text-2)', lineHeight: 1.55 }}>
+              <div className="section-eyebrow" style={{ marginBottom: 8 }}>Publishing advice</div>
+              <div>• Free post for discovery, paid post for a clean first conversion, member post for recurring value.</div>
+              <div>• Strong title first. If the title is weak, pricing confidence usually collapses.</div>
+              <div>• If you charge more, make the description specific about what fans get.</div>
             </div>
           )}
 
