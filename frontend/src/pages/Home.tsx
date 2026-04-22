@@ -44,6 +44,12 @@ const FEATURES = [
   },
 ]
 
+const PROOF_POINTS = [
+  { value: '95%', label: 'to creators' },
+  { value: 'Free', label: 'public discovery feed' },
+  { value: 'On-chain', label: 'tips, unlocks, memberships' },
+]
+
 export default function Home() {
   return (
     <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -128,28 +134,43 @@ export default function Home() {
               lineHeight: 1.06,
             }}
           >
-            Where creators build
+            Turn attention into
             <br />
-            <em style={{ color: 'var(--accent)' }}>devoted followings</em>
+            <em style={{ color: 'var(--accent)' }}>fans, tips, and paid unlocks</em>
           </motion.h1>
 
           <motion.p
             variants={stagger.item}
-            style={{ fontSize: '1.02rem', maxWidth: 620, margin: '0 auto 28px', lineHeight: 1.65, textAlign: 'center' }}
+            style={{ fontSize: '1.02rem', maxWidth: 660, margin: '0 auto 20px', lineHeight: 1.65, textAlign: 'center' }}
           >
-            CULT is a decentralized creator platform on Aptos. Upload content to Shelby Serves,
-            monetize with subscriptions, pay-per-view, and direct tips — all on-chain.
+            CULT is a decentralized creator platform on Aptos. Publish to Shelby, let free posts drive discovery,
+            then convert attention into memberships, paid unlocks, and direct tips.
           </motion.p>
+
+          <motion.div
+            variants={stagger.item}
+            style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 28 }}
+          >
+            {PROOF_POINTS.map((point) => (
+              <div key={point.label} className="badge" style={{ padding: '6px 10px', fontSize: 10 }}>
+                <span style={{ color: 'var(--accent)', fontWeight: 700 }}>{point.value}</span>
+                <span>{point.label}</span>
+              </div>
+            ))}
+          </motion.div>
 
           <motion.div
             variants={stagger.item}
             style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 6 }}
           >
             <Link to="/explore" className="btn btn-primary btn-lg">
-              Explore Creators
+              Explore creators
+            </Link>
+            <Link to="/feed" className="btn btn-lg">
+              See free feed
             </Link>
             <Link to="/dashboard" className="btn btn-lg">
-              Start Creating
+              Start creating
             </Link>
           </motion.div>
         </motion.div>
@@ -159,50 +180,67 @@ export default function Home() {
             width: '100%',
             maxWidth: 1120,
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-            gap: 1,
-            border: '1px solid var(--border)',
-            background: 'color-mix(in srgb, var(--bg-2) 88%, transparent)',
-            backdropFilter: 'blur(12px)',
+            gap: 18,
           }}
         >
-          {FEATURES.slice(0, 4).map((f, i) => (
-            <motion.div
-              key={f.title}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.18 + i * 0.05, duration: 0.35 }}
-              style={{
-                padding: '18px 16px',
-                background: 'color-mix(in srgb, var(--bg-2) 92%, transparent)',
-                borderRight: '1px solid var(--border)',
-              }}
-            >
-              <div
+          <div className="card" style={{ padding: '18px 20px', background: 'color-mix(in srgb, var(--bg-2) 90%, transparent)', border: '1px solid rgba(254,119,201,0.14)' }}>
+            <div className="section-eyebrow">Why CULT works</div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginTop: 10 }}>
+              <div style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.6 }}>Free posts pull people in without forcing wallet connection first.</div>
+              <div style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.6 }}>Creator pages convert that attention into memberships, tips, and paid unlocks.</div>
+              <div style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.6 }}>Revenue settles on-chain, with 95% going straight to creators.</div>
+            </div>
+          </div>
+
+          <div
+            style={{
+              width: '100%',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+              gap: 1,
+              border: '1px solid var(--border)',
+              background: 'color-mix(in srgb, var(--bg-2) 88%, transparent)',
+              backdropFilter: 'blur(12px)',
+            }}
+          >
+            {FEATURES.slice(0, 4).map((f, i) => (
+              <motion.div
+                key={f.title}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.18 + i * 0.05, duration: 0.35 }}
                 style={{
-                  fontSize: '1.1rem',
-                  color: 'var(--accent)',
-                  marginBottom: 8,
-                  fontFamily: 'var(--font-mono)',
+                  padding: '18px 16px',
+                  background: 'color-mix(in srgb, var(--bg-2) 92%, transparent)',
+                  borderRight: '1px solid var(--border)',
                 }}
               >
-                {f.icon}
-              </div>
-              <h3
-                style={{
-                  fontFamily: 'var(--font-sans)',
-                  fontSize: '0.82rem',
-                  fontWeight: 700,
-                  letterSpacing: '0.04em',
-                  color: 'var(--text)',
-                  marginBottom: 6,
-                }}
-              >
-                {f.title}
-              </h3>
-              <p style={{ fontSize: 12, lineHeight: 1.5, color: 'var(--text-2)' }}>{f.desc}</p>
-            </motion.div>
-          ))}
+                <div
+                  style={{
+                    fontSize: '1.1rem',
+                    color: 'var(--accent)',
+                    marginBottom: 8,
+                    fontFamily: 'var(--font-mono)',
+                  }}
+                >
+                  {f.icon}
+                </div>
+                <h3
+                  style={{
+                    fontFamily: 'var(--font-sans)',
+                    fontSize: '0.82rem',
+                    fontWeight: 700,
+                    letterSpacing: '0.04em',
+                    color: 'var(--text)',
+                    marginBottom: 6,
+                  }}
+                >
+                  {f.title}
+                </h3>
+                <p style={{ fontSize: 12, lineHeight: 1.5, color: 'var(--text-2)' }}>{f.desc}</p>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
     </div>

@@ -140,6 +140,19 @@ export default function EditContentModal({ content, onSuccess, onClose }: Props)
   }
 
   const currentThumbUrl = thumbnailPreview || resolveContentUrl(content.thumbnail_shelby_cid)
+  const accessGuidance = accessLevel === ACCESS_LEVELS.FREE
+    ? 'Use free when this post should pull in reach, sharing, and discovery.'
+    : accessLevel === ACCESS_LEVELS.PURCHASE
+      ? 'Use one-time paid access for a clear standalone premium post, not for ongoing membership value.'
+      : `Use ${ACCESS_LEVEL_LABELS[accessLevel]} when this post should strengthen recurring subscription value.`
+  const pricingGuidance = (() => {
+    const price = parseFloat(purchasePrice) || 0
+    if (accessLevel !== ACCESS_LEVELS.PURCHASE) return ''
+    if (price <= 0) return 'Set a real price. Free-looking paid posts create friction with no upside.'
+    if (price < 1) return 'Very cheap. Good for low-friction sampling, weak for premium positioning.'
+    if (price <= 5) return 'Solid entry price for a first or impulse unlock.'
+    return 'Premium-priced. Make sure the title and description justify that price clearly.'
+  })()
 
   return (
     <div className="modal-overlay" onClick={() => !loading && onClose()}>
@@ -238,6 +251,9 @@ export default function EditContentModal({ content, onSuccess, onClose }: Props)
                 </button>
               ))}
             </div>
+            <div style={{ marginTop: 10, padding: '10px 12px', border: '1px solid rgba(254,119,201,0.14)', background: 'rgba(254,119,201,0.04)', fontSize: 12, color: 'var(--text-2)', lineHeight: 1.55 }}>
+              {accessGuidance}
+            </div>
           </div>
 
           {accessLevel === ACCESS_LEVELS.PURCHASE && (
@@ -252,8 +268,17 @@ export default function EditContentModal({ content, onSuccess, onClose }: Props)
                 onChange={(e) => setPurchasePrice(e.target.value)}
                 style={{ maxWidth: 220 }}
               />
+              <div style={{ marginTop: 10, padding: '10px 12px', border: '1px solid var(--border)', background: 'var(--bg-3)', fontSize: 12, color: 'var(--text-2)', lineHeight: 1.55 }}>
+                {pricingGuidance}
+              </div>
             </div>
           )}
+          <div style={{ marginTop: 4, padding: '12px 14px', border: '1px solid var(--border)', background: 'var(--bg-3)', fontSize: 12, color: 'var(--text-2)', lineHeight: 1.55 }}>
+            <div className="section-eyebrow" style={{ marginBottom: 8 }}>Editing advice</div>
+            <div>• Tighten the title before raising price. Better positioning beats random price inflation.</div>
+            <div>• Free posts drive reach, paid posts drive first conversion, member posts drive recurring value.</div>
+            <div>• If this is a premium post, make the description more specific, not more vague.</div>
+          </div>
         </div>
 
         <div className="modal-footer">
