@@ -221,6 +221,8 @@ export default function CreatorPage() {
         ? `Best first move: join ${cheapestTier.name} for ongoing access.`
         : 'Best first move: browse the strongest post and decide fast.'
     : 'You already have access. Browse the newest drops.'
+  const purchaseOnlyCount = filteredContent.filter((content) => content.access_level === ACCESS_LEVELS.PURCHASE).length
+  const memberOnlyCount = filteredContent.filter((content) => content.access_level !== ACCESS_LEVELS.FREE && content.access_level !== ACCESS_LEVELS.PURCHASE).length
 
   if (loading) return <LoadingSkeleton />
 
@@ -443,28 +445,35 @@ export default function CreatorPage() {
                                 ▶ View
                               </button>
                             ) : content.access_level === ACCESS_LEVELS.PURCHASE ? (
-                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, flexWrap: 'wrap' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 7, flexWrap: 'wrap', maxWidth: 260 }}>
                                 <button className="btn btn-sm btn-primary" onClick={() => handlePurchase(content.id)} disabled={purchasing === content.id} style={{ whiteSpace: 'nowrap', fontSize: 10, padding: '8px 10px' }}>
-                                  {purchasing === content.id ? '…' : `Buy ${unitsToUsd(content.purchase_price)} USD`}
+                                  {purchasing === content.id ? '…' : `Unlock this post for ${unitsToUsd(content.purchase_price)} USD`}
                                 </button>
-                                <span style={{ fontSize: 10, color: 'var(--text-3)', textAlign: 'right' }}>
-                                  One-time unlock for this post only.
+                                <span style={{ fontSize: 10, color: 'var(--text-2)', textAlign: 'right', lineHeight: 1.45 }}>
+                                  One payment, permanent unlock for this post in your wallet history.
                                 </span>
-                                {cheapestTier && cheapestTier.price_per_month <= content.purchase_price && (
-                                  <span style={{ fontSize: 10, color: 'var(--accent)', fontWeight: 600, textAlign: 'right' }}>
-                                    Better value if you want more: subscribe from {unitsToUsd(cheapestTier.price_per_month)} USD/mo
+                                {cheapestTier ? (
+                                  <span style={{ fontSize: 10, color: cheapestTier.price_per_month <= content.purchase_price ? 'var(--accent)' : 'var(--text-3)', fontWeight: cheapestTier.price_per_month <= content.purchase_price ? 600 : 500, textAlign: 'right', lineHeight: 1.45 }}>
+                                    {cheapestTier.price_per_month <= content.purchase_price
+                                      ? `Better value if you want more than one drop: ${cheapestTier.name} starts at ${unitsToUsd(cheapestTier.price_per_month)} USD/mo.`
+                                      : `${cheapestTier.name} starts at ${unitsToUsd(cheapestTier.price_per_month)} USD/mo if you want ongoing access instead.`}
                                   </span>
-                                )}
+                                ) : null}
                               </div>
                             ) : connected ? (
-                              <button
-                                className="btn btn-sm"
-                                onClick={() => handleSubscribe(Math.max(0, content.access_level - 1))}
-                                disabled={subscribing !== null}
-                                style={{ whiteSpace: 'nowrap', fontSize: 10, padding: '8px 10px' }}
-                              >
-                                {subscribing === Math.max(0, content.access_level - 1) ? '…' : `Unlock with Tier ${content.access_level}`}
-                              </button>
+                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 7, maxWidth: 260 }}>
+                                <button
+                                  className="btn btn-sm"
+                                  onClick={() => handleSubscribe(Math.max(0, content.access_level - 1))}
+                                  disabled={subscribing !== null}
+                                  style={{ whiteSpace: 'nowrap', fontSize: 10, padding: '8px 10px' }}
+                                >
+                                  {subscribing === Math.max(0, content.access_level - 1) ? '…' : `Join to unlock this post`}
+                                </button>
+                                <span style={{ fontSize: 10, color: 'var(--text-3)', textAlign: 'right', lineHeight: 1.45 }}>
+                                  Membership unlocks this tier and future member drops.
+                                </span>
+                              </div>
                             ) : (
                               <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-3)' }}>Tier {content.access_level}</span>
                             )}
@@ -583,7 +592,11 @@ export default function CreatorPage() {
                   <div className="section-eyebrow">Best next step</div>
                   <div style={{ fontWeight: 700, margin: '6px 0 8px' }}>Start with {creator.tiers[0].name}</div>
                   <p style={{ fontSize: 12, color: 'var(--text-2)', marginBottom: 12 }}>
-                    Low friction first. Convert with the cheapest tier, then upsell later through consistent drops.
+                    {purchaseOnlyCount > 0 && memberOnlyCount > 0
+                      ? `You can buy ${purchaseOnlyCount} post${purchaseOnlyCount === 1 ? '' : 's'} one by one, or join once to unlock ${memberOnlyCount} member post${memberOnlyCount === 1 ? '' : 's'} plus future drops.`
+                      : purchaseOnlyCount > 0
+                        ? `Good for sampling. Buy ${purchaseOnlyCount} post${purchaseOnlyCount === 1 ? '' : 's'} one by one, or subscribe once if you want ongoing access.`
+                        : `Low friction first. Convert with the cheapest tier, then upsell later through consistent drops.`}
                   </p>
                   <button className="btn btn-primary btn-sm" style={{ width: '100%' }} onClick={() => handleSubscribe(0)} disabled={subscribing !== null}>
                     {subscribing === 0 ? 'Processing…' : `Subscribe for ${unitsToUsd(creator.tiers[0].price_per_month)} USD/mo`}
