@@ -423,13 +423,39 @@ export default function Feed() {
                       )}
                     </div>
 
-                    <div style={{ marginTop: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                    <div style={{ marginTop: 'auto', display: 'grid', gap: 10 }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          gap: 10,
+                          flexWrap: 'wrap',
+                          padding: '10px 12px',
+                          border: '1px solid rgba(254,119,201,0.14)',
+                          background: theme === 'light'
+                            ? 'linear-gradient(180deg, rgba(254,119,201,0.08), rgba(255,255,255,0.4))'
+                            : 'linear-gradient(180deg, rgba(254,119,201,0.08), rgba(254,119,201,0.02))',
+                        }}
+                      >
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: 10, color: 'var(--accent)', fontFamily: 'var(--font-mono)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 4 }}>
+                            Creator page
+                          </div>
+                          <div style={{ fontSize: 12, color: 'var(--text-2)', lineHeight: 1.45 }}>
+                            {item.content.access_level === 0
+                              ? 'Open the full creator page for memberships, tips, gifting, and more posts.'
+                              : 'Open the creator page to compare membership against one-off unlocks.'}
+                          </div>
+                        </div>
+                        <Link to={`/u/${item.creator.handle}`} style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 700, flexShrink: 0 }} onClick={(e) => e.stopPropagation()}>
+                          See profile and offers →
+                        </Link>
+                      </div>
+
                       <span style={{ fontSize: 11, color: 'var(--text-3)' }}>
                         {connected ? (item.hasAccess || item.content.access_level === 0 ? 'Tap to open' : 'Locked preview') : 'Free preview'}
                       </span>
-                      <Link to={`/u/${item.creator.handle}`} style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 600 }} onClick={(e) => e.stopPropagation()}>
-                        See profile and offers →
-                      </Link>
                     </div>
                   </div>
                 </div>

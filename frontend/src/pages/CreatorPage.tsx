@@ -314,13 +314,41 @@ export default function CreatorPage() {
                   </button>
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 1.2fr) minmax(240px, 0.8fr)', gap: 12 }}>
-                <div style={{ padding: '12px 14px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)' }}>
-                  <div className="section-eyebrow">Best next step</div>
-                  <div style={{ fontWeight: 700, margin: '6px 0 6px' }}>{bestConversionMessage}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text-2)' }}>
-                    {lockedCount > 0 ? `There are ${lockedCount} locked posts ready once you convert.` : 'This creator is set up for direct support and future drops.'}
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 1.1fr) minmax(0, 0.9fr)', gap: 12 }}>
+                <div style={{ display: 'grid', gap: 12 }}>
+                  <div style={{ padding: '12px 14px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)' }}>
+                    <div className="section-eyebrow">Best next step</div>
+                    <div style={{ fontWeight: 700, margin: '6px 0 6px' }}>{bestConversionMessage}</div>
+                    <div style={{ fontSize: 12, color: 'var(--text-2)' }}>
+                      {lockedCount > 0 ? `There are ${lockedCount} locked posts ready once you convert.` : 'This creator is set up for direct support and future drops.'}
+                    </div>
                   </div>
+                  {(recentSupporters.length > 0 || creator.subscriber_count > 0 || (popularPaidPost && popularPaidPost.sales > 0)) && (
+                    <div style={{ padding: '12px 14px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(254,119,201,0.14)' }}>
+                      <div className="section-eyebrow">Social proof</div>
+                      <div style={{ display: 'grid', gap: 8 }}>
+                        <div style={{ fontSize: 12, color: 'var(--text-2)' }}>
+                          {creator.subscriber_count > 0
+                            ? `${creator.subscriber_count} subscriber${creator.subscriber_count === 1 ? '' : 's'} already backing this creator.`
+                            : 'Early supporters can set the tone here.'}
+                        </div>
+                        {popularPaidPost && popularPaidPost.sales > 0 && (
+                          <div style={{ fontSize: 12, color: 'var(--text-2)' }}>
+                            <span style={{ color: 'var(--accent)', fontWeight: 700 }}>{popularPaidPost.sales} paid unlock{popularPaidPost.sales === 1 ? '' : 's'}</span> already on <span style={{ color: 'var(--text)' }}>{popularPaidPost.content.title}</span>.
+                          </div>
+                        )}
+                        {recentSupporters.length > 0 && (
+                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                            {recentSupporters.slice(0, 3).map((item, index) => (
+                              <span key={`hero-supporter-${item.counterparty_addr}-${index}`} className="badge" style={{ maxWidth: '100%' }}>
+                                {item.counterparty_addr.slice(0, 6)}…{item.counterparty_addr.slice(-4)}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div style={{ padding: '12px 14px', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border)' }}>
                   <div className="section-eyebrow">Why convert now</div>
@@ -490,7 +518,7 @@ export default function CreatorPage() {
           <aside style={{ position: isMobile ? 'static' : 'sticky', top: 80 }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 18 }}>
               <div className="card" style={{ padding: '16px', background: 'var(--bg-2)' }}>
-                <div className="section-eyebrow">Social proof</div>
+                <div className="section-eyebrow">Supporter activity</div>
                 <div style={{ fontWeight: 700, margin: '6px 0 10px' }}>
                   {creator.subscriber_count > 0 ? `${creator.subscriber_count} people subscribed` : 'Be the first subscriber'}
                 </div>
