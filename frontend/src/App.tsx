@@ -2,6 +2,7 @@ import { AptosWalletAdapterProvider } from '@aptos-labs/wallet-adapter-react'
 import { Network } from '@aptos-labs/ts-sdk'
 import { HashRouter, Routes, Route } from 'react-router-dom'
 import { Toaster } from 'react-hot-toast'
+import { useEffect } from 'react'
 
 import Home from './pages/Home'
 import CreatorPage from './pages/CreatorPage'
@@ -11,8 +12,15 @@ import Layout from './components/Layout'
 import Feed from './pages/Feed'
 import Notifications from './pages/Notifications'
 import FanProfile from './pages/FanProfile'
+import { useStore } from './lib/store'
 
 export default function App() {
+  const theme = useStore((state) => state.theme)
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+  }, [theme])
+
   return (
     <AptosWalletAdapterProvider
       autoConnect
@@ -28,9 +36,9 @@ export default function App() {
           position="bottom-right"
           toastOptions={{
             style: {
-              background: '#0a0a0a',
-              color: '#f0ece3',
-              border: '1px solid #2a2520',
+              background: 'var(--bg-2)',
+              color: 'var(--text)',
+              border: '1px solid var(--border)',
               fontFamily: 'var(--font-mono)',
               fontSize: '13px',
             },

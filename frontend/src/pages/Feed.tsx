@@ -18,6 +18,7 @@ import {
 import { CONTENT_TYPE_ICONS, ACCESS_LEVEL_LABELS } from '../lib/constants'
 import { resolveContentUrl } from '../lib/shelby'
 import ContentViewer from '../components/ContentViewer'
+import { useStore } from '../lib/store'
 
 type FeedItem = {
   creatorAddr: string
@@ -52,6 +53,7 @@ const FEED_PAGE_SIZE = 12
 
 export default function Feed() {
   const { account, connected } = useWallet()
+  const theme = useStore((state) => state.theme)
   const [items, setItems] = useState<FeedItem[]>([])
   const [loading, setLoading] = useState(true)
   const [viewingContent, setViewingContent] = useState<FeedItem | null>(null)
@@ -317,7 +319,7 @@ export default function Feed() {
                           loop
                           playsInline
                           preload="metadata"
-                          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', background: '#000' }}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block', background: theme === 'light' ? '#f1e7da' : '#000' }}
                         />
                       ) : item.content.content_type === 1 ? (
                         <img
@@ -326,7 +328,7 @@ export default function Feed() {
                           style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block', background: 'var(--bg)' }}
                         />
                       ) : item.content.content_type === 2 ? (
-                        <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, padding: 24, background: 'linear-gradient(180deg, rgba(254,119,201,0.10), rgba(254,119,201,0.02))' }}>
+                        <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, padding: 24, background: theme === 'light' ? 'linear-gradient(180deg, rgba(254,119,201,0.08), rgba(255,255,255,0.22))' : 'linear-gradient(180deg, rgba(254,119,201,0.10), rgba(254,119,201,0.02))' }}>
                           {thumbUrl ? (
                             <img
                               src={thumbUrl}
@@ -342,7 +344,7 @@ export default function Feed() {
                           </div>
                         </div>
                       ) : (
-                        <div style={{ width: '100%', height: '100%', padding: 22, display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-start', textAlign: 'left', fontFamily: 'var(--font-sans)', fontSize: 14, lineHeight: 1.7, color: 'var(--text)', background: 'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00)), var(--bg-2)' }}>
+                        <div style={{ width: '100%', height: '100%', padding: 22, display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-start', textAlign: 'left', fontFamily: 'var(--font-sans)', fontSize: 14, lineHeight: 1.7, color: 'var(--text)', background: theme === 'light' ? 'linear-gradient(180deg, rgba(255,255,255,0.34), rgba(255,255,255,0.08)), var(--bg-2)' : 'linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.00)), var(--bg-2)' }}>
                           <div>
                             <div style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: 10 }}>Article preview</div>
                             <div style={{ display: '-webkit-box', WebkitLineClamp: 8, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
@@ -357,7 +359,7 @@ export default function Feed() {
                       CONTENT_TYPE_ICONS[item.content.content_type]
                     )}
                     {!item.hasAccess && item.content.access_level !== 0 && (
-                      <div style={{ position: 'absolute', inset: 0, background: 'rgba(8,8,7,0.56)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '1.8rem' }}>
+                      <div style={{ position: 'absolute', inset: 0, background: theme === 'light' ? 'rgba(247,241,232,0.68)' : 'rgba(8,8,7,0.56)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme === 'light' ? 'var(--text)' : 'white', fontSize: '1.8rem' }}>
                         🔒
                       </div>
                     )}
@@ -441,7 +443,7 @@ export default function Feed() {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="card"
-                  style={{ padding: '22px 20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: 420, background: 'linear-gradient(180deg, rgba(254,119,201,0.08), rgba(254,119,201,0.02))', border: '1px solid rgba(254,119,201,0.18)' }}
+                  style={{ padding: '22px 20px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: 420, background: theme === 'light' ? 'linear-gradient(180deg, rgba(254,119,201,0.08), rgba(255,255,255,0.24))' : 'linear-gradient(180deg, rgba(254,119,201,0.08), rgba(254,119,201,0.02))', border: '1px solid rgba(254,119,201,0.18)' }}
                 >
                   <div>
                     <div className="section-eyebrow">Want the full CULT experience?</div>

@@ -59,7 +59,7 @@ export default function Home() {
           position: 'relative',
           overflow: 'hidden',
           gap: 28,
-          background: '#080807',
+          background: 'var(--bg)',
           flex: 1,
         }}
       >
@@ -79,7 +79,7 @@ export default function Home() {
             transform: 'translate(-50%, -50%)',
             width: 'min(68vw, 640px)',
             height: 'min(68vw, 640px)',
-            border: '1px solid rgba(200,169,110,0.05)',
+            border: '1px solid color-mix(in srgb, var(--accent) 10%, transparent)',
             borderRadius: '50%',
             pointerEvents: 'none',
             opacity: 0.7,
@@ -93,7 +93,7 @@ export default function Home() {
             transform: 'translate(-50%, -50%)',
             width: 'min(96vw, 980px)',
             height: 'min(96vw, 980px)',
-            border: '1px solid rgba(200,169,110,0.025)',
+            border: '1px solid color-mix(in srgb, var(--accent) 6%, transparent)',
             borderRadius: '50%',
             pointerEvents: 'none',
             zIndex: 0,
@@ -162,7 +162,7 @@ export default function Home() {
             gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
             gap: 1,
             border: '1px solid var(--border)',
-            background: 'rgba(16, 15, 13, 0.72)',
+            background: 'color-mix(in srgb, var(--bg-2) 88%, transparent)',
             backdropFilter: 'blur(12px)',
           }}
         >
@@ -174,7 +174,7 @@ export default function Home() {
               transition={{ delay: 0.18 + i * 0.05, duration: 0.35 }}
               style={{
                 padding: '18px 16px',
-                background: 'rgba(16, 15, 13, 0.78)',
+                background: 'color-mix(in srgb, var(--bg-2) 92%, transparent)',
                 borderRight: '1px solid var(--border)',
               }}
             >

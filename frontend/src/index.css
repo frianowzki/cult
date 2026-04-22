@@ -2,18 +2,6 @@
 
 /* ─── Design Tokens ──────────────────────────────────────────────────────────── */
 :root {
-  --bg: #080807;
-  --bg-2: #100f0d;
-  --bg-3: #1a1915;
-  --bg-4: #252320;
-
-  --border: #2a2520;
-  --border-light: #3a3530;
-
-  --text: #f0ece3;
-  --text-2: #a09880;
-  --text-3: #605848;
-
   --accent: #FE77C9;
   --accent-dim: #b84f90;
   --accent-glow: rgba(254, 119, 201, 0.14);
@@ -32,6 +20,38 @@
   --tracking-tight: -0.022em;
   --tracking-wide: 0.08em;
   --copy-max-width: 68ch;
+
+  --bg: #080807;
+  --bg-2: #100f0d;
+  --bg-3: #1a1915;
+  --bg-4: #252320;
+
+  --border: #2a2520;
+  --border-light: #3a3530;
+
+  --text: #f0ece3;
+  --text-2: #a09880;
+  --text-3: #605848;
+
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  --bg: #f7f1e8;
+  --bg-2: #fffaf4;
+  --bg-3: #f1e7da;
+  --bg-4: #e7dac9;
+
+  --border: #d9cbbc;
+  --border-light: #cdbdab;
+
+  --text: #1f1712;
+  --text-2: #5f5347;
+  --text-3: #8b7d70;
+
+  --accent-glow: rgba(254, 119, 201, 0.1);
+
+  color-scheme: light;
 }
 
 /* ─── Reset ──────────────────────────────────────────────────────────────────── */
@@ -134,6 +154,17 @@ body {
     linear-gradient(to bottom, rgba(8,8,7,0.12), rgba(8,8,7,0.42));
 }
 
+:root[data-theme='light'] .cult-hero-grain {
+  opacity: 0.035;
+  mix-blend-mode: multiply;
+}
+
+:root[data-theme='light'] .cult-hero-vignette {
+  background:
+    radial-gradient(ellipse at center, transparent 40%, rgba(160,130,100,0.08) 66%, rgba(120,92,68,0.18) 100%),
+    linear-gradient(to bottom, rgba(255,255,255,0.2), rgba(231,218,201,0.36));
+}
+
 .cult-hero-sweep {
   position: absolute;
   inset: -20% -10%;
@@ -213,6 +244,14 @@ a {
   background: #ff8fd5;
   border-color: #ff8fd5;
   color: var(--bg);
+}
+
+:root[data-theme='light'] .btn-primary {
+  color: #fffaf4;
+}
+
+:root[data-theme='light'] .btn-primary:hover {
+  color: #fffaf4;
 }
 
 .btn-ghost {
@@ -434,6 +473,10 @@ textarea.input {
   text-transform: uppercase;
   color: var(--accent);
   margin-bottom: 4px;
+}
+
+:root[data-theme='light'] .modal-overlay {
+  background: rgba(80, 62, 48, 0.28);
 }
 
 @media (max-width: 900px) {

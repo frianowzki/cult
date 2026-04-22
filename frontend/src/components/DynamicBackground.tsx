@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { useStore } from '../lib/store'
 
 const ORB_STYLE: React.CSSProperties = {
   position: 'absolute',
@@ -9,6 +10,7 @@ const ORB_STYLE: React.CSSProperties = {
 }
 
 export default function DynamicBackground() {
+  const theme = useStore((state) => state.theme)
   const orb1 = useRef<HTMLDivElement>(null)
   const orb2 = useRef<HTMLDivElement>(null)
   const orb3 = useRef<HTMLDivElement>(null)
@@ -116,7 +118,9 @@ export default function DynamicBackground() {
           height: '55vw',
           top: '-15%',
           left: '-10%',
-          background: 'radial-gradient(circle, rgba(254,119,201,0.34) 0%, rgba(254,119,201,0.14) 42%, rgba(184,79,144,0.08) 58%, transparent 74%)',
+          background: theme === 'light'
+            ? 'radial-gradient(circle, rgba(254,119,201,0.16) 0%, rgba(254,119,201,0.08) 42%, rgba(184,79,144,0.04) 58%, transparent 74%)'
+            : 'radial-gradient(circle, rgba(254,119,201,0.34) 0%, rgba(254,119,201,0.14) 42%, rgba(184,79,144,0.08) 58%, transparent 74%)',
           opacity: 0.32,
         }}
       />
@@ -129,7 +133,9 @@ export default function DynamicBackground() {
           height: '50vw',
           bottom: '-10%',
           right: '-8%',
-          background: 'radial-gradient(circle, rgba(184,79,144,0.28) 0%, rgba(254,119,201,0.12) 38%, rgba(120,36,86,0.08) 58%, transparent 72%)',
+          background: theme === 'light'
+            ? 'radial-gradient(circle, rgba(184,79,144,0.12) 0%, rgba(254,119,201,0.08) 38%, rgba(120,36,86,0.04) 58%, transparent 72%)'
+            : 'radial-gradient(circle, rgba(184,79,144,0.28) 0%, rgba(254,119,201,0.12) 38%, rgba(120,36,86,0.08) 58%, transparent 72%)',
           opacity: 0.22,
         }}
       />
@@ -142,7 +148,9 @@ export default function DynamicBackground() {
           height: '35vw',
           top: '40%',
           left: '20%',
-          background: 'radial-gradient(circle, rgba(255,168,224,0.18) 0%, rgba(254,119,201,0.1) 42%, rgba(184,79,144,0.06) 58%, transparent 72%)',
+          background: theme === 'light'
+            ? 'radial-gradient(circle, rgba(255,168,224,0.1) 0%, rgba(254,119,201,0.06) 42%, rgba(184,79,144,0.03) 58%, transparent 72%)'
+            : 'radial-gradient(circle, rgba(255,168,224,0.18) 0%, rgba(254,119,201,0.1) 42%, rgba(184,79,144,0.06) 58%, transparent 72%)',
           opacity: 0.18,
         }}
       />
@@ -155,8 +163,8 @@ export default function DynamicBackground() {
           inset: 0,
           width: '100%',
           height: '100%',
-          mixBlendMode: 'screen',
-          opacity: 0.6,
+          mixBlendMode: theme === 'light' ? 'multiply' : 'screen',
+          opacity: theme === 'light' ? 0.24 : 0.6,
         }}
       />
     </div>

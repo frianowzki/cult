@@ -8,6 +8,7 @@ import { CONTENT_TYPE_ICONS, CONTENT_TYPE_LABELS, ACCESS_LEVEL_LABELS } from '..
 import LoveButton from './LoveButton'
 import SaveButton from './SaveButton'
 import CommentSection from './CommentSection'
+import { useStore } from '../lib/store'
 
 interface Props {
   content: Content
@@ -30,6 +31,7 @@ export default function ContentViewer({
 }: Props) {
   
   const { connected, account, signMessage } = useWallet()
+  const theme = useStore((state) => state.theme)
   const [downloading, setDownloading] = useState(false)
   const [canDownload, setCanDownload] = useState(false)
 
@@ -138,7 +140,7 @@ export default function ContentViewer({
         <video
           controls
           autoPlay={false}
-          style={{ width: '100%', borderRadius: 'var(--radius-md)', maxHeight: 'min(52vh, 400px)', background: '#000' }}
+          style={{ width: '100%', borderRadius: 'var(--radius-md)', maxHeight: 'min(52vh, 400px)', background: theme === 'light' ? '#f1e7da' : '#000' }}
           poster={thumbnailUrl || undefined}
         >
           <source src={contentUrl} />
@@ -301,7 +303,7 @@ export default function ContentViewer({
                   className="btn btn-ghost btn-sm"
                   onClick={onDelete}
                   disabled={deleting}
-                  style={{ color: '#ff8a8a', fontSize: 12 }}
+                  style={{ color: 'var(--red)', fontSize: 12 }}
                 >
                   {deleting ? 'Deleting…' : 'Delete'}
                 </button>

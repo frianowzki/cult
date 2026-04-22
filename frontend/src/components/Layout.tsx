@@ -9,11 +9,13 @@ import { useStore } from '../lib/store'
 import DynamicBackground from './DynamicBackground'
 import NotificationsPopup from './NotificationsPopup'
 
+type ThemeMode = 'dark' | 'light'
+
 export default function Layout() {
   const { connected, account, connect, disconnect, wallets } = useWallet()
   const location = useLocation()
   const isCreatorPage = location.pathname.startsWith('/u/')
-  const { setRegisterModalOpen, registerModalOpen } = useStore()
+  const { setRegisterModalOpen, registerModalOpen, theme, toggleTheme } = useStore()
   const [walletMenuOpen, setWalletMenuOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [notifOpen, setNotifOpen] = useState(false)
@@ -24,6 +26,7 @@ export default function Layout() {
   const notifRef = useRef<HTMLDivElement | null>(null)
 
   const nav = [
+    { label: 'Theme', to: '#' },
     { label: 'Explore', to: '/explore' },
     { label: 'Feed', to: '/feed' },
     ...(connected && account?.address && isCreator ? [{ label: 'Dashboard', to: '/dashboard' }] : []),
@@ -107,6 +110,54 @@ export default function Layout() {
   const shortAddr = account?.address
     ? `${String(account.address).slice(0, 6)}…${String(account.address).slice(-4)}`
     : ''
+
+  const headerSurface = theme === 'light'
+    ? {
+        background: isCreatorPage
+          ? 'linear-gradient(180deg, rgba(255, 250, 244, 0.86) 0%, rgba(255, 250, 244, 0.76) 42%, rgba(247, 241, 232, 0.66) 100%)'
+          : 'linear-gradient(180deg, rgba(255, 250, 244, 0.82) 0%, rgba(247, 241, 232, 0.72) 42%, rgba(241, 231, 218, 0.62) 100%)',
+        backdropFilter: isCreatorPage
+          ? 'blur(18px) saturate(120%)'
+          : 'blur(24px) saturate(130%)',
+        WebkitBackdropFilter: isCreatorPage
+          ? 'blur(18px) saturate(120%)'
+          : 'blur(24px) saturate(130%)',
+        borderBottom: '1px solid rgba(120, 92, 68, 0.12)',
+        boxShadow: '0 10px 28px rgba(97, 72, 53, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.55)',
+      }
+    : {
+        background: isCreatorPage
+          ? 'linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.045) 20%, rgba(255, 255, 255, 0.025) 48%, rgba(255, 255, 255, 0.015) 100%)'
+          : 'linear-gradient(180deg, rgba(26, 18, 24, 0.44) 0%, rgba(14, 11, 14, 0.34) 42%, rgba(8, 8, 7, 0.24) 100%)',
+        backdropFilter: isCreatorPage
+          ? 'blur(19px) saturate(130%) brightness(1.01)'
+          : 'blur(26px) saturate(170%) brightness(1.03)',
+        WebkitBackdropFilter: isCreatorPage
+          ? 'blur(19px) saturate(130%) brightness(1.01)'
+          : 'blur(26px) saturate(170%) brightness(1.03)',
+        borderBottom: isCreatorPage
+          ? '1px solid rgba(255, 255, 255, 0.055)'
+          : '1px solid rgba(255, 255, 255, 0.06)',
+        boxShadow: isCreatorPage
+          ? '0 8px 22px rgba(0, 0, 0, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 -1px 0 rgba(255, 255, 255, 0.015)'
+          : '0 10px 34px rgba(0, 0, 0, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 -1px 0 rgba(254, 119, 201, 0.05)',
+      }
+
+  const footerSurface = theme === 'light'
+    ? {
+        borderTop: '1px solid rgba(120, 92, 68, 0.12)',
+        background: 'linear-gradient(180deg, rgba(255, 250, 244, 0.92) 0%, rgba(241, 231, 218, 0.86) 100%)',
+        backdropFilter: 'blur(16px) saturate(125%)',
+        WebkitBackdropFilter: 'blur(16px) saturate(125%)',
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.5)',
+      }
+    : {
+        borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+        background: 'linear-gradient(180deg, rgba(14, 12, 13, 0.58) 0%, rgba(8, 8, 7, 0.74) 100%)',
+        backdropFilter: 'blur(18px) saturate(135%)',
+        WebkitBackdropFilter: 'blur(18px) saturate(135%)',
+        boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.03)',
+      }
 
   const bellButton = (
     <div style={{ position: 'relative', flexShrink: 0 }} ref={notifRef}>
@@ -231,6 +282,9 @@ export default function Layout() {
 
   const walletControls = (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end', flexShrink: 0 }}>
+      <button className="btn btn-ghost btn-sm" onClick={toggleTheme} title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
+        {theme === 'dark' ? 'Light' : 'Dark'}
+      </button>
       {connected && bellButton}
       {connected ? walletMenu : (
         <button className="btn btn-primary btn-sm" onClick={handleConnect}>
@@ -257,21 +311,7 @@ export default function Layout() {
           position: 'sticky',
           top: 0,
           zIndex: 100,
-          background: isCreatorPage
-            ? 'linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.045) 20%, rgba(255, 255, 255, 0.025) 48%, rgba(255, 255, 255, 0.015) 100%)'
-            : 'linear-gradient(180deg, rgba(26, 18, 24, 0.44) 0%, rgba(14, 11, 14, 0.34) 42%, rgba(8, 8, 7, 0.24) 100%)',
-          backdropFilter: isCreatorPage
-            ? 'blur(19px) saturate(130%) brightness(1.01)'
-            : 'blur(26px) saturate(170%) brightness(1.03)',
-          WebkitBackdropFilter: isCreatorPage
-            ? 'blur(19px) saturate(130%) brightness(1.01)'
-            : 'blur(26px) saturate(170%) brightness(1.03)',
-          borderBottom: isCreatorPage
-            ? '1px solid rgba(255, 255, 255, 0.055)'
-            : '1px solid rgba(255, 255, 255, 0.06)',
-          boxShadow: isCreatorPage
-            ? '0 8px 22px rgba(0, 0, 0, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 -1px 0 rgba(255, 255, 255, 0.015)'
-            : '0 10px 34px rgba(0, 0, 0, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 -1px 0 rgba(254, 119, 201, 0.05)',
+          ...headerSurface,
         }}
       >
         {isMobile ? (
@@ -416,11 +456,7 @@ export default function Layout() {
       <footer
         style={{
           width: '100%',
-          borderTop: '1px solid rgba(255, 255, 255, 0.05)',
-          background: 'linear-gradient(180deg, rgba(14, 12, 13, 0.58) 0%, rgba(8, 8, 7, 0.74) 100%)',
-          backdropFilter: 'blur(18px) saturate(135%)',
-          WebkitBackdropFilter: 'blur(18px) saturate(135%)',
-          boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.03)',
+          ...footerSurface,
           padding: isMobile ? '12px 16px calc(12px + env(safe-area-inset-bottom))' : '14px 28px',
           display: isMobile ? 'flex' : 'grid',
           gridTemplateColumns: isMobile ? 'none' : 'minmax(120px, 1fr) auto minmax(260px, 1fr)',

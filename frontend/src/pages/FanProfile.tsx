@@ -14,10 +14,12 @@ import {
 } from '../lib/aptos'
 import { resolveContentUrl } from '../lib/shelby'
 import UserProfileModal from '../components/UserProfileModal'
+import { useStore } from '../lib/store'
 
 export default function FanProfile() {
   const { address } = useParams<{ address: string }>()
   const { account } = useWallet()
+  const theme = useStore((state) => state.theme)
 
   const normalizedAddress = (address || '').trim()
   const viewerAddress = String(account?.address || '')
@@ -103,12 +105,12 @@ export default function FanProfile() {
   return (
     <>
       <div style={{ maxWidth: 980, margin: '0 auto', padding: '24px clamp(16px, 4vw, 32px) 28px' }}>
-        <div className="card" style={{ padding: '24px clamp(18px, 4vw, 32px) 28px', background: 'linear-gradient(180deg, rgba(20,18,17,0.96) 0%, rgba(13,12,11,0.98) 100%)', border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 24px 60px rgba(0,0,0,0.28)', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', inset: 0, background: 'radial-gradient(circle at 16% 18%, rgba(254,119,201,0.14), transparent 26%), radial-gradient(circle at 82% 12%, rgba(254,119,201,0.08), transparent 22%)', pointerEvents: 'none' }} />
+        <div className="card" style={{ padding: '24px clamp(18px, 4vw, 32px) 28px', background: theme === 'light' ? 'linear-gradient(180deg, rgba(255,250,244,0.98) 0%, rgba(247,241,232,0.98) 100%)' : 'linear-gradient(180deg, rgba(20,18,17,0.96) 0%, rgba(13,12,11,0.98) 100%)', border: theme === 'light' ? '1px solid rgba(120,92,68,0.12)' : '1px solid rgba(255,255,255,0.08)', boxShadow: theme === 'light' ? '0 20px 48px rgba(103,78,58,0.08)' : '0 24px 60px rgba(0,0,0,0.28)', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', inset: 0, background: theme === 'light' ? 'radial-gradient(circle at 16% 18%, rgba(254,119,201,0.08), transparent 26%), radial-gradient(circle at 82% 12%, rgba(254,119,201,0.05), transparent 22%)' : 'radial-gradient(circle at 16% 18%, rgba(254,119,201,0.14), transparent 26%), radial-gradient(circle at 82% 12%, rgba(254,119,201,0.08), transparent 22%)', pointerEvents: 'none' }} />
 
           <div style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap', marginBottom: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-              <div style={{ width: 88, height: 88, borderRadius: '50%', border: '2px solid rgba(255,255,255,0.08)', background: avatarUrl ? `url(${avatarUrl}) center/cover no-repeat` : 'linear-gradient(135deg, rgba(254,119,201,0.22), rgba(254,119,201,0.06))', boxShadow: '0 10px 30px rgba(0,0,0,0.28)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent)', fontFamily: 'var(--font-mono)', fontSize: '1.8rem', overflow: 'hidden' }}>
+              <div style={{ width: 88, height: 88, borderRadius: '50%', border: theme === 'light' ? '2px solid rgba(120,92,68,0.12)' : '2px solid rgba(255,255,255,0.08)', background: avatarUrl ? `url(${avatarUrl}) center/cover no-repeat` : 'linear-gradient(135deg, rgba(254,119,201,0.22), rgba(254,119,201,0.06))', boxShadow: theme === 'light' ? '0 10px 24px rgba(103,78,58,0.10)' : '0 10px 30px rgba(0,0,0,0.28)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--accent)', fontFamily: 'var(--font-mono)', fontSize: '1.8rem', overflow: 'hidden' }}>
                 {!avatarUrl && (profile.display_name.charAt(0).toUpperCase() || '◌')}
               </div>
               <div style={{ minWidth: 0 }}>

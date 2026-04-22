@@ -1,6 +1,17 @@
 import { create } from 'zustand'
 import type { CreatorProfile, Content } from './aptos'
 
+type ThemeMode = 'dark' | 'light'
+
+const THEME_STORAGE_KEY = 'cult:theme'
+
+function readInitialTheme(): ThemeMode {
+  if (typeof window === 'undefined') return 'dark'
+
+  const saved = window.localStorage.getItem(THEME_STORAGE_KEY)
+  return saved === 'light' ? 'light' : 'dark'
+}
+
 interface AppState {
   currentCreator: CreatorProfile | null
   currentCreatorContent: Content[]
@@ -9,6 +20,10 @@ interface AppState {
 
   subscriptionStatus: { isActive: boolean; tierIndex: number; expiresAt: number } | null
   setSubscriptionStatus: (s: AppState['subscriptionStatus']) => void
+
+  theme: ThemeMode
+  setTheme: (theme: ThemeMode) => void
+  toggleTheme: () => void
 
   uploadModalOpen: boolean
   setUploadModalOpen: (v: boolean) => void
@@ -33,6 +48,21 @@ export const useStore = create<AppState>((set) => ({
 
   subscriptionStatus: null,
   setSubscriptionStatus: (s) => set({ subscriptionStatus: s }),
+
+  theme: readInitialTheme(),
+  setTheme: (theme) => {
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(THEME_STORAGE_KEY, theme)
+    }
+    set({ theme })
+  },
+  toggleTheme: () => set((state) => {
+    const nextTheme = state.theme === 'dark' ? 'light' : 'dark'
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme)
+    }
+    return { theme: nextTheme }
+  }),
 
   uploadModalOpen: false,
   setUploadModalOpen: (v) => set({ uploadModalOpen: v }),
