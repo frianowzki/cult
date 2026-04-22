@@ -254,7 +254,7 @@ export default function EditProfileModal({ profile, onSuccess, onClose }: Props)
                       setBannerPreview('')
                       setRemoveBanner(true)
                     }}
-                    style={{ color: '#ff8a8a', borderColor: 'rgba(255,138,138,0.25)' }}
+                    style={{ color: 'var(--red)', borderColor: 'color-mix(in srgb, var(--red) 25%, var(--border))' }}
                   >
                     Remove banner
                   </button>

@@ -49,7 +49,7 @@ export default function AutoRenewBanner({ creatorAddr, expiresAt, onRenewed }: P
         marginBottom: 20,
         padding: '16px 18px',
         borderColor: 'rgba(200,169,110,0.35)',
-        background: 'linear-gradient(180deg, rgba(200,169,110,0.08) 0%, rgba(10,10,10,0.92) 100%)',
+        background: 'linear-gradient(180deg, color-mix(in srgb, var(--accent) 7%, var(--bg-2)) 0%, var(--bg-2) 100%)',
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap', alignItems: 'center' }}>

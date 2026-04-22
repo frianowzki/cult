@@ -282,8 +282,24 @@ export default function Layout() {
 
   const walletControls = (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end', flexShrink: 0 }}>
-      <button className="btn btn-ghost btn-sm" onClick={toggleTheme} title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
-        {theme === 'dark' ? 'Light' : 'Dark'}
+      <button
+        className="btn btn-sm"
+        onClick={toggleTheme}
+        title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+        style={{
+          padding: '6px 10px',
+          gap: 6,
+          borderColor: theme === 'light' ? 'rgba(120, 92, 68, 0.14)' : 'var(--border)',
+          background: theme === 'light'
+            ? 'linear-gradient(180deg, rgba(255,255,255,0.55), rgba(241,231,218,0.72))'
+            : 'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01))',
+          boxShadow: theme === 'light'
+            ? 'inset 0 1px 0 rgba(255,255,255,0.65)'
+            : 'inset 0 1px 0 rgba(255,255,255,0.04)',
+        }}
+      >
+        <span aria-hidden="true" style={{ fontSize: 12, lineHeight: 1 }}>{theme === 'dark' ? '☼' : '☾'}</span>
+        <span className="mono" style={{ fontSize: 10 }}>{theme === 'dark' ? 'Light' : 'Dark'}</span>
       </button>
       {connected && bellButton}
       {connected ? walletMenu : (
