@@ -26,7 +26,6 @@ export default function Layout() {
   const notifRef = useRef<HTMLDivElement | null>(null)
 
   const nav = [
-    { label: 'Theme', to: '#' },
     { label: 'Explore', to: '/explore' },
     { label: 'Feed', to: '/feed' },
     ...(connected && account?.address && isCreator ? [{ label: 'Dashboard', to: '/dashboard' }] : []),
@@ -159,6 +158,35 @@ export default function Layout() {
         boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.03)',
       }
 
+  const utilityButtonStyle = {
+    height: 30,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: 'var(--radius)',
+    border: '1px solid var(--border)',
+    background: 'transparent',
+    cursor: 'pointer',
+    padding: '0 10px',
+    flexShrink: 0,
+  } as const
+
+  const themeButton = (
+    <button
+      onClick={toggleTheme}
+      title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+      aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+      className="btn btn-ghost btn-sm"
+      style={{
+        ...utilityButtonStyle,
+        color: 'var(--text-2)',
+        minWidth: 40,
+      }}
+    >
+      <span style={{ fontSize: 13, lineHeight: 1, fontFamily: 'var(--font-mono)' }}>{theme === 'dark' ? '☼' : '☾'}</span>
+    </button>
+  )
+
   const bellButton = (
     <div style={{ position: 'relative', flexShrink: 0 }} ref={notifRef}>
       <button
@@ -167,18 +195,10 @@ export default function Layout() {
         aria-label="Notifications"
         className="btn btn-ghost btn-sm"
         style={{
-          minWidth: connected ? undefined : 120,
-          height: 30,
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          borderRadius: 'var(--radius)',
-          border: '1px solid var(--border)',
-          background: 'transparent',
+          ...utilityButtonStyle,
+          minWidth: connected ? 40 : 120,
           color: notifOpen ? 'var(--accent)' : 'var(--text-2)',
-          cursor: 'pointer',
           padding: connected ? '0 10px' : 0,
-          flexShrink: 0,
         }}
       >
         <span style={{ fontSize: 13, lineHeight: 1, fontFamily: 'var(--font-mono)' }}>◈</span>
@@ -282,25 +302,7 @@ export default function Layout() {
 
   const walletControls = (
     <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'flex-end', flexShrink: 0 }}>
-      <button
-        className="btn btn-sm"
-        onClick={toggleTheme}
-        title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
-        style={{
-          padding: '6px 10px',
-          gap: 6,
-          borderColor: theme === 'light' ? 'rgba(120, 92, 68, 0.14)' : 'var(--border)',
-          background: theme === 'light'
-            ? 'linear-gradient(180deg, rgba(255,255,255,0.55), rgba(241,231,218,0.72))'
-            : 'linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01))',
-          boxShadow: theme === 'light'
-            ? 'inset 0 1px 0 rgba(255,255,255,0.65)'
-            : 'inset 0 1px 0 rgba(255,255,255,0.04)',
-        }}
-      >
-        <span aria-hidden="true" style={{ fontSize: 12, lineHeight: 1 }}>{theme === 'dark' ? '☼' : '☾'}</span>
-        <span className="mono" style={{ fontSize: 10 }}>{theme === 'dark' ? 'Light' : 'Dark'}</span>
-      </button>
+      {themeButton}
       {connected && bellButton}
       {connected ? walletMenu : (
         <button className="btn btn-primary btn-sm" onClick={handleConnect}>
@@ -342,6 +344,7 @@ export default function Layout() {
                 </span>
               </Link>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                {themeButton}
                 {connected && bellButton}
                 {walletMenu}
                 {!connected && (

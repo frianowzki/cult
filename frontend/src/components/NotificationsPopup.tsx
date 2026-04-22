@@ -88,7 +88,7 @@ export default function NotificationsPopup({ onClose, onUnreadCount }: Props) {
                   textDecoration: 'none',
                   color: 'inherit',
                   borderBottom: '1px solid var(--border)',
-                  background: item.isRead ? 'transparent' : 'rgba(254,119,201,0.05)',
+                  background: item.isRead ? 'transparent' : 'color-mix(in srgb, var(--accent) 6%, transparent)',
                 }}
               >
                 <div
