@@ -119,9 +119,9 @@ export default function DynamicBackground() {
           top: '-15%',
           left: '-10%',
           background: theme === 'light'
-            ? 'radial-gradient(circle, rgba(254,119,201,0.16) 0%, rgba(254,119,201,0.08) 42%, rgba(184,79,144,0.04) 58%, transparent 74%)'
+            ? 'radial-gradient(circle, rgba(254,119,201,0.26) 0%, rgba(254,119,201,0.15) 34%, rgba(255,182,226,0.1) 52%, rgba(184,79,144,0.05) 64%, transparent 78%)'
             : 'radial-gradient(circle, rgba(254,119,201,0.34) 0%, rgba(254,119,201,0.14) 42%, rgba(184,79,144,0.08) 58%, transparent 74%)',
-          opacity: 0.32,
+          opacity: theme === 'light' ? 0.5 : 0.32,
         }}
       />
       {/* Orb 2 — accent shadow, bottom-right */}
@@ -134,9 +134,9 @@ export default function DynamicBackground() {
           bottom: '-10%',
           right: '-8%',
           background: theme === 'light'
-            ? 'radial-gradient(circle, rgba(184,79,144,0.12) 0%, rgba(254,119,201,0.08) 38%, rgba(120,36,86,0.04) 58%, transparent 72%)'
+            ? 'radial-gradient(circle, rgba(184,79,144,0.2) 0%, rgba(254,119,201,0.12) 34%, rgba(255,196,232,0.08) 52%, rgba(120,36,86,0.04) 64%, transparent 76%)'
             : 'radial-gradient(circle, rgba(184,79,144,0.28) 0%, rgba(254,119,201,0.12) 38%, rgba(120,36,86,0.08) 58%, transparent 72%)',
-          opacity: 0.22,
+          opacity: theme === 'light' ? 0.34 : 0.22,
         }}
       />
       {/* Orb 3 — soft accent haze, center-left mid */}
@@ -149,9 +149,20 @@ export default function DynamicBackground() {
           top: '40%',
           left: '20%',
           background: theme === 'light'
-            ? 'radial-gradient(circle, rgba(255,168,224,0.1) 0%, rgba(254,119,201,0.06) 42%, rgba(184,79,144,0.03) 58%, transparent 72%)'
+            ? 'radial-gradient(circle, rgba(255,168,224,0.18) 0%, rgba(254,119,201,0.1) 36%, rgba(255,214,239,0.07) 54%, rgba(184,79,144,0.035) 64%, transparent 76%)'
             : 'radial-gradient(circle, rgba(255,168,224,0.18) 0%, rgba(254,119,201,0.1) 42%, rgba(184,79,144,0.06) 58%, transparent 72%)',
-          opacity: 0.18,
+          opacity: theme === 'light' ? 0.28 : 0.18,
+        }}
+      />
+
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: theme === 'light'
+            ? 'radial-gradient(ellipse at 22% 18%, rgba(254,119,201,0.08) 0%, transparent 42%), radial-gradient(ellipse at 78% 24%, rgba(254,119,201,0.06) 0%, transparent 38%), radial-gradient(ellipse at 52% 78%, rgba(184,79,144,0.05) 0%, transparent 42%)'
+            : 'transparent',
+          opacity: theme === 'light' ? 1 : 0,
         }}
       />
 
@@ -163,8 +174,8 @@ export default function DynamicBackground() {
           inset: 0,
           width: '100%',
           height: '100%',
-          mixBlendMode: theme === 'light' ? 'multiply' : 'screen',
-          opacity: theme === 'light' ? 0.24 : 0.6,
+          mixBlendMode: theme === 'light' ? 'soft-light' : 'screen',
+          opacity: theme === 'light' ? 0.34 : 0.6,
         }}
       />
     </div>
