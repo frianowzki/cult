@@ -89,7 +89,7 @@ Opens at http://localhost:3000
 
 Shelby Serves is a decentralized hot storage protocol by Aptos Labs + Jump Crypto.
 
-1. Get API access at https://shelby.network
+1. Get API access at https://geomi.dev/
 2. Set `VITE_SHELBY_API_KEY` and `VITE_SHELBY_GATEWAY` in your `.env`
 3. Without a key, the app falls back to **mock mode** for local dev:
    - Files get a fake CID (`bafybeimock...`)
