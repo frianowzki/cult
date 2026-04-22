@@ -546,7 +546,9 @@ textarea.input {
     position: sticky;
     top: 0;
     z-index: 2;
-    background: var(--bg-2);
+    background: color-mix(in srgb, var(--bg-2) 92%, transparent);
+    backdrop-filter: blur(14px) saturate(120%);
+    -webkit-backdrop-filter: blur(14px) saturate(120%);
     padding-top: 16px;
     padding-bottom: 14px;
   }
@@ -560,7 +562,9 @@ textarea.input {
     position: sticky;
     bottom: 0;
     z-index: 2;
-    background: var(--bg-2);
+    background: color-mix(in srgb, var(--bg-2) 94%, transparent);
+    backdrop-filter: blur(14px) saturate(120%);
+    -webkit-backdrop-filter: blur(14px) saturate(120%);
     padding-top: 12px;
     padding-bottom: calc(14px + env(safe-area-inset-bottom));
     flex-wrap: wrap;

@@ -160,6 +160,7 @@ export default function Layout() {
 
   const utilityButtonStyle = {
     height: 30,
+    minHeight: 30,
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -169,6 +170,9 @@ export default function Layout() {
     cursor: 'pointer',
     padding: '0 10px',
     flexShrink: 0,
+    boxShadow: theme === 'light'
+      ? 'inset 0 1px 0 rgba(255,255,255,0.45)'
+      : 'inset 0 1px 0 rgba(255,255,255,0.04)',
   } as const
 
   const themeButton = (
@@ -260,6 +264,11 @@ export default function Layout() {
         className="btn btn-sm"
         onClick={() => setWalletMenuOpen((open) => !open)}
         title={String(account?.address)}
+        style={{
+          ...utilityButtonStyle,
+          color: walletMenuOpen ? 'var(--accent)' : 'var(--text)',
+          minWidth: 96,
+        }}
       >
         <span className="mono" style={{ fontSize: 11 }}>{shortAddr}</span>
       </button>
@@ -343,7 +352,7 @@ export default function Layout() {
                   ✦ TESTNET
                 </span>
               </Link>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, alignSelf: 'flex-start' }}>
                 {themeButton}
                 {connected && bellButton}
                 {walletMenu}
@@ -443,7 +452,7 @@ export default function Layout() {
                   key={wallet.name}
                   className="btn"
                   onClick={() => void handleWalletSelect(wallet.name)}
-                  style={{ justifyContent: 'space-between', width: '100%', padding: '12px 14px', minHeight: 52 }}
+                  style={{ justifyContent: 'space-between', width: '100%', padding: '12px 14px', minHeight: 52, textTransform: 'none', letterSpacing: '-0.01em' }}
                 >
                   <span style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
                     {'icon' in wallet && wallet.icon ? (
@@ -461,7 +470,7 @@ export default function Layout() {
                       <span style={{ fontWeight: 600, color: 'var(--text)' }}>{wallet.name}</span>
                     </span>
                   </span>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--text-3)', flexShrink: 0 }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11, color: 'var(--text-2)', flexShrink: 0, fontFamily: 'var(--font-mono)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
                     <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#4ade80', boxShadow: '0 0 8px rgba(74, 222, 128, 0.45)' }} />
                     <span>Connect</span>
                   </span>
