@@ -1,23 +1,9 @@
-const STATIC_CACHE = 'cult-static-v2'
-const RUNTIME_CACHE = 'cult-runtime-v2'
-const APP_SHELL = ['/', '/manifest.json', '/offline.html', '/icon-192.png', '/icon-512.png']
-
-self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(STATIC_CACHE).then((cache) => cache.addAll(APP_SHELL))
-  )
+self.addEventListener('install', () => {
+  self.skipWaiting()
 })
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((key) => ![STATIC_CACHE, RUNTIME_CACHE].includes(key))
-          .map((key) => caches.delete(key))
-      )
-    ).then(() => self.clients.claim())
-  )
+  event.waitUntil(self.clients.claim())
 })
 
 self.addEventListener('message', (event) => {
@@ -26,59 +12,44 @@ self.addEventListener('message', (event) => {
   }
 })
 
-self.addEventListener('fetch', (event) => {
-  const { request } = event
-  if (request.method !== 'GET') return
+self.addEventListener('push', (event) => {
+  if (!event.data) return
 
-  const url = new URL(request.url)
-  const isSameOrigin = url.origin === self.location.origin
-  const isDocument = request.mode === 'navigate'
-  const isStaticAsset = isSameOrigin && (
-    url.pathname.startsWith('/assets/') ||
-    url.pathname === '/' ||
-    url.pathname.endsWith('.js') ||
-    url.pathname.endsWith('.css') ||
-    url.pathname.endsWith('.png') ||
-    url.pathname.endsWith('.svg') ||
-    url.pathname.endsWith('.wasm') ||
-    url.pathname.endsWith('.json')
+  let payload = {
+    title: 'CULT',
+    body: 'New activity is ready.',
+    url: '/',
+  }
+
+  try {
+    payload = { ...payload, ...event.data.json() }
+  } catch {}
+
+  event.waitUntil(
+    self.registration.showNotification(payload.title || 'CULT', {
+      body: payload.body || 'New activity is ready.',
+      icon: '/favicon.ico',
+      badge: '/favicon.ico',
+      data: { url: payload.url || '/' },
+    })
   )
-
-  if (isDocument) {
-    event.respondWith(networkFirst(request, '/offline.html'))
-    return
-  }
-
-  if (isStaticAsset) {
-    event.respondWith(staleWhileRevalidate(request))
-  }
 })
 
-async function networkFirst(request, fallbackPath) {
-  const cache = await caches.open(RUNTIME_CACHE)
-  try {
-    const response = await fetch(request)
-    cache.put(request, response.clone())
-    return response
-  } catch {
-    const cached = await cache.match(request)
-    if (cached) return cached
-    return caches.match(fallbackPath)
-  }
-}
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  const targetUrl = event.notification.data?.url || '/'
 
-async function staleWhileRevalidate(request) {
-  const cache = await caches.open(RUNTIME_CACHE)
-  const cached = await cache.match(request)
-
-  const fetchPromise = fetch(request)
-    .then((response) => {
-      if (response && response.status === 200) {
-        cache.put(request, response.clone())
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
+      for (const client of clients) {
+        if ('focus' in client) {
+          client.navigate(targetUrl)
+          return client.focus()
+        }
       }
-      return response
+      if (self.clients.openWindow) {
+        return self.clients.openWindow(targetUrl)
+      }
     })
-    .catch(() => undefined)
-
-  return cached || fetchPromise || Response.error()
-}
+  )
+})

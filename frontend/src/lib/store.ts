@@ -13,6 +13,8 @@ function readInitialTheme(): ThemeMode {
 }
 
 interface AppState {
+  pushEnabled: boolean
+  setPushEnabled: (enabled: boolean) => void
   currentCreator: CreatorProfile | null
   currentCreatorContent: Content[]
   setCurrentCreator: (p: CreatorProfile | null) => void
@@ -41,6 +43,8 @@ interface AppState {
 }
 
 export const useStore = create<AppState>((set) => ({
+  pushEnabled: false,
+  setPushEnabled: (enabled) => set({ pushEnabled: enabled }),
   currentCreator: null,
   currentCreatorContent: [],
   setCurrentCreator: (p) => set({ currentCreator: p }),

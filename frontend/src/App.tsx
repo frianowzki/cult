@@ -13,13 +13,19 @@ import Feed from './pages/Feed'
 import Notifications from './pages/Notifications'
 import FanProfile from './pages/FanProfile'
 import { useStore } from './lib/store'
+import { readPushEnabled } from './lib/push'
 
 export default function App() {
   const theme = useStore((state) => state.theme)
+  const setPushEnabled = useStore((state) => state.setPushEnabled)
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
   }, [theme])
+
+  useEffect(() => {
+    setPushEnabled(readPushEnabled())
+  }, [setPushEnabled])
 
   return (
     <AptosWalletAdapterProvider

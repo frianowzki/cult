@@ -6,6 +6,7 @@ import { motion } from 'framer-motion'
 import toast from 'react-hot-toast'
 import RegisterCreatorModal from './RegisterCreatorModal'
 import { useStore } from '../lib/store'
+import { enablePushNotifications, isPushSupported } from '../lib/push'
 import DynamicBackground from './DynamicBackground'
 import NotificationsPopup from './NotificationsPopup'
 
@@ -15,7 +16,7 @@ export default function Layout() {
   const { connected, account, connect, disconnect, wallets } = useWallet()
   const location = useLocation()
   const isCreatorPage = location.pathname.startsWith('/u/')
-  const { setRegisterModalOpen, registerModalOpen, theme, toggleTheme } = useStore()
+  const { setRegisterModalOpen, registerModalOpen, theme, toggleTheme, pushEnabled, setPushEnabled } = useStore()
   const [walletMenuOpen, setWalletMenuOpen] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const [notifOpen, setNotifOpen] = useState(false)
@@ -92,6 +93,18 @@ export default function Layout() {
     } catch (e) {
       console.error(e)
       toast.error(`Failed to connect ${walletName}`)
+    }
+  }
+
+  async function handleEnablePush() {
+    if (!account?.address) return
+    try {
+      await enablePushNotifications(String(account.address))
+      setPushEnabled(true)
+      toast.success('Push notifications enabled')
+    } catch (error) {
+      console.error(error)
+      toast.error(error instanceof Error ? error.message : 'Failed to enable push notifications')
     }
   }
 
@@ -355,6 +368,17 @@ export default function Layout() {
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, alignSelf: 'flex-start' }}>
                 {themeButton}
                 {connected && bellButton}
+                {connected && isPushSupported() && (
+                  <button
+                    className="btn btn-ghost btn-sm"
+                    onClick={() => void handleEnablePush()}
+                    style={{ ...utilityButtonStyle, color: pushEnabled ? 'var(--accent)' : 'var(--text-2)', minWidth: 40 }}
+                    title={pushEnabled ? 'Push notifications enabled' : 'Enable push notifications'}
+                    aria-label={pushEnabled ? 'Push notifications enabled' : 'Enable push notifications'}
+                  >
+                    <span style={{ fontSize: 13, lineHeight: 1, fontFamily: 'var(--font-mono)' }}>{pushEnabled ? '◉' : '◎'}</span>
+                  </button>
+                )}
                 {walletMenu}
                 {!connected && (
                   <button className="btn btn-primary btn-sm" onClick={handleConnect}>
