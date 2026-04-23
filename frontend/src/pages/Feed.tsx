@@ -25,6 +25,7 @@ type FeedItem = {
   creator: CreatorProfile
   content: Content
   hasAccess: boolean
+  isOwnPost?: boolean
 }
 
 function rankFeedItems(feedItems: FeedItem[], isPublicFeed: boolean) {
@@ -105,23 +106,38 @@ export default function Feed() {
         return
       }
 
-      const following = await getFollowing(String(account.address))
-      if (!following.length) {
+      const accountAddress = String(account.address)
+      const [following, selfCreatorProfile] = await Promise.all([
+        getFollowing(accountAddress),
+        getCreatorProfile(accountAddress),
+      ])
+      const feedCreatorAddresses = Array.from(new Set([
+        ...following,
+        ...(selfCreatorProfile ? [accountAddress] : []),
+      ]))
+
+      if (!feedCreatorAddresses.length) {
         setItems([])
       } else {
         const [followingSaved, creators] = await Promise.all([
-          getSavedContent(String(account.address)),
+          getSavedContent(accountAddress),
           Promise.all(
-            following.map(async (creatorAddr) => {
+            feedCreatorAddresses.map(async (creatorAddr) => {
               const [creator, contents] = await Promise.all([
                 getCreatorProfile(creatorAddr),
                 getCreatorContent(creatorAddr),
               ])
               if (!creator) return [] as FeedItem[]
               const accessList = await Promise.all(
-                contents.map((content) => canAccessContent(String(account.address), creatorAddr, content.id))
+                contents.map((content) => canAccessContent(accountAddress, creatorAddr, content.id))
               )
-              return contents.map((content, index) => ({ creatorAddr, creator, content, hasAccess: accessList[index] }))
+              return contents.map((content, index) => ({
+                creatorAddr,
+                creator,
+                content,
+                hasAccess: accessList[index],
+                isOwnPost: creatorAddr.toLowerCase() === accountAddress.toLowerCase(),
+              }))
             })
           ),
         ])
@@ -387,7 +403,10 @@ export default function Feed() {
                           {!avatarUrl && '✦'}
                         </div>
                         <div>
-                          <div style={{ fontWeight: 700, fontSize: 14 }}>{item.creator.display_name}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                            <div style={{ fontWeight: 700, fontSize: 14 }}>{item.creator.display_name}</div>
+                            {item.isOwnPost && <span className="badge" style={{ fontSize: 9 }}>Your post</span>}
+                          </div>
                           <div className="mono" style={{ fontSize: 11, color: 'var(--accent)' }}>@{item.creator.handle}</div>
                         </div>
                       </Link>
