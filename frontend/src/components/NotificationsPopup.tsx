@@ -37,6 +37,18 @@ function getNotificationCopy(item: NotificationItem) {
         body: `${item.actorName || item.actorAddr?.slice(0, 6) || 'Someone'} commented on ${item.contentTitle || 'your post'}.`,
         meta: item.commentText ? `“${item.commentText.slice(0, 72)}${item.commentText.length > 72 ? '…' : ''}”` : null,
       }
+    case 'new_love':
+      return {
+        label: 'New love',
+        body: `${item.actorName || item.actorAddr?.slice(0, 6) || 'Someone'} loved ${item.contentTitle || 'your post'}.`,
+        meta: null,
+      }
+    case 'grouped':
+      return {
+        label: 'Grouped activity',
+        body: `${item.groupedCount || 0} new activities around ${item.contentTitle || item.creatorName}.`,
+        meta: item.groupedKinds?.join(', ') || null,
+      }
     case 'new_post':
     default:
       return {

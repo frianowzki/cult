@@ -722,6 +722,14 @@ export async function getActivityNotificationsForCreator(creatorAddr: string): P
             order_by: { transaction_version: desc }
             limit: 40
           ) { data event_index transaction_version }
+          loves: events(
+            where: {
+              type: { _eq: "${CONTRACT_ADDRESS}::${MODULE_NAME}::LoveEvent" }
+              data: { _contains: { creator_addr: "${creatorAddr}" } }
+            }
+            order_by: { transaction_version: desc }
+            limit: 40
+          ) { data event_index transaction_version }
         }
       `),
     ])
@@ -822,10 +830,54 @@ export async function getActivityNotificationsForCreator(creatorAddr: string): P
       }
     }))
 
-    return [...subscriptions, ...purchases, ...follows, ...comments].sort((a, b) => b.createdAt - a.createdAt)
+    const loves = await Promise.all(((data?.loves || []) as any[]).map(async (event) => {
+      const actorAddr = event.data?.fan_addr || ''
+      const contentId = Number(event.data?.content_id ?? 0)
+      const identity = await getIdentity(actorAddr)
+      const content = contentMap.get(contentId)
+      return {
+        id: `love-${event.transaction_version}-${event.event_index}`,
+        kind: 'new_love' as const,
+        creatorAddr,
+        creatorHandle: creator.handle,
+        creatorName: creator.display_name,
+        creatorAvatarCid: creator.avatar_shelby_cid,
+        actorAddr,
+        actorName: identity?.name || undefined,
+        actorAvatarCid: identity?.avatarCid || undefined,
+        contentId,
+        contentTitle: content?.title || `Post #${contentId}`,
+        createdAt: versionToTimestamp(event.transaction_version),
+      }
+    }))
+
+    return [...subscriptions, ...purchases, ...follows, ...comments, ...loves].sort((a, b) => b.createdAt - a.createdAt)
   } catch {
     return []
   }
+}
+
+function groupNotifications(items: NotificationItem[]): NotificationItem[] {
+  const grouped = new Map<string, NotificationItem[]>()
+
+  for (const item of items) {
+    const key = `${item.kind}:${item.creatorAddr}:${item.contentId ?? 'none'}`
+    const bucket = grouped.get(key) || []
+    bucket.push(item)
+    grouped.set(key, bucket)
+  }
+
+  return Array.from(grouped.values()).map((bucket) => {
+    if (bucket.length === 1) return bucket[0]
+    const latest = bucket.sort((a, b) => b.createdAt - a.createdAt)[0]
+    return {
+      ...latest,
+      id: `grouped-${latest.kind}-${latest.creatorAddr}-${latest.contentId ?? 'none'}`,
+      kind: 'grouped' as const,
+      groupedCount: bucket.length,
+      groupedKinds: Array.from(new Set(bucket.map((item) => item.kind))),
+    }
+  }).sort((a, b) => b.createdAt - a.createdAt)
 }
 
 export async function getRecentNotifications(fanAddr: string, limit = 10): Promise<NotificationItem[]> {
@@ -834,7 +886,7 @@ export async function getRecentNotifications(fanAddr: string, limit = 10): Promi
       getPostNotificationsForFan(fanAddr),
       getActivityNotificationsForCreator(fanAddr),
     ])
-    const all = [...creatorActivityNotifications, ...fanPostNotifications].sort((a, b) => b.createdAt - a.createdAt)
+    const all = groupNotifications([...creatorActivityNotifications, ...fanPostNotifications].sort((a, b) => b.createdAt - a.createdAt))
     const lastSeen = getLastNotificationsSeenAt(fanAddr)
     return all.slice(0, limit).map((item) => ({
       ...item,

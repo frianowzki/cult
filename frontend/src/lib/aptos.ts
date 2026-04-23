@@ -7,7 +7,7 @@ export const aptos = new Aptos(new AptosConfig({ network: Network.TESTNET }))
 
 export interface NotificationItem {
   id: string
-  kind: 'new_post' | 'new_subscriber' | 'new_purchase' | 'new_follower' | 'new_comment'
+  kind: 'new_post' | 'new_subscriber' | 'new_purchase' | 'new_follower' | 'new_comment' | 'new_love' | 'grouped'
   creatorAddr: string
   creatorHandle: string
   creatorName: string
@@ -22,6 +22,8 @@ export interface NotificationItem {
   amountPaid?: number
   tierIndex?: number
   commentText?: string
+  groupedCount?: number
+  groupedKinds?: string[]
   createdAt: number
   publishedAt?: number
   isRead?: boolean
