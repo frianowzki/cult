@@ -579,7 +579,7 @@ export async function getPostNotificationsForFan(fanAddr: string): Promise<Notif
           if (!creator) return []
 
           return contents.map((content) => ({
-            id: `${creatorAddr}-${content.id}`,
+            id: `post-${creatorAddr}-${content.id}`,
             kind: 'new_post' as const,
             creatorAddr,
             creatorHandle: creator.handle,
@@ -588,6 +588,7 @@ export async function getPostNotificationsForFan(fanAddr: string): Promise<Notif
             contentId: content.id,
             contentTitle: content.title,
             accessLevel: content.access_level,
+            createdAt: content.published_at,
             publishedAt: content.published_at,
           }))
         } catch {
@@ -596,7 +597,7 @@ export async function getPostNotificationsForFan(fanAddr: string): Promise<Notif
       })
     )
 
-    return all.flat().sort((a, b) => b.publishedAt - a.publishedAt)
+    return all.flat().sort((a, b) => b.createdAt - a.createdAt)
   } catch {
     return []
   }
@@ -669,13 +670,175 @@ export function markNotificationsSeen(fanAddr: string, timestamp?: number) {
   } catch {}
 }
 
+async function queryNotificationEvents(query: string) {
+  const response = await fetch('https://api.testnet.aptoslabs.com/v1/graphql', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': import.meta.env.VITE_APTOS_API_KEY || '',
+    },
+    body: JSON.stringify({ query }),
+  })
+  const json = await response.json()
+  return json?.data || {}
+}
+
+export async function getActivityNotificationsForCreator(creatorAddr: string): Promise<NotificationItem[]> {
+  try {
+    const [creator, contents, data] = await Promise.all([
+      getCreatorProfile(creatorAddr),
+      getCreatorContent(creatorAddr),
+      queryNotificationEvents(`
+        query GetCreatorActivityNotifications {
+          subscriptions: events(
+            where: {
+              type: { _eq: "${CONTRACT_ADDRESS}::${MODULE_NAME}::SubscribeEvent" }
+              data: { _contains: { creator_addr: "${creatorAddr}" } }
+            }
+            order_by: { transaction_version: desc }
+            limit: 40
+          ) { data event_index transaction_version }
+          purchases: events(
+            where: {
+              type: { _eq: "${CONTRACT_ADDRESS}::${MODULE_NAME}::PurchaseEvent" }
+              data: { _contains: { creator_addr: "${creatorAddr}" } }
+            }
+            order_by: { transaction_version: desc }
+            limit: 40
+          ) { data event_index transaction_version }
+          follows: events(
+            where: {
+              type: { _eq: "${CONTRACT_ADDRESS}::${MODULE_NAME}::FollowEvent" }
+              data: { _contains: { creator_addr: "${creatorAddr}" } }
+            }
+            order_by: { transaction_version: desc }
+            limit: 40
+          ) { data event_index transaction_version }
+          comments: events(
+            where: {
+              type: { _eq: "${CONTRACT_ADDRESS}::${MODULE_NAME}::CommentEvent" }
+              data: { _contains: { creator_addr: "${creatorAddr}" } }
+            }
+            order_by: { transaction_version: desc }
+            limit: 40
+          ) { data event_index transaction_version }
+        }
+      `),
+    ])
+
+    if (!creator) return []
+
+    const contentMap = new Map(contents.map((content) => [content.id, content]))
+    const identityCache = new Map<string, Awaited<ReturnType<typeof resolveDisplayIdentity>>>()
+    const getIdentity = async (addr: string) => {
+      if (!addr) return null
+      if (!identityCache.has(addr)) {
+        identityCache.set(addr, await resolveDisplayIdentity(addr))
+      }
+      return identityCache.get(addr) || null
+    }
+    const versionToTimestamp = (value: unknown) => {
+      const version = Number(value ?? 0)
+      return version > 0 ? version : 0
+    }
+
+    const subscriptions = await Promise.all(((data?.subscriptions || []) as any[]).map(async (event) => {
+      const actorAddr = event.data?.fan_addr || ''
+      const identity = await getIdentity(actorAddr)
+      return {
+        id: `sub-${event.transaction_version}-${event.event_index}`,
+        kind: 'new_subscriber' as const,
+        creatorAddr,
+        creatorHandle: creator.handle,
+        creatorName: creator.display_name,
+        creatorAvatarCid: creator.avatar_shelby_cid,
+        actorAddr,
+        actorName: identity?.name || undefined,
+        actorAvatarCid: identity?.avatarCid || undefined,
+        tierIndex: Number(event.data?.tier_index ?? 0),
+        amountPaid: Number(event.data?.amount_paid ?? 0),
+        createdAt: versionToTimestamp(event.transaction_version),
+      }
+    }))
+
+    const purchases = await Promise.all(((data?.purchases || []) as any[]).map(async (event) => {
+      const actorAddr = event.data?.fan_addr || ''
+      const contentId = Number(event.data?.content_id ?? 0)
+      const identity = await getIdentity(actorAddr)
+      const content = contentMap.get(contentId)
+      return {
+        id: `purchase-${event.transaction_version}-${event.event_index}`,
+        kind: 'new_purchase' as const,
+        creatorAddr,
+        creatorHandle: creator.handle,
+        creatorName: creator.display_name,
+        creatorAvatarCid: creator.avatar_shelby_cid,
+        actorAddr,
+        actorName: identity?.name || undefined,
+        actorAvatarCid: identity?.avatarCid || undefined,
+        contentId,
+        contentTitle: content?.title || `Post #${contentId}`,
+        amountPaid: Number(event.data?.amount_paid ?? 0),
+        createdAt: versionToTimestamp(event.transaction_version),
+      }
+    }))
+
+    const follows = await Promise.all(((data?.follows || []) as any[]).map(async (event) => {
+      const actorAddr = event.data?.fan_addr || ''
+      const identity = await getIdentity(actorAddr)
+      return {
+        id: `follow-${event.transaction_version}-${event.event_index}`,
+        kind: 'new_follower' as const,
+        creatorAddr,
+        creatorHandle: creator.handle,
+        creatorName: creator.display_name,
+        creatorAvatarCid: creator.avatar_shelby_cid,
+        actorAddr,
+        actorName: identity?.name || undefined,
+        actorAvatarCid: identity?.avatarCid || undefined,
+        createdAt: versionToTimestamp(event.transaction_version),
+      }
+    }))
+
+    const comments = await Promise.all(((data?.comments || []) as any[]).map(async (event) => {
+      const actorAddr = event.data?.fan_addr || ''
+      const contentId = Number(event.data?.content_id ?? 0)
+      const identity = await getIdentity(actorAddr)
+      const content = contentMap.get(contentId)
+      return {
+        id: `comment-${event.transaction_version}-${event.event_index}`,
+        kind: 'new_comment' as const,
+        creatorAddr,
+        creatorHandle: creator.handle,
+        creatorName: creator.display_name,
+        creatorAvatarCid: creator.avatar_shelby_cid,
+        actorAddr,
+        actorName: identity?.name || undefined,
+        actorAvatarCid: identity?.avatarCid || undefined,
+        contentId,
+        contentTitle: content?.title || `Post #${contentId}`,
+        commentText: event.data?.comment || event.data?.text || '',
+        createdAt: versionToTimestamp(event.transaction_version),
+      }
+    }))
+
+    return [...subscriptions, ...purchases, ...follows, ...comments].sort((a, b) => b.createdAt - a.createdAt)
+  } catch {
+    return []
+  }
+}
+
 export async function getRecentNotifications(fanAddr: string, limit = 10): Promise<NotificationItem[]> {
   try {
-    const all = await getPostNotificationsForFan(fanAddr)
+    const [fanPostNotifications, creatorActivityNotifications] = await Promise.all([
+      getPostNotificationsForFan(fanAddr),
+      getActivityNotificationsForCreator(fanAddr),
+    ])
+    const all = [...creatorActivityNotifications, ...fanPostNotifications].sort((a, b) => b.createdAt - a.createdAt)
     const lastSeen = getLastNotificationsSeenAt(fanAddr)
     return all.slice(0, limit).map((item) => ({
       ...item,
-      isRead: item.publishedAt * 1000 <= lastSeen,
+      isRead: item.createdAt * 1000 <= lastSeen,
     }))
   } catch {
     return []

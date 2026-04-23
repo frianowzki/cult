@@ -7,15 +7,23 @@ export const aptos = new Aptos(new AptosConfig({ network: Network.TESTNET }))
 
 export interface NotificationItem {
   id: string
-  kind: 'new_post'
+  kind: 'new_post' | 'new_subscriber' | 'new_purchase' | 'new_follower' | 'new_comment'
   creatorAddr: string
   creatorHandle: string
   creatorName: string
   creatorAvatarCid: string
-  contentId: number
-  contentTitle: string
-  accessLevel: number
-  publishedAt: number
+  actorAddr?: string
+  actorHandle?: string
+  actorName?: string
+  actorAvatarCid?: string
+  contentId?: number
+  contentTitle?: string
+  accessLevel?: number
+  amountPaid?: number
+  tierIndex?: number
+  commentText?: string
+  createdAt: number
+  publishedAt?: number
   isRead?: boolean
 }
 
@@ -855,7 +863,7 @@ export async function getPostNotificationsForFan(fanAddr: string): Promise<Notif
           if (!creator) return []
 
           return contents.map((content) => ({
-            id: `${creatorAddr}-${content.id}`,
+            id: `post-${creatorAddr}-${content.id}`,
             kind: 'new_post' as const,
             creatorAddr,
             creatorHandle: creator.handle,
@@ -864,6 +872,7 @@ export async function getPostNotificationsForFan(fanAddr: string): Promise<Notif
             contentId: content.id,
             contentTitle: content.title,
             accessLevel: content.access_level,
+            createdAt: content.published_at,
             publishedAt: content.published_at,
           }))
         } catch {
@@ -872,7 +881,7 @@ export async function getPostNotificationsForFan(fanAddr: string): Promise<Notif
       })
     )
 
-    return all.flat().sort((a, b) => b.publishedAt - a.publishedAt)
+    return all.flat().sort((a, b) => b.createdAt - a.createdAt)
   } catch {
     return []
   }

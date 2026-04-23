@@ -3,9 +3,45 @@ import { Link } from 'react-router-dom'
 import { useWallet } from '@aptos-labs/wallet-adapter-react'
 import { motion } from 'framer-motion'
 
-import { getPostNotificationsForFan, getLastNotificationsSeenAt, markNotificationsSeen, type NotificationItem } from '../lib/aptos'
+import { getRecentNotifications, getLastNotificationsSeenAt, markNotificationsSeen, type NotificationItem, unitsToUsd } from '../lib/aptos'
 import { ACCESS_LEVEL_LABELS } from '../lib/constants'
 import { resolveContentUrl } from '../lib/shelby'
+
+function getNotificationCopy(item: NotificationItem) {
+  switch (item.kind) {
+    case 'new_subscriber':
+      return {
+        label: 'New subscriber',
+        body: `${item.actorName || item.actorAddr?.slice(0, 6) || 'Someone'} joined${typeof item.tierIndex === 'number' ? ` Tier ${item.tierIndex + 1}` : ''}.`,
+        meta: item.amountPaid ? `${unitsToUsd(item.amountPaid)} USD` : null,
+      }
+    case 'new_purchase':
+      return {
+        label: 'New purchase',
+        body: `${item.actorName || item.actorAddr?.slice(0, 6) || 'Someone'} unlocked ${item.contentTitle || 'a post'}.`,
+        meta: item.amountPaid ? `${unitsToUsd(item.amountPaid)} USD` : null,
+      }
+    case 'new_follower':
+      return {
+        label: 'New follower',
+        body: `${item.actorName || item.actorAddr?.slice(0, 6) || 'Someone'} followed you.`,
+        meta: null,
+      }
+    case 'new_comment':
+      return {
+        label: 'New comment',
+        body: `${item.actorName || item.actorAddr?.slice(0, 6) || 'Someone'} commented on ${item.contentTitle || 'your post'}.`,
+        meta: item.commentText ? `“${item.commentText.slice(0, 120)}${item.commentText.length > 120 ? '…' : ''}”` : null,
+      }
+    case 'new_post':
+    default:
+      return {
+        label: 'New post',
+        body: `${item.creatorName} published ${item.contentTitle || 'new content'}.`,
+        meta: typeof item.accessLevel === 'number' ? ACCESS_LEVEL_LABELS[item.accessLevel] : null,
+      }
+  }
+}
 
 export default function Notifications() {
   const { connected, account } = useWallet()
@@ -26,8 +62,8 @@ export default function Notifications() {
     setLoading(true)
     try {
       const lastSeen = getLastNotificationsSeenAt(String(account.address))
-      const data = await getPostNotificationsForFan(String(account.address))
-      setItems(data.map((item) => ({ ...item, isRead: item.publishedAt * 1000 <= lastSeen })))
+      const data = await getRecentNotifications(String(account.address), 80)
+      setItems(data.map((item) => ({ ...item, isRead: item.createdAt * 1000 <= lastSeen })))
     } catch (e) {
       console.error(e)
       setItems([])
@@ -50,7 +86,7 @@ export default function Notifications() {
           Connect wallet to view notifications
         </h2>
         <p style={{ color: 'var(--text-2)' }}>
-          Follow creators first, then new posts will appear here.
+          Follow creators and publish as a creator, then activity will appear here.
         </p>
       </div>
     )
@@ -62,9 +98,9 @@ export default function Notifications() {
         <div>
           <div className="section-eyebrow">Notifications</div>
           <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 300, marginBottom: 6 }}>
-            From creators you follow
+            Notifications that matter
           </h2>
-          <p style={{ fontSize: 13, color: 'var(--text-3)', margin: 0 }}>New posts and fresh activity from your circle.</p>
+          <p style={{ fontSize: 13, color: 'var(--text-3)', margin: 0 }}>Posts, followers, subscribers, purchases, and comments in one feed.</p>
         </div>
         {!loading && items.length > 0 && (
           <span className="mono" style={{ fontSize: 11, color: 'var(--text-3)' }}>
@@ -94,7 +130,8 @@ export default function Notifications() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {items.map((item, index) => {
-            const avatarUrl = resolveContentUrl(item.creatorAvatarCid)
+            const copy = getNotificationCopy(item)
+            const avatarUrl = resolveContentUrl(item.kind === 'new_post' ? item.creatorAvatarCid : item.actorAvatarCid || item.creatorAvatarCid)
 
             return (
               <motion.div
@@ -124,32 +161,28 @@ export default function Notifications() {
                       flexShrink: 0,
                     }}
                   >
-                    {!avatarUrl && '✦'}
+                    {!avatarUrl && (item.kind === 'new_post' ? '✦' : '•')}
                   </div>
 
                   <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 6 }}>
+                      <span className="badge" style={{ fontSize: 10 }}>{copy.label}</span>
                       <span style={{ fontWeight: 700 }}>{item.creatorName}</span>
                       <span className="mono" style={{ fontSize: 11, color: 'var(--accent)' }}>
                         @{item.creatorHandle}
                       </span>
+                      {!item.isRead && <span style={{ color: 'var(--accent)', fontWeight: 700, fontSize: 11 }}>• new</span>}
                     </div>
 
-                    <p style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.6, marginBottom: 8 }}>
-                      published new content {!item.isRead && <span style={{ color: 'var(--accent)', fontWeight: 700 }}>• new</span>}
+                    <p style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.6, marginBottom: 8 }}>
+                      {copy.body}
                     </p>
 
-                    <div style={{ fontWeight: 600, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                      <span>{item.contentTitle}</span>
-                      <span style={{ fontSize: 11, color: 'var(--accent)', fontWeight: 600 }}>
-                        Open →
-                      </span>
-                    </div>
-
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-                      <span className="badge">{ACCESS_LEVEL_LABELS[item.accessLevel]}</span>
+                      {copy.meta ? <span className="badge">{copy.meta}</span> : null}
+                      {item.kind === 'new_post' && typeof item.accessLevel === 'number' ? <span className="badge">{ACCESS_LEVEL_LABELS[item.accessLevel]}</span> : null}
                       <span className="badge mono" style={{ fontSize: 10 }}>
-                        {new Date(item.publishedAt * 1000).toLocaleString()}
+                        {new Date(item.createdAt * 1000).toLocaleString()}
                       </span>
                     </div>
                   </div>

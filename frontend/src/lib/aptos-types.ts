@@ -1,14 +1,22 @@
 export interface NotificationItem {
   id: string
-  kind: 'new_post'
+  kind: 'new_post' | 'new_subscriber' | 'new_purchase' | 'new_follower' | 'new_comment'
   creatorAddr: string
   creatorHandle: string
   creatorName: string
   creatorAvatarCid: string
-  contentId: number
-  contentTitle: string
-  accessLevel: number
-  publishedAt: number
+  actorAddr?: string
+  actorHandle?: string
+  actorName?: string
+  actorAvatarCid?: string
+  contentId?: number
+  contentTitle?: string
+  accessLevel?: number
+  amountPaid?: number
+  tierIndex?: number
+  commentText?: string
+  createdAt: number
+  publishedAt?: number
   isRead?: boolean
 }
 
