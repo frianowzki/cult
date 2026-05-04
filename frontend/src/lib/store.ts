@@ -8,8 +8,12 @@ const THEME_STORAGE_KEY = 'cult:theme'
 function readInitialTheme(): ThemeMode {
   if (typeof window === 'undefined') return 'dark'
 
-  const saved = window.localStorage.getItem(THEME_STORAGE_KEY)
-  return saved === 'light' ? 'light' : 'dark'
+  try {
+    const saved = window.localStorage.getItem(THEME_STORAGE_KEY)
+    return saved === 'light' ? 'light' : 'dark'
+  } catch {
+    return 'dark'
+  }
 }
 
 interface AppState {
@@ -56,14 +60,14 @@ export const useStore = create<AppState>((set) => ({
   theme: readInitialTheme(),
   setTheme: (theme) => {
     if (typeof window !== 'undefined') {
-      window.localStorage.setItem(THEME_STORAGE_KEY, theme)
+      try { window.localStorage.setItem(THEME_STORAGE_KEY, theme) } catch {}
     }
     set({ theme })
   },
   toggleTheme: () => set((state) => {
     const nextTheme = state.theme === 'dark' ? 'light' : 'dark'
     if (typeof window !== 'undefined') {
-      window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme)
+      try { window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme) } catch {}
     }
     return { theme: nextTheme }
   }),

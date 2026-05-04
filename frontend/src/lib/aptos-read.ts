@@ -15,6 +15,14 @@ import type {
   UserProfile,
 } from './aptos-types'
 
+function sanitizeAddr(addr: string): string {
+  const cleaned = addr.trim().toLowerCase()
+  if (!/^0x[0-9a-f]{1,64}$/.test(cleaned)) {
+    throw new Error(`Invalid address: ${addr}`)
+  }
+  return cleaned
+}
+
 export const unitsToUsd = (units: number): string =>
   (units / OCTAS_PER_APT).toFixed(2)
 
@@ -423,7 +431,7 @@ export async function getLegacyFanHistoryFromEvents(fanAddr: string): Promise<Pu
             subscriptions: events(
               where: {
                 type: { _eq: "${CONTRACT_ADDRESS}::${MODULE_NAME}::SubscribeEvent" }
-                data: { _contains: { fan_addr: "${fanAddr}" } }
+                data: { _contains: { fan_addr: "${sanitizeAddr(fanAddr)}" } }
               }
               order_by: { transaction_version: desc }
               limit: 100
@@ -433,7 +441,7 @@ export async function getLegacyFanHistoryFromEvents(fanAddr: string): Promise<Pu
             purchases: events(
               where: {
                 type: { _eq: "${CONTRACT_ADDRESS}::${MODULE_NAME}::PurchaseEvent" }
-                data: { _contains: { fan_addr: "${fanAddr}" } }
+                data: { _contains: { fan_addr: "${sanitizeAddr(fanAddr)}" } }
               }
               order_by: { transaction_version: desc }
               limit: 100
@@ -693,7 +701,7 @@ export async function getActivityNotificationsForCreator(creatorAddr: string): P
           subscriptions: events(
             where: {
               type: { _eq: "${CONTRACT_ADDRESS}::${MODULE_NAME}::SubscribeEvent" }
-              data: { _contains: { creator_addr: "${creatorAddr}" } }
+              data: { _contains: { creator_addr: "${sanitizeAddr(creatorAddr)}" } }
             }
             order_by: { transaction_version: desc }
             limit: 40
@@ -701,7 +709,7 @@ export async function getActivityNotificationsForCreator(creatorAddr: string): P
           purchases: events(
             where: {
               type: { _eq: "${CONTRACT_ADDRESS}::${MODULE_NAME}::PurchaseEvent" }
-              data: { _contains: { creator_addr: "${creatorAddr}" } }
+              data: { _contains: { creator_addr: "${sanitizeAddr(creatorAddr)}" } }
             }
             order_by: { transaction_version: desc }
             limit: 40
@@ -709,7 +717,7 @@ export async function getActivityNotificationsForCreator(creatorAddr: string): P
           follows: events(
             where: {
               type: { _eq: "${CONTRACT_ADDRESS}::${MODULE_NAME}::FollowEvent" }
-              data: { _contains: { creator_addr: "${creatorAddr}" } }
+              data: { _contains: { creator_addr: "${sanitizeAddr(creatorAddr)}" } }
             }
             order_by: { transaction_version: desc }
             limit: 40
@@ -717,7 +725,7 @@ export async function getActivityNotificationsForCreator(creatorAddr: string): P
           comments: events(
             where: {
               type: { _eq: "${CONTRACT_ADDRESS}::${MODULE_NAME}::CommentEvent" }
-              data: { _contains: { creator_addr: "${creatorAddr}" } }
+              data: { _contains: { creator_addr: "${sanitizeAddr(creatorAddr)}" } }
             }
             order_by: { transaction_version: desc }
             limit: 40
@@ -725,7 +733,7 @@ export async function getActivityNotificationsForCreator(creatorAddr: string): P
           loves: events(
             where: {
               type: { _eq: "${CONTRACT_ADDRESS}::${MODULE_NAME}::LoveEvent" }
-              data: { _contains: { creator_addr: "${creatorAddr}" } }
+              data: { _contains: { creator_addr: "${sanitizeAddr(creatorAddr)}" } }
             }
             order_by: { transaction_version: desc }
             limit: 40
@@ -911,7 +919,7 @@ export async function getLegacyCreatorSalesHistory(creatorAddr: string): Promise
             subscriptions: events(
               where: {
                 type: { _eq: "${CONTRACT_ADDRESS}::${MODULE_NAME}::SubscribeEvent" }
-                data: { _contains: { creator_addr: "${creatorAddr}" } }
+                data: { _contains: { creator_addr: "${sanitizeAddr(creatorAddr)}" } }
               }
               order_by: { transaction_version: desc }
               limit: 100
@@ -921,7 +929,7 @@ export async function getLegacyCreatorSalesHistory(creatorAddr: string): Promise
             purchases: events(
               where: {
                 type: { _eq: "${CONTRACT_ADDRESS}::${MODULE_NAME}::PurchaseEvent" }
-                data: { _contains: { creator_addr: "${creatorAddr}" } }
+                data: { _contains: { creator_addr: "${sanitizeAddr(creatorAddr)}" } }
               }
               order_by: { transaction_version: desc }
               limit: 100
@@ -974,7 +982,7 @@ export async function getFollowerCount(creatorAddr: string): Promise<number> {
             events(
               where: {
                 type: { _eq: "${CONTRACT_ADDRESS}::${MODULE_NAME}::FollowEvent" }
-                data: { _contains: { creator_addr: "${creatorAddr}" } }
+                data: { _contains: { creator_addr: "${sanitizeAddr(creatorAddr)}" } }
               }
             ) {
               aggregate { count }

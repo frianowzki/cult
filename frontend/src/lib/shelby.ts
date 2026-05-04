@@ -42,12 +42,18 @@ export function resolveContentUrl(cidOrUrl?: string | null, uploaderAddress?: st
   const value = cidOrUrl.trim()
   if (!value) return ''
 
-  if (
-    value.startsWith('http://') ||
-    value.startsWith('https://') ||
-    value.startsWith('blob:')
-  ) {
+  if (value.startsWith('blob:')) {
     return value
+  }
+
+  if (value.startsWith('http://') || value.startsWith('https://')) {
+    try {
+      const url = new URL(value)
+      if (url.protocol === 'http:' || url.protocol === 'https:') {
+        return value
+      }
+    } catch {}
+    return ''
   }
 
   const parsed = parseCid(value)

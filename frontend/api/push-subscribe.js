@@ -1,3 +1,5 @@
+const { rateLimit } = require('./_rateLimit')
+const { verifyWalletSignature } = require('./_auth')
 const { readSubscriptions, writeSubscriptions } = require('./_pushStore')
 
 module.exports = async function handler(req, res) {
@@ -19,9 +21,24 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ ok: false, error: 'Method not allowed' })
   }
 
-  const { walletAddress, subscription } = req.body || {}
+  const body = req.body || {}
+
+  // Verify wallet signature
+  let verifiedAddress
+  try {
+    verifiedAddress = await verifyWalletSignature(body)
+  } catch (authError) {
+    return res.status(401).json({ ok: false, error: authError.message })
+  }
+
+  const { walletAddress, subscription } = body
   if (!walletAddress || !subscription?.endpoint) {
     return res.status(400).json({ ok: false, error: 'walletAddress and subscription are required' })
+  }
+
+  // Verified address must match the walletAddress in the body
+  if (walletAddress.toLowerCase() !== verifiedAddress.toLowerCase()) {
+    return res.status(403).json({ ok: false, error: 'Address mismatch: signed address does not match walletAddress' })
   }
 
   const existing = readSubscriptions()

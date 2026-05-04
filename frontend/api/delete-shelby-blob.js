@@ -1,3 +1,6 @@
+const { rateLimit } = require('./_rateLimit')
+const { verifyWalletSignature } = require('./_auth')
+
 const SHELBY_API_KEY = process.env.SHELBY_API_KEY
 const SHELBY_BASE_URL = 'https://api.testnet.shelby.xyz'
 
@@ -22,6 +25,15 @@ module.exports = async function handler(req, res) {
     }
 
     const body = req.body || {}
+
+    // Verify wallet signature
+    let verifiedAddress
+    try {
+      verifiedAddress = await verifyWalletSignature(body)
+    } catch (authError) {
+      return res.status(401).json({ error: authError.message })
+    }
+
     const cid = body.cid
 
     console.log('delete request cid:', cid)
@@ -33,6 +45,11 @@ module.exports = async function handler(req, res) {
     const parsed = parseCid(cid)
     if (!parsed) {
       return res.status(400).json({ error: 'Invalid cid format. Expected address::blobName' })
+    }
+
+    // The verified address must match the CID's address prefix
+    if (parsed.address.toLowerCase() !== verifiedAddress.toLowerCase()) {
+      return res.status(403).json({ error: 'Address mismatch: you can only delete your own blobs' })
     }
 
     const address = parsed.address

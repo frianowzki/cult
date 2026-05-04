@@ -37,7 +37,8 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close()
-  const targetUrl = event.notification.data?.url || '/'
+  const rawUrl = event.notification.data?.url || '/'
+  const targetUrl = self.registration.scope + rawUrl.replace(/^\//, '')
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {

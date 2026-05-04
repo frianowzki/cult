@@ -5,6 +5,14 @@ const MODULE_NAME = 'cult'
 const GRAPHQL_URL = 'https://api.testnet.aptoslabs.com/v1/graphql'
 const aptos = new Aptos(new AptosConfig({ network: Network.TESTNET }))
 
+function sanitizeAddr(addr) {
+  const cleaned = addr.trim().toLowerCase()
+  if (!/^0x[0-9a-f]{1,64}$/.test(cleaned)) {
+    throw new Error(`Invalid address: ${addr}`)
+  }
+  return cleaned
+}
+
 async function graphql(query) {
   const response = await fetch(GRAPHQL_URL, {
     method: 'POST',
@@ -40,7 +48,7 @@ async function collectRecentActivity() {
         subscriptions: events(
           where: {
             type: { _eq: "${CONTRACT_ADDRESS}::${MODULE_NAME}::SubscribeEvent" }
-            data: { _contains: { creator_addr: "${creatorAddr}" } }
+            data: { _contains: { creator_addr: "${sanitizeAddr(creatorAddr)}" } }
           }
           order_by: { transaction_version: desc }
           limit: 8
@@ -48,7 +56,7 @@ async function collectRecentActivity() {
         purchases: events(
           where: {
             type: { _eq: "${CONTRACT_ADDRESS}::${MODULE_NAME}::PurchaseEvent" }
-            data: { _contains: { creator_addr: "${creatorAddr}" } }
+            data: { _contains: { creator_addr: "${sanitizeAddr(creatorAddr)}" } }
           }
           order_by: { transaction_version: desc }
           limit: 8
@@ -56,7 +64,7 @@ async function collectRecentActivity() {
         follows: events(
           where: {
             type: { _eq: "${CONTRACT_ADDRESS}::${MODULE_NAME}::FollowEvent" }
-            data: { _contains: { creator_addr: "${creatorAddr}" } }
+            data: { _contains: { creator_addr: "${sanitizeAddr(creatorAddr)}" } }
           }
           order_by: { transaction_version: desc }
           limit: 8
@@ -64,7 +72,7 @@ async function collectRecentActivity() {
         comments: events(
           where: {
             type: { _eq: "${CONTRACT_ADDRESS}::${MODULE_NAME}::CommentEvent" }
-            data: { _contains: { creator_addr: "${creatorAddr}" } }
+            data: { _contains: { creator_addr: "${sanitizeAddr(creatorAddr)}" } }
           }
           order_by: { transaction_version: desc }
           limit: 8
@@ -72,7 +80,7 @@ async function collectRecentActivity() {
         loves: events(
           where: {
             type: { _eq: "${CONTRACT_ADDRESS}::${MODULE_NAME}::LoveEvent" }
-            data: { _contains: { creator_addr: "${creatorAddr}" } }
+            data: { _contains: { creator_addr: "${sanitizeAddr(creatorAddr)}" } }
           }
           order_by: { transaction_version: desc }
           limit: 8

@@ -12,6 +12,7 @@ import Layout from './components/Layout'
 import Feed from './pages/Feed'
 import Notifications from './pages/Notifications'
 import FanProfile from './pages/FanProfile'
+import NotFound from './pages/NotFound'
 import { useStore } from './lib/store'
 import { readPushEnabled } from './lib/push'
 
@@ -59,6 +60,7 @@ export default function App() {
             <Route path="/u/:handle" element={<CreatorPage />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/fan/:address" element={<FanProfile />} />
+            <Route path="*" element={<NotFound />} />
           </Route>
         </Routes>
       </HashRouter>

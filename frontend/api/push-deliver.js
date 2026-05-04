@@ -1,4 +1,5 @@
 const webpush = require('web-push')
+const { requireCronSecret } = require('./_auth')
 const { readSubscriptions, readNotifications, writeNotifications, readState, writeState, writeSubscriptions } = require('./_pushStore')
 const { collectRecentActivity } = require('./_pushActivity')
 
@@ -31,6 +32,12 @@ function buildPayload(item) {
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST' && req.method !== 'GET') {
     return res.status(405).json({ ok: false, error: 'Method not allowed' })
+  }
+
+  try {
+    requireCronSecret(req)
+  } catch (authError) {
+    return res.status(401).json({ ok: false, error: authError.message })
   }
 
   if (!publicKey || !privateKey) {

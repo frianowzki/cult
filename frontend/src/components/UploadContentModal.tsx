@@ -63,10 +63,13 @@ export default function UploadContentModal({ onSuccess }: Props) {
     if (accepted[0]) setFile(accepted[0])
   }, [])
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  const MAX_FILE_SIZE = 100 * 1024 * 1024 // 100MB
+
+const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: ACCEPTED_TYPES,
     maxFiles: 1,
+    maxSize: MAX_FILE_SIZE,
   })
 
   function handleThumbnailChange(e: React.ChangeEvent<HTMLInputElement>) {

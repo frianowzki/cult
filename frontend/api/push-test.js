@@ -1,4 +1,5 @@
 const webpush = require('web-push')
+const { requireCronSecret } = require('./_auth')
 const { readSubscriptions } = require('./_pushStore')
 
 const publicKey = process.env.WEB_PUSH_VAPID_PUBLIC_KEY
@@ -10,15 +11,21 @@ if (publicKey && privateKey) {
 }
 
 module.exports = async function handler(req, res) {
-  if (req.method !== 'POST' && req.method !== 'GET') {
+  if (req.method !== 'POST') {
     return res.status(405).json({ ok: false, error: 'Method not allowed' })
+  }
+
+  try {
+    requireCronSecret(req)
+  } catch (authError) {
+    return res.status(401).json({ ok: false, error: authError.message })
   }
 
   if (!publicKey || !privateKey) {
     return res.status(501).json({ ok: false, error: 'Missing WEB_PUSH_VAPID_PUBLIC_KEY or WEB_PUSH_VAPID_PRIVATE_KEY' })
   }
 
-  const walletAddress = String(req.query.walletAddress || req.body?.walletAddress || '').toLowerCase()
+  const walletAddress = String(req.body?.walletAddress || '').toLowerCase()
   const subscriptions = readSubscriptions().filter((sub) => !walletAddress || sub.walletAddress === walletAddress)
 
   if (!subscriptions.length) {
