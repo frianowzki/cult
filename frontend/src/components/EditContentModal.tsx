@@ -82,6 +82,10 @@ export default function EditContentModal({ content, onSuccess, onClose }: Props)
     if (!account) { toast.error('Wallet not connected'); return }
     if (!title.trim()) { toast.error('Title is required'); return }
 
+    if (accessLevel === ACCESS_LEVELS.PURCHASE && parseFloat(purchasePrice) > 10000) {
+      toast.error('Purchase price cannot exceed $10,000'); return
+    }
+
     setLoading(true)
     try {
       let shelbyCid = content.shelby_cid
@@ -230,12 +234,12 @@ export default function EditContentModal({ content, onSuccess, onClose }: Props)
 
           <div className="form-group">
             <label className="label">Title *</label>
-            <input className="input" value={title} onChange={(e) => setTitle(e.target.value)} />
+            <input className="input" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} />
           </div>
 
           <div className="form-group">
             <label className="label">Description</label>
-            <textarea className="input" rows={4} value={description} onChange={(e) => setDescription(e.target.value)} />
+            <textarea className="input" rows={4} value={description} onChange={(e) => setDescription(e.target.value)} maxLength={1000} />
           </div>
 
           <div className="form-group">
@@ -263,6 +267,7 @@ export default function EditContentModal({ content, onSuccess, onClose }: Props)
                 className="input"
                 type="number"
                 min="0"
+                max="10000"
                 step="0.1"
                 value={purchasePrice}
                 onChange={(e) => setPurchasePrice(e.target.value)}

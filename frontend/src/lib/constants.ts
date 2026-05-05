@@ -2,8 +2,15 @@ export const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS || '0xYOUR
 export const PLATFORM_ADDRESS = import.meta.env.VITE_PLATFORM_ADDRESS || '0xYOUR_PLATFORM_ADDRESS'
 export const MODULE_NAME = 'cult'
 export const APTOS_NETWORK = 'testnet'
-export const SHELBY_API_KEY = import.meta.env.VITE_SHELBY_API_KEY || ''
 export const OCTAS_PER_APT = 100_000_000
+
+// Validate critical on-chain constants at startup (log errors, don't crash)
+if (!/^0x[0-9a-f]{1,64}$/.test(CONTRACT_ADDRESS)) {
+  console.error(`[CULT] Invalid CONTRACT_ADDRESS: "${CONTRACT_ADDRESS}". On-chain calls will fail.`)
+}
+if (!/^[a-z_]+$/.test(MODULE_NAME)) {
+  console.error(`[CULT] Invalid MODULE_NAME: "${MODULE_NAME}". On-chain calls will fail.`)
+}
 
 export const CONTENT_TYPES = { VIDEO: 0, IMAGE: 1, AUDIO: 2, ARTICLE: 3 } as const
 

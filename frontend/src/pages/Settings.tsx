@@ -151,6 +151,11 @@ export default function Settings() {
     if (!displayName) { toast.error('Display name is required'); return }
     if (!account || !profile) { toast.error('Wallet not connected'); return }
 
+    const activeTiers = tiers.slice(0, tierCount)
+    for (const t of activeTiers) {
+      if (parseFloat(t.price) > 10000) { toast.error('Tier price cannot exceed $10,000'); return }
+    }
+
     setLoading(true)
     try {
       let avatarCid = profile.avatar_shelby_cid
@@ -181,16 +186,33 @@ export default function Settings() {
 
       await signAndSubmitTransaction({ data: payload })
 
-      const tierPayload = buildUpdateTiersPayload({
-        tiers: tiers.slice(0, tierCount).map((t) => ({
-          name: t.name,
-          priceUsd: parseFloat(t.price) || 0,
-          description: t.description,
-        })),
-      })
+      let tiersSucceeded = false
+      try {
+        const tierPayload = buildUpdateTiersPayload({
+          tiers: tiers.slice(0, tierCount).map((t) => ({
+            name: t.name,
+            priceUsd: parseFloat(t.price) || 0,
+            description: t.description,
+          })),
+        })
 
-      await signAndSubmitTransaction({ data: tierPayload })
-      toast.success('Profile and tiers updated!')
+        await signAndSubmitTransaction({ data: tierPayload })
+        tiersSucceeded = true
+      } catch (tierErr: any) {
+        console.error('Tier update failed:', tierErr)
+        const tierMsg = String(tierErr?.message || tierErr || '')
+        if (tierMsg.includes('cancel') || tierMsg.includes('reject')) {
+          toast.error('Profile saved but tier update was cancelled — you can retry from Settings')
+        } else {
+          toast.error('Profile saved but tier update failed — you can retry from Settings')
+        }
+      }
+
+      if (tiersSucceeded) {
+        toast.success('Profile and tiers updated!')
+      } else {
+        toast.success('Profile updated!')
+      }
 
       // Refresh local profile
       const updated = await getCreatorProfile(String(account.address))
@@ -323,6 +345,7 @@ export default function Settings() {
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
             placeholder="Your Creator Name"
+            maxLength={80}
           />
         </div>
 
@@ -335,6 +358,7 @@ export default function Settings() {
             onChange={(e) => setBio(e.target.value)}
             placeholder="Tell your audience who you are…"
             rows={4}
+            maxLength={500}
           />
         </div>
 
@@ -399,17 +423,17 @@ export default function Settings() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 160px), 1fr))', gap: 10, marginBottom: 10 }}>
               <div>
                 <label className="label">Tier name</label>
-                <input className="input" value={tier.name} onChange={(e) => updateTier(i, 'name', e.target.value)} />
+                <input className="input" value={tier.name} onChange={(e) => updateTier(i, 'name', e.target.value)} maxLength={40} />
               </div>
               <div>
                 <label className="label">Price (USD/mo)</label>
-                <input className="input" type="number" min="0" step="0.1" value={tier.price} onChange={(e) => updateTier(i, 'price', e.target.value)} />
+                <input className="input" type="number" min="0" max="10000" step="0.1" value={tier.price} onChange={(e) => updateTier(i, 'price', e.target.value)} />
               </div>
             </div>
 
             <div>
               <label className="label">Description</label>
-              <input className="input" value={tier.description} onChange={(e) => updateTier(i, 'description', e.target.value)} />
+              <input className="input" value={tier.description} onChange={(e) => updateTier(i, 'description', e.target.value)} maxLength={200} />
             </div>
           </div>
         ))}

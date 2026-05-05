@@ -6,7 +6,9 @@ import toast from 'react-hot-toast'
 import {
   aptos,
   buildGiftSubscriptionPayload,
-  getUserAddressByHandle,
+  // NOTE: getCreatorAddressByHandle only resolves creators (not regular users).
+  // Gifts to non-creator usernames will fail with "Username not found".
+  getCreatorAddressByHandle,
   type Tier,
 } from '../lib/aptos'
 
@@ -40,7 +42,7 @@ export default function GiftSubscriptionModal({ creatorAddr, creatorName, tiers,
 
     setLoading(true)
     try {
-      const recipientAddr = await getUserAddressByHandle(normalizedHandle)
+      const recipientAddr = await getCreatorAddressByHandle(normalizedHandle)
       if (!recipientAddr) {
         toast.error('Username not found')
         return

@@ -135,6 +135,7 @@ export default function CreatorPage() {
   }
 
   async function handleSubscribe(tierIndex: number) {
+    if (subscribing !== null) return
     if (!connected || !account) { toast.error('Connect wallet first'); return }
     setSubscribing(tierIndex)
     try {
@@ -145,7 +146,6 @@ export default function CreatorPage() {
     } catch (e: any) {
       toast.error(e?.message || 'Transaction failed')
     } finally {
-      setSubscribing(tierIndex)
       setSubscribing(null)
     }
   }

@@ -116,6 +116,11 @@ export default function EditProfileModal({ profile, onSuccess, onClose }: Props)
     if (!displayName) { toast.error('Display name is required'); return }
     if (!account) { toast.error('Wallet not connected'); return }
 
+    const activeTiers = tiers.slice(0, tierCount)
+    for (const t of activeTiers) {
+      if (parseFloat(t.price) > 10000) { toast.error('Tier price cannot exceed $10,000'); return }
+    }
+
     setLoading(true)
     try {
       let avatarCid = profile.avatar_shelby_cid
@@ -271,6 +276,7 @@ export default function EditProfileModal({ profile, onSuccess, onClose }: Props)
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="Your Creator Name"
+              maxLength={80}
             />
           </div>
 
@@ -283,6 +289,7 @@ export default function EditProfileModal({ profile, onSuccess, onClose }: Props)
               onChange={(e) => setBio(e.target.value)}
               placeholder="Tell your audience who you are…"
               rows={4}
+              maxLength={500}
             />
           </div>
 
@@ -348,6 +355,7 @@ export default function EditProfileModal({ profile, onSuccess, onClose }: Props)
                     className="input"
                     value={tier.name}
                     onChange={(e) => updateTier(i, 'name', e.target.value)}
+                    maxLength={40}
                   />
                 </div>
                 <div>
@@ -356,6 +364,7 @@ export default function EditProfileModal({ profile, onSuccess, onClose }: Props)
                     className="input"
                     type="number"
                     min="0"
+                    max="10000"
                     step="0.1"
                     value={tier.price}
                     onChange={(e) => updateTier(i, 'price', e.target.value)}
@@ -369,6 +378,7 @@ export default function EditProfileModal({ profile, onSuccess, onClose }: Props)
                   className="input"
                   value={tier.description}
                   onChange={(e) => updateTier(i, 'description', e.target.value)}
+                  maxLength={200}
                 />
               </div>
             </div>

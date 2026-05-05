@@ -898,7 +898,7 @@ export async function getRecentNotifications(fanAddr: string, limit = 10): Promi
     const lastSeen = getLastNotificationsSeenAt(fanAddr)
     return all.slice(0, limit).map((item) => ({
       ...item,
-      isRead: item.createdAt * 1000 <= lastSeen,
+      isRead: item.createdAt > 1000000000 ? item.createdAt * 1000 <= lastSeen : false,
     }))
   } catch {
     return []

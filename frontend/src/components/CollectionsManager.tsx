@@ -22,7 +22,18 @@ function storageKey(creatorAddr: string) {
 function loadCollections(creatorAddr: string): Collection[] {
   try {
     const raw = localStorage.getItem(storageKey(creatorAddr))
-    return raw ? JSON.parse(raw) : []
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+    return parsed.filter(
+      (item: any) =>
+        item &&
+        typeof item === 'object' &&
+        typeof item.id === 'string' &&
+        typeof item.name === 'string' &&
+        Array.isArray(item.contentIds) &&
+        item.contentIds.every((id: any) => typeof id === 'number'),
+    )
   } catch {
     return []
   }

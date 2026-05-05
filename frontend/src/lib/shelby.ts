@@ -6,7 +6,6 @@ import {
   expectedTotalChunksets,
 } from '@shelby-protocol/sdk/browser'
 import { Hex, Network } from '@aptos-labs/ts-sdk'
-import { SHELBY_API_KEY } from './constants'
 
 export const SHELBY_BASE_URL = 'https://api.testnet.shelby.xyz'
 export const SHELBY_RPC_ENDPOINT = 'https://api.testnet.shelby.xyz/shelby'
@@ -46,6 +45,10 @@ export function resolveContentUrl(cidOrUrl?: string | null, uploaderAddress?: st
     return value
   }
 
+  if (value.startsWith('javascript:') || value.startsWith('data:')) {
+    return ''
+  }
+
   if (value.startsWith('http://') || value.startsWith('https://')) {
     try {
       const url = new URL(value)
@@ -66,7 +69,7 @@ export function resolveContentUrl(cidOrUrl?: string | null, uploaderAddress?: st
 export function getShelbyClient() {
   return new ShelbyClient({
     network: Network.TESTNET,
-    apiKey: SHELBY_API_KEY || undefined,
+    apiKey: undefined,
   })
 }
 
@@ -175,7 +178,7 @@ export async function mockUpload(
 }
 
 export function isShelbyEnabled(): boolean {
-  return !!SHELBY_API_KEY
+  return false
 }
 
 export function buildDeleteBlobPayload(blobName: string) {

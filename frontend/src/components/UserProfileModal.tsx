@@ -178,6 +178,7 @@ export default function UserProfileModal({ profile, onSuccess, onClose }: Props)
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="Your name"
+              maxLength={80}
             />
           </div>
 
@@ -189,6 +190,7 @@ export default function UserProfileModal({ profile, onSuccess, onClose }: Props)
               onChange={(e) => setBio(e.target.value)}
               placeholder="Say something about yourself…"
               rows={4}
+              maxLength={500}
             />
           </div>
         </div>

@@ -25,7 +25,7 @@ export default class ErrorBoundary extends Component<Props, State> {
   }
 
   handleReset = () => {
-    this.setState({ hasError: false, error: null })
+    window.location.reload()
   }
 
   render() {
@@ -139,7 +139,7 @@ export default class ErrorBoundary extends Component<Props, State> {
               </button>
               <button
                 className="btn"
-                onClick={() => window.location.hash = '#/'}
+                onClick={() => { window.location.href = '/' }}
               >
                 Go home
               </button>

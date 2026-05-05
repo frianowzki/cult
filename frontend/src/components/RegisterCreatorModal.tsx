@@ -91,6 +91,11 @@ export default function RegisterCreatorModal({ onSuccess }: Props) {
     if (!handle || !displayName) { toast.error('Handle and display name are required'); return }
     if (!account) { toast.error('Wallet not connected'); return }
 
+    const activeTiers = tiers.slice(0, tierCount)
+    for (const t of activeTiers) {
+      if (parseFloat(t.price) > 10000) { toast.error('Tier price cannot exceed $10,000'); return }
+    }
+
     setLoading(true)
     try {
       let avatarCid = ''
@@ -212,17 +217,17 @@ export default function RegisterCreatorModal({ onSuccess }: Props) {
                 <div className="form-group">
                   <label className="label">Handle *</label>
                   <input className="input" placeholder="your_handle" value={handle}
-                    onChange={(e) => setHandle(e.target.value.toLowerCase().replace(/\s/g, '_'))} />
+                    onChange={(e) => setHandle(e.target.value.toLowerCase().replace(/\s/g, '_'))} maxLength={30} />
                 </div>
                 <div className="form-group">
                   <label className="label">Display Name *</label>
                   <input className="input" placeholder="Your Creator Name" value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)} />
+                    onChange={(e) => setDisplayName(e.target.value)} maxLength={80} />
                 </div>
                 <div className="form-group">
                   <label className="label">Bio</label>
                   <textarea className="input" placeholder="Tell your audience who you are…"
-                    value={bio} onChange={(e) => setBio(e.target.value)} rows={3} />
+                    value={bio} onChange={(e) => setBio(e.target.value)} rows={3} maxLength={500} />
                 </div>
               </motion.div>
             ) : (
@@ -247,18 +252,18 @@ export default function RegisterCreatorModal({ onSuccess }: Props) {
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 160px), 1fr))', gap: 10, marginBottom: 10 }}>
                       <div>
                         <label className="label">Tier name</label>
-                        <input className="input" value={tier.name} onChange={(e) => updateTier(i, 'name', e.target.value)} />
+                        <input className="input" value={tier.name} onChange={(e) => updateTier(i, 'name', e.target.value)} maxLength={40} />
                       </div>
                       <div>
                         <label className="label">Price (USD/mo)</label>
-                        <input className="input" type="number" min="0" step="0.01" value={tier.price}
+                        <input className="input" type="number" min="0" max="10000" step="0.01" value={tier.price}
                           onChange={(e) => updateTier(i, 'price', e.target.value)} />
                       </div>
                     </div>
                     <div>
                       <label className="label">Description</label>
                       <input className="input" placeholder="What do members get?" value={tier.description}
-                        onChange={(e) => updateTier(i, 'description', e.target.value)} />
+                        onChange={(e) => updateTier(i, 'description', e.target.value)} maxLength={200} />
                     </div>
                   </div>
                 ))}

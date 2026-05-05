@@ -1,5 +1,4 @@
 import { Hex } from '@aptos-labs/ts-sdk'
-import { SHELBY_API_KEY } from './constants'
 import { getShelbyPublicUrl } from './shelby-read'
 
 export const SHELBY_RPC_ENDPOINT = 'https://api.testnet.shelby.xyz/shelby'
@@ -85,7 +84,7 @@ async function uploadPart(uploadId: string, partIdx: number, partData: Uint8Arra
         method: 'PUT',
         headers: {
           'Content-Type': 'application/octet-stream',
-          ...(SHELBY_API_KEY ? { Authorization: `Bearer ${SHELBY_API_KEY}` } : {}),
+          // SHELBY_API_KEY removed from client bundle for security; server-side only
         },
         body: new Blob([partData]),
       })
@@ -115,7 +114,7 @@ export async function pushBlobToRpc(blobName: string, data: Uint8Array, accountA
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      ...(SHELBY_API_KEY ? { Authorization: `Bearer ${SHELBY_API_KEY}` } : {}),
+      // SHELBY_API_KEY removed from client bundle for security; server-side only
     },
     body: JSON.stringify({
       rawAccount: accountAddress,
@@ -145,7 +144,7 @@ export async function pushBlobToRpc(blobName: string, data: Uint8Array, accountA
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      ...(SHELBY_API_KEY ? { Authorization: `Bearer ${SHELBY_API_KEY}` } : {}),
+      // SHELBY_API_KEY removed from client bundle for security; server-side only
     },
   })
 
@@ -182,7 +181,7 @@ export async function mockUpload(file: File, onProgress?: ProgressCallback): Pro
 }
 
 export function isShelbyEnabled(): boolean {
-  return !!SHELBY_API_KEY
+  return false
 }
 
 export function buildDeleteBlobPayload(blobName: string) {

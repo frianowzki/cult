@@ -63,7 +63,13 @@ function getDraftsKey(addr: string) {
 function loadDrafts(addr: string): DraftItem[] {
   try {
     const raw = localStorage.getItem(getDraftsKey(addr))
-    return raw ? JSON.parse(raw) : []
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+    return parsed.filter(
+      (item: any) =>
+        item && typeof item === 'object' && typeof item.title === 'string' && typeof item.id === 'string',
+    )
   } catch {
     return []
   }
@@ -241,6 +247,10 @@ export default function UploadContentModal({ onSuccess }: Props) {
   async function handleSubmit() {
     if (!file || !title) { toast.error('File and title are required'); return }
     if (!account?.address) { toast.error('Wallet not connected'); return }
+
+    if (accessLevel === ACCESS_LEVELS.PURCHASE && parseFloat(purchasePrice) > 10000) {
+      toast.error('Purchase price cannot exceed $10,000'); return
+    }
 
     // If draft mode, save locally instead of uploading
     if (publishMode === 'draft') {
@@ -449,7 +459,7 @@ export default function UploadContentModal({ onSuccess }: Props) {
               {([
                 { value: 'now' as PublishMode, label: 'Publish now' },
                 { value: 'draft' as PublishMode, label: 'Save as draft' },
-                { value: 'schedule' as PublishMode, label: 'Schedule' },
+                { value: 'schedule' as PublishMode, label: 'Schedule (coming soon)' },
               ]).map((opt) => (
                 <button
                   key={opt.value}
@@ -549,13 +559,13 @@ export default function UploadContentModal({ onSuccess }: Props) {
           <div className="form-group">
             <label className="label">Title *</label>
             <input className="input" placeholder="Content title…" value={title}
-              onChange={(e) => setTitle(e.target.value)} />
+              onChange={(e) => setTitle(e.target.value)} maxLength={120} />
           </div>
 
           <div className="form-group">
             <label className="label">Description</label>
             <textarea className="input" placeholder="Describe your content…"
-              value={description} onChange={(e) => setDescription(e.target.value)} rows={3} />
+              value={description} onChange={(e) => setDescription(e.target.value)} rows={3} maxLength={1000} />
           </div>
 
           <div className="form-group">
@@ -577,7 +587,7 @@ export default function UploadContentModal({ onSuccess }: Props) {
           {accessLevel === ACCESS_LEVELS.PURCHASE && (
             <div className="form-group">
               <label className="label">Purchase price (USD)</label>
-              <input className="input" type="number" min="0" step="0.1"
+              <input className="input" type="number" min="0" max="10000" step="0.1"
                 value={purchasePrice} onChange={(e) => setPurchasePrice(e.target.value)}
                 style={{ maxWidth: 200 }} />
               <div style={{ marginTop: 10, padding: '10px 12px', border: '1px solid var(--border)', background: 'var(--bg-3)', fontSize: 12, color: 'var(--text-2)', lineHeight: 1.55 }}>
@@ -645,8 +655,14 @@ export default function UploadContentModal({ onSuccess }: Props) {
             Cancel
           </button>
           {publishMode !== 'now' ? (
-            <button className="btn btn-primary" onClick={handleSubmit} disabled={isLoading || !title}>
-              {publishMode === 'draft' ? (editingDraftId ? 'Update draft' : 'Save draft') : (editingDraftId ? 'Update scheduled' : 'Save scheduled')}
+            <button
+              className="btn btn-primary"
+              onClick={handleSubmit}
+              disabled={isLoading || !title || publishMode === 'schedule'}
+              title={publishMode === 'schedule' ? 'Automatic scheduling will be available in a future update' : undefined}
+              style={publishMode === 'schedule' ? { opacity: 0.5, cursor: 'not-allowed' } : undefined}
+            >
+              {publishMode === 'draft' ? (editingDraftId ? 'Update draft' : 'Save draft') : 'Save scheduled'}
             </button>
           ) : (
             <button className="btn btn-primary" onClick={handleSubmit} disabled={isLoading || !file || !title}>
