@@ -147,3 +147,11 @@ export interface CommentItem {
   text: string
   postedAt: number
 }
+
+export interface Collection {
+  id: string
+  name: string
+  description: string
+  contentIds: number[]
+  createdAt: number
+}

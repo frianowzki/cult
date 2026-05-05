@@ -81,6 +81,8 @@ export interface Content {
   access_level: number
   purchase_price: number
   published_at: number
+  scheduled_for: number
+  is_draft: boolean
   is_active: boolean
 }
 

@@ -2,10 +2,27 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { unitsToUsd, getAllCreators, type IndexedCreator } from '../lib/aptos'
-import { CONTENT_TYPE_ICONS } from '../lib/constants'
+import { CONTENT_TYPE_ICONS, CONTENT_TYPES, CONTENT_TYPE_LABELS } from '../lib/constants'
 import { resolveContentUrl } from '../lib/shelby'
 
 const ACCENT_CHARS = ['♪', '◉', '✦', '▶', '◈', '⬡', '◎', '▣', '⊕']
+
+const SORT_OPTIONS = [
+  { value: 'trending', label: 'Trending' },
+  { value: 'newest', label: 'Newest' },
+  { value: 'subscribers', label: 'Most Subscribers' },
+  { value: 'content', label: 'Most Content' },
+] as const
+
+type SortOption = typeof SORT_OPTIONS[number]['value']
+
+const FILTER_PILLS = [
+  { value: null, label: 'All' },
+  { value: CONTENT_TYPES.VIDEO, label: CONTENT_TYPE_LABELS[CONTENT_TYPES.VIDEO], icon: CONTENT_TYPE_ICONS[CONTENT_TYPES.VIDEO] },
+  { value: CONTENT_TYPES.IMAGE, label: CONTENT_TYPE_LABELS[CONTENT_TYPES.IMAGE], icon: CONTENT_TYPE_ICONS[CONTENT_TYPES.IMAGE] },
+  { value: CONTENT_TYPES.AUDIO, label: CONTENT_TYPE_LABELS[CONTENT_TYPES.AUDIO], icon: CONTENT_TYPE_ICONS[CONTENT_TYPES.AUDIO] },
+  { value: CONTENT_TYPES.ARTICLE, label: CONTENT_TYPE_LABELS[CONTENT_TYPES.ARTICLE], icon: CONTENT_TYPE_ICONS[CONTENT_TYPES.ARTICLE] },
+] as const
 
 function rankCreators(creators: IndexedCreator[], normalizedSearch: string) {
   const now = Date.now() / 1000
@@ -46,6 +63,8 @@ export default function Explore() {
   const [creators, setCreators] = useState<IndexedCreator[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
+  const [contentTypeFilter, setContentTypeFilter] = useState<number | null>(null)
+  const [sortBy, setSortBy] = useState<SortOption>('trending')
 
   useEffect(() => {
     loadCreators()
@@ -69,7 +88,14 @@ export default function Explore() {
 
   const normalizedSearch = search.trim().toLowerCase().replace(/^@/, '')
 
-  const filtered = rankCreators(creators.filter((c) => {
+  /* Content type filter */
+  const typeFiltered = creators.filter((c) => {
+    if (contentTypeFilter === null) return true
+    return c.searchable_content.some((content) => content.content_type === contentTypeFilter)
+  })
+
+  /* Search filter */
+  const searchFiltered = typeFiltered.filter((c) => {
     if (!normalizedSearch) return true
 
     const matchesCreator = [c.handle, c.display_name, c.bio]
@@ -83,7 +109,24 @@ export default function Explore() {
         .filter(Boolean)
         .some((value) => value.toLowerCase().includes(normalizedSearch))
     )
-  }), normalizedSearch)
+  })
+
+  /* Rank then sort */
+  const ranked = rankCreators(searchFiltered, normalizedSearch)
+
+  const filtered = [...ranked].sort((a, b) => {
+    switch (sortBy) {
+      case 'newest':
+        return b.created_at - a.created_at
+      case 'subscribers':
+        return b.subscriber_count - a.subscriber_count
+      case 'content':
+        return b.content_count - a.content_count
+      case 'trending':
+      default:
+        return (b as any).__rank - (a as any).__rank
+    }
+  })
 
   return (
     <div style={{ maxWidth: 1280, margin: '0 auto', padding: '24px clamp(16px, 4vw, 32px) 16px', minHeight: '100%' }}>
@@ -105,22 +148,73 @@ export default function Explore() {
             Search
           </button>
         </div>
+
+        {/* Content type filter pills */}
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 16 }}>
+          {FILTER_PILLS.map((pill) => {
+            const isActive = contentTypeFilter === pill.value
+            return (
+              <button
+                key={pill.label}
+                className={`btn btn-sm ${isActive ? 'btn-primary' : 'btn-ghost'}`}
+                onClick={() => setContentTypeFilter(pill.value as number | null)}
+                style={{
+                  fontSize: 12,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  fontFamily: 'var(--font-mono)',
+                  background: isActive ? 'var(--accent)' : 'transparent',
+                  color: isActive ? 'var(--bg)' : 'var(--text-2)',
+                  borderColor: isActive ? 'var(--accent)' : 'var(--border)',
+                }}
+              >
+                {'icon' in pill && (
+                  <span style={{ fontSize: 11 }}>{(pill as any).icon}</span>
+                )}
+                {pill.label}
+              </button>
+            )
+          })}
+        </div>
       </div>
 
-      {/* Results count */}
+      {/* Results count + Sort */}
       {!loading && (
-        <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
           <span className="mono" style={{ fontSize: 11, color: 'var(--text-3)' }}>
             {filtered.length} creator{filtered.length !== 1 ? 's' : ''}
             {normalizedSearch ? ` matching @${normalizedSearch}` : ' on-chain'}
+            {contentTypeFilter !== null && ` · ${CONTENT_TYPE_LABELS[contentTypeFilter]}`}
           </span>
-          <button
-            className="btn btn-ghost btn-sm"
-            onClick={loadCreators}
-            style={{ fontSize: 11 }}
-          >
-            ↻ Refresh
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as SortOption)}
+              style={{
+                background: 'var(--bg-2)',
+                color: 'var(--text-2)',
+                border: '1px solid var(--border)',
+                borderRadius: 4,
+                padding: '4px 8px',
+                fontSize: 11,
+                fontFamily: 'var(--font-mono)',
+                cursor: 'pointer',
+                outline: 'none',
+              }}
+            >
+              {SORT_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+            <button
+              className="btn btn-ghost btn-sm"
+              onClick={loadCreators}
+              style={{ fontSize: 11 }}
+            >
+              ↻ Refresh
+            </button>
+          </div>
         </div>
       )}
 
@@ -161,7 +255,9 @@ export default function Explore() {
               ? 'No creators registered yet — be the first!'
               : normalizedSearch
                 ? `No creators or content found for ${search.trim()}`
-                : 'No creators found'}
+                : contentTypeFilter !== null
+                  ? `No creators with ${CONTENT_TYPE_LABELS[contentTypeFilter]} content`
+                  : 'No creators found'}
           </p>
         </div>
       )}

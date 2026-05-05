@@ -30,6 +30,7 @@ import TipModal from '../components/TipModal'
 import FollowButton from '../components/FollowButton'
 import ContentViewer from '../components/ContentViewer'
 import GiftSubscriptionModal from '../components/GiftSubscriptionModal'
+import CollectionViewer from '../components/CollectionViewer'
 
 export default function CreatorPage() {
   const { handle } = useParams<{ handle: string }>()
@@ -42,7 +43,7 @@ export default function CreatorPage() {
   const [salesHistory, setSalesHistory] = useState<PurchaseHistoryItem[]>([])
   const [accessMap, setAccessMap] = useState<Record<number, boolean>>({})
   const [loading, setLoading] = useState(true)
-  const [selectedTab, setSelectedTab] = useState<'all' | 'video' | 'image' | 'audio' | 'article'>('all')
+  const [selectedTab, setSelectedTab] = useState<'all' | 'video' | 'image' | 'audio' | 'article' | 'collections'>('all')
   const [subscribing, setSubscribing] = useState<number | null>(null)
   const [purchasing, setPurchasing] = useState<number | null>(null)
   const [viewingContent, setViewingContent] = useState<Content | null>(null)
@@ -190,11 +191,14 @@ export default function CreatorPage() {
     postsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 
-  const filteredContent = useMemo(() => contents.filter((c) => {
-    if (selectedTab === 'all') return true
-    const typeMap: Record<string, number> = { video: 0, image: 1, audio: 2, article: 3 }
-    return c.content_type === typeMap[selectedTab]
-  }), [contents, selectedTab])
+  const filteredContent = useMemo(() => {
+    if (selectedTab === 'collections') return []
+    return contents.filter((c) => {
+      if (selectedTab === 'all') return true
+      const typeMap: Record<string, number> = { video: 0, image: 1, audio: 2, article: 3 }
+      return c.content_type === typeMap[selectedTab]
+    })
+  }, [contents, selectedTab])
 
   const lockedCount = filteredContent.filter((content) => !(accessMap[content.id] ?? (content.access_level === ACCESS_LEVELS.FREE))).length
   const cheapestTier = creator?.tiers?.[0] || null
@@ -423,15 +427,17 @@ export default function CreatorPage() {
         <div ref={postsSectionRef} style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'minmax(0, 1fr)', gap: 24, alignItems: 'start' }}>
           <div>
             <div style={{ display: 'flex', gap: 4, marginBottom: 18, borderBottom: '1px solid var(--border)', overflowX: 'auto', paddingBottom: 2 }}>
-              {(['all', 'video', 'image', 'audio', 'article'] as const).map((tab) => (
+              {(['all', 'video', 'image', 'audio', 'article', 'collections'] as const).map((tab) => (
                 <button key={tab} className="btn btn-ghost btn-sm" onClick={() => setSelectedTab(tab)}
                   style={{ color: selectedTab === tab ? 'var(--accent)' : 'var(--text-3)', borderBottom: selectedTab === tab ? '2px solid var(--accent)' : '2px solid transparent', borderRadius: 0, paddingBottom: 10, flexShrink: 0 }}>
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                  {tab === 'collections' ? 'Collections' : tab.charAt(0).toUpperCase() + tab.slice(1)}
                 </button>
               ))}
             </div>
 
-            {filteredContent.length === 0 ? (
+            {selectedTab === 'collections' ? (
+              <CollectionViewer creatorAddr={creatorAddr} contents={contents} />
+            ) : filteredContent.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--text-3)' }}>
                 <div style={{ fontFamily: 'var(--font-mono)', fontSize: '2rem', marginBottom: 12 }}>◌</div>
                 No content yet

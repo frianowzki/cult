@@ -34,6 +34,9 @@ import AutoRenewBanner from '../components/AutoRenewBanner'
 import ContentViewer from '../components/ContentViewer'
 import UserProfileModal from '../components/UserProfileModal'
 import GiftSubscriptionModal from '../components/GiftSubscriptionModal'
+import CreatorAnalytics from '../components/CreatorAnalytics'
+import EarningsView from '../components/EarningsView'
+import CollectionsManager from '../components/CollectionsManager'
 
 export default function Dashboard() {
   const { connected, account, signAndSubmitTransaction } = useWallet()
@@ -57,7 +60,7 @@ export default function Dashboard() {
   const [fanSubscription, setFanSubscription] = useState<SubscriptionStatus | null>(null)
   const [fanPurchaseHistory, setFanPurchaseHistory] = useState<PurchaseHistoryItem[]>([])
   const [creatorPurchaseHistory, setCreatorPurchaseHistory] = useState<PurchaseHistoryItem[]>([])
-  const [dashTab, setDashTab] = useState<'posts' | 'analytics' | 'following' | 'history'>('posts')
+  const [dashTab, setDashTab] = useState<'posts' | 'analytics' | 'earnings' | 'collections' | 'following' | 'history'>('posts')
   const [giftModalOpen, setGiftModalOpen] = useState(false)
 
   useEffect(() => {
@@ -447,7 +450,7 @@ export default function Dashboard() {
       )}
 
       <div style={{ display: 'flex', gap: 4, marginBottom: 28, borderBottom: '1px solid var(--border)', flexWrap: 'wrap' }}>
-        {(['posts', 'analytics', 'following', 'history'] as const).map((tab) => (
+        {(['posts', 'analytics', 'earnings', 'collections', 'following', 'history'] as const).map((tab) => (
           <button
             key={tab}
             className="btn btn-ghost btn-sm"
@@ -460,114 +463,28 @@ export default function Dashboard() {
               textTransform: 'capitalize',
             }}
           >
-            {tab === 'posts' ? 'Your Content' : tab === 'analytics' ? 'Analytics' : tab === 'following' ? 'Following Feed' : 'History'}
+            {tab === 'posts' ? 'Your Content' : tab === 'analytics' ? 'Analytics' : tab === 'earnings' ? 'Earnings' : tab === 'collections' ? 'Collections' : tab === 'following' ? 'Following Feed' : 'History'}
           </button>
         ))}
       </div>
 
       {dashTab === 'analytics' ? (
-        <div style={{ display: 'grid', gap: 20, marginBottom: 8 }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
-            {[
-              { label: 'Sales Revenue', value: `$${unitsToUsd(totalSalesRevenue)}`, hint: `${creatorPurchaseHistory.length} total conversions` },
-              { label: 'Subscription Revenue', value: `$${unitsToUsd(subSales.reduce((sum, item) => sum + item.amount_paid, 0))}`, hint: `${subSales.length} membership sales` },
-              { label: 'Paid Post Revenue', value: `$${unitsToUsd(paidSales.reduce((sum, item) => sum + item.amount_paid, 0))}`, hint: `${paidSales.length} paid unlocks` },
-              { label: 'Avg Revenue / Sale', value: `$${unitsToUsd(avgRevenuePerSale)}`, hint: 'Across subscriptions and paid posts' },
-            ].map((stat) => (
-              <div key={stat.label} className="card" style={{ padding: '20px 22px' }}>
-                <div className="section-eyebrow">Analytics</div>
-                <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem', lineHeight: 1, margin: '8px 0 6px' }}>{stat.value}</div>
-                <div style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 8 }}>{stat.label}</div>
-                <div style={{ fontSize: 12, color: 'var(--text-2)' }}>{stat.hint}</div>
-              </div>
-            ))}
-          </div>
-
-          <div className="card" style={{ padding: '22px 24px' }}>
-            <div className="section-eyebrow">Funnel breakdown</div>
-            <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 300, marginBottom: 14 }}>Where conversion is coming from</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 14, marginBottom: 16 }}>
-              {[
-                { label: 'Free posts', value: freePosts.length, hint: 'Top-of-funnel discovery' },
-                { label: 'Member posts', value: memberPosts.length, hint: 'Recurring-value inventory' },
-                { label: 'Buy-once posts', value: oneOffPosts.length, hint: 'One-time conversion assets' },
-                { label: 'Selling posts', value: postsWithSales.length, hint: 'Posts with actual paid conversions' },
-              ].map((item) => (
-                <div key={item.label} style={{ padding: '14px 16px', border: '1px solid var(--border)', background: 'var(--bg-2)' }}>
-                  <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.45rem', lineHeight: 1, marginBottom: 6 }}>{item.value}</div>
-                  <div style={{ fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--text-3)', marginBottom: 6 }}>{item.label}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text-2)' }}>{item.hint}</div>
-                </div>
-              ))}
-            </div>
-            <div style={{ display: 'grid', gap: 10 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 13 }}>
-                <span style={{ color: 'var(--text-2)' }}>Recurring revenue</span>
-                <strong>${unitsToUsd(recurringRevenue)}</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 13 }}>
-                <span style={{ color: 'var(--text-2)' }}>One-off revenue</span>
-                <strong>${unitsToUsd(oneOffRevenue)}</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 13 }}>
-                <span style={{ color: 'var(--text-2)' }}>Revenue mix</span>
-                <strong>{totalSalesRevenue > 0 ? `${Math.round((recurringRevenue / totalSalesRevenue) * 100)}% recurring / ${Math.round((oneOffRevenue / totalSalesRevenue) * 100)}% one-off` : 'No sales yet'}</strong>
-              </div>
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 16 }}>
-            <div className="card" style={{ padding: '22px 24px' }}>
-              <div className="section-eyebrow">Best monetizing post</div>
-              <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 300, marginBottom: 14 }}>Top paid content</h3>
-              {topPaidPost && topPaidPost.revenue > 0 ? (
-                <>
-                  <div style={{ fontWeight: 700, marginBottom: 6 }}>{topPaidPost.content.title}</div>
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 10 }}>
-                    <span className="badge">{topPaidPost.sales} sales</span>
-                    <span className="badge badge-accent">${unitsToUsd(topPaidPost.revenue)}</span>
-                    <span className="badge">{ACCESS_LEVEL_LABELS[topPaidPost.content.access_level]}</span>
-                  </div>
-                  <p style={{ margin: 0, fontSize: 12, color: 'var(--text-2)' }}>This is currently your strongest paid conversion asset. Push fans here from social and notifications.</p>
-                </>
-              ) : (
-                <p style={{ margin: 0, color: 'var(--text-3)' }}>No paid post revenue yet. Your first conversion target should be one clear flagship paid post.</p>
-              )}
-            </div>
-
-            <div className="card" style={{ padding: '22px 24px' }}>
-              <div className="section-eyebrow">Conversion advice</div>
-              <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 300, marginBottom: 14 }}>What to do next</h3>
-              <div style={{ display: 'grid', gap: 10, fontSize: 13, color: 'var(--text-2)' }}>
-                <div>• Put one strongest paid post near the top, don’t spread value too thin.</div>
-                <div>• Make tier descriptions outcome-driven, not vague.</div>
-                <div>• If followers see locked posts often, push them toward one obvious membership tier.</div>
-                <div>• Use notifications to bring fans back, then convert with your best locked post.</div>
-                <div>• Right now you have {freePosts.length} free, {memberPosts.length} member-only, and {oneOffPosts.length} one-time paid posts. Balance discovery against monetization.</div>
-              </div>
-            </div>
-
-            <div className="card" style={{ padding: '22px 24px' }}>
-              <div className="section-eyebrow">Converting posts</div>
-              <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 300, marginBottom: 14 }}>What is actually selling</h3>
-              {postsWithSales.length > 0 ? (
-                <div style={{ display: 'grid', gap: 10 }}>
-                  {postsWithSales.slice(0, 4).map((item) => (
-                    <div key={item.content.id} style={{ display: 'flex', justifyContent: 'space-between', gap: 12, paddingBottom: 10, borderBottom: '1px solid var(--border)' }}>
-                      <div>
-                        <div style={{ fontWeight: 600, fontSize: 13 }}>{item.content.title}</div>
-                        <div style={{ fontSize: 11, color: 'var(--text-3)' }}>{item.sales} sale{item.sales === 1 ? '' : 's'} • {ACCESS_LEVEL_LABELS[item.content.access_level]}</div>
-                      </div>
-                      <div style={{ fontWeight: 700, color: 'var(--accent)' }}>${unitsToUsd(item.revenue)}</div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p style={{ margin: 0, color: 'var(--text-3)' }}>No converting posts yet. You need one cleaner flagship paid offer.</p>
-              )}
-            </div>
-          </div>
-        </div>
+        <CreatorAnalytics
+          contents={contents}
+          purchaseHistory={creatorPurchaseHistory}
+          totalEarned={creator.total_earned}
+        />
+      ) : dashTab === 'earnings' ? (
+        <EarningsView
+          creatorAddr={String(account?.address || '')}
+          totalEarned={creator.total_earned}
+          purchaseHistory={creatorPurchaseHistory}
+        />
+      ) : dashTab === 'collections' ? (
+        <CollectionsManager
+          creatorAddr={String(account?.address || '')}
+          contents={contents}
+        />
       ) : dashTab === 'history' ? (
         <div style={{ display: 'grid', gap: 20, marginBottom: 8 }}>
           <div className="card" style={{ padding: '22px 24px' }}>
