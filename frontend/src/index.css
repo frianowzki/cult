@@ -575,3 +575,243 @@ textarea.input {
     width: 100%;
   }
 }
+
+/* ─── Mobile Responsive Utilities ────────────────────────────────────────── */
+/* These supplement the inline CSS-in-JS styles with responsive overrides    */
+
+/* Safe-area-inset padding for mobile browsers with notches */
+body {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Touch-friendly: minimum 44px tap targets */
+.btn,
+.btn-sm,
+.btn-lg,
+.badge,
+.input,
+textarea.input {
+  min-height: 44px;
+}
+
+.btn-sm {
+  min-height: 36px;
+}
+
+/* Better scroll behavior on mobile */
+html {
+  -webkit-text-size-adjust: 100%;
+  -moz-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-behavior: smooth;
+  overscroll-behavior: none;
+}
+
+@media (max-width: 640px) {
+  /* Card padding */
+  .card {
+    padding: 16px !important;
+  }
+
+  /* Modal full width */
+  .modal {
+    max-width: calc(100% - 24px) !important;
+    margin: 12px;
+  }
+
+  .modal-header h3 {
+    font-size: 1.1rem;
+  }
+
+  /* Profile cards responsive padding */
+  .profile-hero-card {
+    padding: 16px !important;
+  }
+
+  .profile-form-card {
+    padding: 16px !important;
+  }
+
+  .profile-qr-card {
+    padding: 16px !important;
+  }
+
+  /* Stack upload row vertically */
+  .profile-upload-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  /* Stack hero actions vertically */
+  .profile-hero-actions {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+
+  /* Feed cards smaller min-height */
+  .card[style*="min-height"],
+  .card {
+    min-height: auto !important;
+  }
+
+  /* Section eyebrow smaller */
+  .section-eyebrow {
+    font-size: 10px;
+  }
+
+  /* h2 max 1.3rem */
+  h2 {
+    font-size: min(clamp(1.8rem, 4vw, 3rem), 1.3rem) !important;
+  }
+
+  /* Dashboard stats grid single column */
+  [style*="gridTemplateColumns"],
+  [style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Explore grid single column */
+  [style*="minmax"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Reduce gaps */
+  [style*="gap: 24px"],
+  [style*="gap:24px"] {
+    gap: 12px !important;
+  }
+
+  [style*="gap: 20px"],
+  [style*="gap:20px"] {
+    gap: 10px !important;
+  }
+
+  [style*="gap: 16px"],
+  [style*="gap:16px"] {
+    gap: 8px !important;
+  }
+
+  /* General padding/margin reductions for common values */
+  [style*="padding: 24px"],
+  [style*="padding:24px"] {
+    padding: 16px !important;
+  }
+
+  [style*="padding: 32px"],
+  [style*="padding:32px"] {
+    padding: 20px !important;
+  }
+
+  /* Layout: stack flex rows that are side-by-side */
+  [style*="flexDirection: row"],
+  [style*="flex-direction: row"] {
+    flex-wrap: wrap !important;
+  }
+
+  /* Reduce inline font sizes that are too large */
+  [style*="fontSize: 2"],
+  [style*="font-size: 2"] {
+    font-size: 1.5rem !important;
+  }
+
+  /* Full-width buttons on small screens */
+  .modal-footer .btn {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Extra small screen tweaks */
+  .card {
+    padding: 12px !important;
+    border-radius: var(--radius);
+  }
+
+  .modal {
+    max-width: 100% !important;
+    margin: 0;
+    border-radius: 16px 16px 0 0;
+    max-height: min(90dvh, calc(100dvh - 4px));
+  }
+
+  .modal-header h3 {
+    font-size: 1rem;
+  }
+
+  .modal-header,
+  .modal-body,
+  .modal-footer {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  h2 {
+    font-size: 1.1rem !important;
+  }
+
+  h3 {
+    font-size: 1rem !important;
+  }
+
+  .section-eyebrow {
+    font-size: 9px;
+  }
+
+  .btn {
+    padding: 8px 12px;
+    font-size: 11px;
+  }
+
+  .btn-sm {
+    padding: 6px 10px;
+    font-size: 10px;
+    min-height: 32px;
+  }
+
+  .btn-lg {
+    padding: 12px 20px;
+    font-size: 13px;
+  }
+
+  .input {
+    padding: 8px 12px;
+    font-size: 16px; /* prevent iOS zoom */
+  }
+
+  /* Reduce all gaps further */
+  [style*="gap: 12px"],
+  [style*="gap:12px"] {
+    gap: 8px !important;
+  }
+
+  [style*="gap: 8px"],
+  [style*="gap:8px"] {
+    gap: 6px !important;
+  }
+
+  /* Tighter padding */
+  [style*="padding: 16px"],
+  [style*="padding:16px"] {
+    padding: 12px !important;
+  }
+
+  [style*="padding: 20px"],
+  [style*="padding:20px"] {
+    padding: 14px !important;
+  }
+
+  /* Profile cards extra compact */
+  .profile-hero-card,
+  .profile-form-card,
+  .profile-qr-card {
+    padding: 12px !important;
+  }
+
+  /* Safe area bottom for modals */
+  .modal {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}

@@ -30,6 +30,7 @@ export default function Layout() {
     { label: 'Explore', to: '/explore' },
     { label: 'Feed', to: '/feed' },
     ...(connected && account?.address && isCreator ? [{ label: 'Dashboard', to: '/dashboard' }] : []),
+    ...(connected && account?.address && isCreator ? [{ label: 'Settings', to: '/settings' }] : []),
     ...(connected && account?.address ? [{ label: 'Profile', to: `/fan/${String(account.address)}` }] : []),
   ]
 

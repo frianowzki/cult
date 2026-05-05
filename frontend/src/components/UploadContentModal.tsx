@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useDropzone } from 'react-dropzone'
 import { useWallet } from '@aptos-labs/wallet-adapter-react'
 import { motion } from 'framer-motion'
@@ -22,6 +22,19 @@ interface Props {
   onSuccess?: () => void
 }
 
+type PublishMode = 'now' | 'draft' | 'schedule'
+
+interface DraftItem {
+  id: string
+  title: string
+  description: string
+  accessLevel: number
+  purchasePrice: string
+  publishMode: PublishMode
+  scheduledFor: string
+  createdAt: number
+}
+
 const ACCEPTED_TYPES: Record<string, string[]> = {
   'video/*': ['.mp4', '.mov', '.webm'],
   'image/*': ['.jpg', '.jpeg', '.png', '.gif', '.webp'],
@@ -43,6 +56,25 @@ const STEP_LABELS: Record<string, string> = {
   done: 'Upload complete!',
 }
 
+function getDraftsKey(addr: string) {
+  return `cult:drafts:${addr}`
+}
+
+function loadDrafts(addr: string): DraftItem[] {
+  try {
+    const raw = localStorage.getItem(getDraftsKey(addr))
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
+function saveDrafts(addr: string, drafts: DraftItem[]) {
+  try {
+    localStorage.setItem(getDraftsKey(addr), JSON.stringify(drafts))
+  } catch { /* ignore */ }
+}
+
 export default function UploadContentModal({ onSuccess }: Props) {
   const { signAndSubmitTransaction, account } = useWallet()
   const { setUploadModalOpen } = useStore()
@@ -59,13 +91,28 @@ export default function UploadContentModal({ onSuccess }: Props) {
   const [uploading, setUploading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
+  // Draft/schedule state
+  const [publishMode, setPublishMode] = useState<PublishMode>('now')
+  const [scheduledFor, setScheduledFor] = useState('')
+  const [drafts, setDrafts] = useState<DraftItem[]>([])
+  const [editingDraftId, setEditingDraftId] = useState<string | null>(null)
+
+  const addr = account?.address ? String(account.address) : ''
+
+  // Load drafts on mount / address change
+  useEffect(() => {
+    if (addr) {
+      setDrafts(loadDrafts(addr))
+    }
+  }, [addr])
+
   const onDrop = useCallback((accepted: File[]) => {
     if (accepted[0]) setFile(accepted[0])
   }, [])
 
   const MAX_FILE_SIZE = 100 * 1024 * 1024 // 100MB
 
-const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: ACCEPTED_TYPES,
     maxFiles: 1,
@@ -116,10 +163,99 @@ const { getRootProps, getInputProps, isDragActive } = useDropzone({
     return pushBlobToRpc(uniqueName, data, addr, onProgress)
   }
 
+  // ─── Draft operations ────────────────────────────────────────────────────
+
+  function handleSaveDraft() {
+    if (!title) { toast.error('Title is required to save a draft'); return }
+    if (!addr) { toast.error('Wallet not connected'); return }
+
+    const draft: DraftItem = {
+      id: editingDraftId || `draft_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+      title,
+      description,
+      accessLevel,
+      purchasePrice,
+      publishMode,
+      scheduledFor,
+      createdAt: editingDraftId
+        ? (drafts.find((d) => d.id === editingDraftId)?.createdAt || Date.now())
+        : Date.now(),
+    }
+
+    let updated: DraftItem[]
+    if (editingDraftId) {
+      updated = drafts.map((d) => d.id === editingDraftId ? draft : d)
+    } else {
+      updated = [draft, ...drafts]
+    }
+
+    saveDrafts(addr, updated)
+    setDrafts(updated)
+    setEditingDraftId(null)
+    toast.success(editingDraftId ? 'Draft updated' : 'Draft saved')
+
+    // Reset form
+    setTitle('')
+    setDescription('')
+    setAccessLevel(ACCESS_LEVELS.FREE)
+    setPurchasePrice('1')
+    setPublishMode('now')
+    setScheduledFor('')
+    setFile(null)
+    setThumbnail(null)
+    setThumbnailPreview('')
+  }
+
+  function handleEditDraft(draft: DraftItem) {
+    setEditingDraftId(draft.id)
+    setTitle(draft.title)
+    setDescription(draft.description)
+    setAccessLevel(draft.accessLevel)
+    setPurchasePrice(draft.purchasePrice)
+    setPublishMode(draft.publishMode)
+    setScheduledFor(draft.scheduledFor)
+    setFile(null)
+    setThumbnail(null)
+    setThumbnailPreview('')
+  }
+
+  function handleDeleteDraft(draftId: string) {
+    if (!addr) return
+    const updated = drafts.filter((d) => d.id !== draftId)
+    saveDrafts(addr, updated)
+    setDrafts(updated)
+    if (editingDraftId === draftId) {
+      setEditingDraftId(null)
+      setTitle('')
+      setDescription('')
+      setAccessLevel(ACCESS_LEVELS.FREE)
+      setPurchasePrice('1')
+      setPublishMode('now')
+      setScheduledFor('')
+    }
+    toast.success('Draft deleted')
+  }
+
+  // ─── Publish / submit ────────────────────────────────────────────────────
+
   async function handleSubmit() {
     if (!file || !title) { toast.error('File and title are required'); return }
     if (!account?.address) { toast.error('Wallet not connected'); return }
 
+    // If draft mode, save locally instead of uploading
+    if (publishMode === 'draft') {
+      handleSaveDraft()
+      return
+    }
+
+    // If schedule mode, save as draft with scheduled_for timestamp locally
+    if (publishMode === 'schedule') {
+      if (!scheduledFor) { toast.error('Pick a date/time to schedule'); return }
+      handleSaveDraft()
+      return
+    }
+
+    // Publish now — upload and submit on-chain
     setUploading(true)
     setUploadStep('encoding')
     setUploadPercent(0)
@@ -164,6 +300,12 @@ const { getRootProps, getInputProps, isDragActive } = useDropzone({
 
       await signAndSubmitTransaction({ data: payload })
       toast.success('Content published on-chain!')
+
+      // If this was an editing draft, remove it
+      if (editingDraftId) {
+        handleDeleteDraft(editingDraftId)
+      }
+
       setUploadModalOpen(false)
       onSuccess?.()
     } catch (e: any) {
@@ -188,6 +330,9 @@ const { getRootProps, getInputProps, isDragActive } = useDropzone({
     return 'Premium-priced. Make sure the title and description justify it clearly.'
   })()
 
+  // Min datetime for scheduling = now + 5 min
+  const minScheduleDate = new Date(Date.now() + 5 * 60 * 1000).toISOString().slice(0, 16)
+
   return (
     <div className="modal-overlay" onClick={() => !isLoading && setUploadModalOpen(false)}>
       <motion.div
@@ -208,8 +353,143 @@ const { getRootProps, getInputProps, isDragActive } = useDropzone({
         </div>
 
         <div className="modal-body">
+          {/* Existing drafts */}
+          {drafts.length > 0 && (
+            <div style={{ marginBottom: 20 }}>
+              <div className="section-eyebrow" style={{ marginBottom: 10 }}>
+                Saved drafts ({drafts.length})
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {drafts.map((draft) => (
+                  <div
+                    key={draft.id}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 12,
+                      padding: '10px 14px',
+                      background: editingDraftId === draft.id ? 'rgba(254,119,201,0.08)' : 'var(--bg-3)',
+                      border: `1px solid ${editingDraftId === draft.id ? 'var(--accent)' : 'var(--border)'}`,
+                      borderRadius: 'var(--radius)',
+                    }}
+                  >
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {draft.title || '(Untitled)'}
+                      </div>
+                      <div style={{ fontSize: 11, color: 'var(--text-3)', marginTop: 2, display: 'flex', gap: 8, alignItems: 'center' }}>
+                        <span className="badge" style={{ fontSize: 10 }}>
+                          {draft.publishMode === 'draft' ? 'Draft' : `Scheduled ${draft.scheduledFor ? new Date(draft.scheduledFor).toLocaleDateString() : ''}`}
+                        </span>
+                        <span>{new Date(draft.createdAt).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                      <button
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => handleEditDraft(draft)}
+                        disabled={isLoading}
+                        style={{ fontSize: 11 }}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="btn btn-ghost btn-sm"
+                        onClick={() => handleDeleteDraft(draft.id)}
+                        disabled={isLoading}
+                        style={{ fontSize: 11, color: '#ff8a8a', borderColor: 'rgba(255,138,138,0.2)' }}
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div style={{ height: 1, background: 'var(--border)', margin: '16px 0' }} />
+            </div>
+          )}
+
+          {editingDraftId && (
+            <div style={{
+              marginBottom: 16,
+              padding: '8px 12px',
+              background: 'rgba(254,119,201,0.06)',
+              border: '1px solid rgba(254,119,201,0.2)',
+              borderRadius: 'var(--radius)',
+              fontSize: 12,
+              color: 'var(--accent)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}>
+              <span>Editing draft</span>
+              <button
+                className="btn btn-ghost btn-sm"
+                style={{ fontSize: 10, padding: '2px 8px' }}
+                onClick={() => {
+                  setEditingDraftId(null)
+                  setTitle('')
+                  setDescription('')
+                  setAccessLevel(ACCESS_LEVELS.FREE)
+                  setPurchasePrice('1')
+                  setPublishMode('now')
+                  setScheduledFor('')
+                }}
+              >
+                Cancel edit
+              </button>
+            </div>
+          )}
+
+          {/* Publish mode toggle */}
           <div className="form-group">
-            <label className="label">Content file *</label>
+            <label className="label">Publish mode</label>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              {([
+                { value: 'now' as PublishMode, label: 'Publish now' },
+                { value: 'draft' as PublishMode, label: 'Save as draft' },
+                { value: 'schedule' as PublishMode, label: 'Schedule' },
+              ]).map((opt) => (
+                <button
+                  key={opt.value}
+                  className={`btn btn-sm ${publishMode === opt.value ? 'btn-primary' : ''}`}
+                  onClick={() => setPublishMode(opt.value)}
+                  disabled={isLoading}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+            {publishMode === 'draft' && (
+              <div style={{ marginTop: 8, padding: '8px 12px', border: '1px solid var(--border)', background: 'var(--bg-3)', fontSize: 12, color: 'var(--text-2)', lineHeight: 1.55 }}>
+                Drafts are saved locally in your browser. The on-chain contract doesn't support draft state yet, so you can edit and publish them later from here.
+              </div>
+            )}
+            {publishMode === 'schedule' && (
+              <div style={{ marginTop: 8, padding: '8px 12px', border: '1px solid var(--border)', background: 'var(--bg-3)', fontSize: 12, color: 'var(--text-2)', lineHeight: 1.55 }}>
+                Scheduled posts are saved locally. The contract doesn't accept a scheduled_for param yet, so you'll need to publish manually at the scheduled time.
+              </div>
+            )}
+          </div>
+
+          {/* Schedule date/time */}
+          {publishMode === 'schedule' && (
+            <div className="form-group">
+              <label className="label">Schedule date & time</label>
+              <input
+                className="input"
+                type="datetime-local"
+                min={minScheduleDate}
+                value={scheduledFor}
+                onChange={(e) => setScheduledFor(e.target.value)}
+                style={{ maxWidth: 280 }}
+              />
+            </div>
+          )}
+
+          <div className="form-group">
+            <label className="label">Content file {publishMode === 'now' ? '*' : '(optional for drafts)'}</label>
             <div
               {...getRootProps()}
               style={{
@@ -306,7 +586,7 @@ const { getRootProps, getInputProps, isDragActive } = useDropzone({
             </div>
           )}
 
-          {!uploading && !submitting && (
+          {!uploading && !submitting && publishMode === 'now' && (
             <div style={{ marginTop: 4, padding: '12px 14px', border: '1px solid var(--border)', background: 'var(--bg-3)', fontSize: 12, color: 'var(--text-2)', lineHeight: 1.55 }}>
               <div className="section-eyebrow" style={{ marginBottom: 8 }}>Publishing advice</div>
               <div>• Free post for discovery, paid post for a clean first conversion, member post for recurring value.</div>
@@ -364,9 +644,15 @@ const { getRootProps, getInputProps, isDragActive } = useDropzone({
           <button className="btn" onClick={() => !isLoading && setUploadModalOpen(false)} disabled={isLoading}>
             Cancel
           </button>
-          <button className="btn btn-primary" onClick={handleSubmit} disabled={isLoading || !file || !title}>
-            {uploading ? (STEP_LABELS[uploadStep] || '…') : submitting ? 'Publishing…' : 'Publish'}
-          </button>
+          {publishMode !== 'now' ? (
+            <button className="btn btn-primary" onClick={handleSubmit} disabled={isLoading || !title}>
+              {publishMode === 'draft' ? (editingDraftId ? 'Update draft' : 'Save draft') : (editingDraftId ? 'Update scheduled' : 'Save scheduled')}
+            </button>
+          ) : (
+            <button className="btn btn-primary" onClick={handleSubmit} disabled={isLoading || !file || !title}>
+              {uploading ? (STEP_LABELS[uploadStep] || '…') : submitting ? 'Publishing…' : 'Publish'}
+            </button>
+          )}
         </div>
       </motion.div>
     </div>

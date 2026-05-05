@@ -50,6 +50,34 @@ function rankFeedItems(feedItems: FeedItem[], isPublicFeed: boolean) {
     .map(({ __rank, ...item }) => item)
 }
 
+function rankForyouItems(feedItems: FeedItem[]) {
+  const now = Date.now() / 1000
+
+  return feedItems
+    .map((item) => {
+      const hoursOld = Math.max(0.5, (now - item.content.published_at) / 3600)
+      // Heavy recency weighting — newer content dominates
+      const recencyScore = 2000 / Math.sqrt(hoursOld)
+      // Boost creators with more subscribers
+      const subscriberBoost = Math.min(item.creator.subscriber_count, 500) * 1.2
+      // Boost creators who have earned more (signal of quality)
+      const earningsBoost = Math.min(item.creator.total_earned / 100000000, 300) * 0.1
+      // Free posts get a discovery boost so new visitors can engage
+      const freeBoost = item.content.access_level === 0 ? 40 : 0
+      // Mix of content types — slight preference for visual media
+      const typeBoost = item.content.content_type === 0 ? 20 : item.content.content_type === 1 ? 16 : item.content.content_type === 2 ? 10 : 6
+      // Title quality
+      const titleBoost = item.content.title.trim().length > 0 ? 8 : 0
+
+      return {
+        ...item,
+        __rank: recencyScore + subscriberBoost + earningsBoost + freeBoost + typeBoost + titleBoost,
+      }
+    })
+    .sort((a, b) => b.__rank - a.__rank || b.content.published_at - a.content.published_at)
+    .map(({ __rank, ...item }) => item)
+}
+
 const FEED_PAGE_SIZE = 12
 
 export default function Feed() {
@@ -59,7 +87,8 @@ export default function Feed() {
   const [loading, setLoading] = useState(true)
   const [viewingContent, setViewingContent] = useState<FeedItem | null>(null)
   const [savedItems, setSavedItems] = useState<Array<FeedItem & { savedAt: number }>>([])
-  const [selectedTab, setSelectedTab] = useState<'following' | 'saved'>('following')
+  const [selectedTab, setSelectedTab] = useState<'foryou' | 'following' | 'saved'>('foryou')
+  const [foryouItems, setForyouItems] = useState<FeedItem[]>([])
   const [visibleCount, setVisibleCount] = useState(FEED_PAGE_SIZE)
   const [engagementMap, setEngagementMap] = useState<Record<string, number>>({})
 
@@ -70,39 +99,40 @@ export default function Feed() {
   async function loadFeed() {
     setLoading(true)
     try {
+      // Always load For You feed from all creators
+      const allCreators = await getAllCreators()
+      const allCreatorGroups = await Promise.all(
+        allCreators.map(async (creator) => {
+          const contents = await getCreatorContent(creator.address)
+          const filtered = connected
+            ? contents
+            : contents.filter((content) => content.access_level === 0)
+          return filtered.map((content) => ({
+            creatorAddr: creator.address,
+            creator: {
+              creator_addr: creator.address,
+              handle: creator.handle,
+              display_name: creator.display_name,
+              bio: creator.bio,
+              avatar_shelby_cid: creator.avatar_shelby_cid,
+              banner_shelby_cid: creator.banner_shelby_cid,
+              tiers: creator.tiers,
+              total_earned: creator.total_earned,
+              subscriber_count: creator.subscriber_count,
+              content_count: creator.content_count,
+              created_at: creator.created_at,
+            },
+            content,
+            hasAccess: content.access_level === 0,
+          }))
+        })
+      )
+      setForyouItems(rankForyouItems(allCreatorGroups.flat()))
+
       if (!connected || !account?.address) {
-        const creators = await getAllCreators()
-        const publicFeedGroups = await Promise.all(
-          creators.map(async (creator) => {
-            const contents = await getCreatorContent(creator.address)
-            return contents
-              .filter((content) => content.access_level === 0)
-              .map((content) => ({
-                creatorAddr: creator.address,
-                creator: {
-                  creator_addr: creator.address,
-                  handle: creator.handle,
-                  display_name: creator.display_name,
-                  bio: creator.bio,
-                  avatar_shelby_cid: creator.avatar_shelby_cid,
-                  banner_shelby_cid: creator.banner_shelby_cid,
-                  tiers: creator.tiers,
-                  total_earned: creator.total_earned,
-                  subscriber_count: creator.subscriber_count,
-                  content_count: creator.content_count,
-                  created_at: creator.created_at,
-                },
-                content,
-                hasAccess: true,
-              }))
-          })
-        )
-
-        const publicFeed = rankFeedItems(publicFeedGroups.flat(), true)
-
-        setItems(publicFeed)
+        setItems([])
         setSavedItems([])
-        setSelectedTab('following')
+        setSelectedTab('foryou')
         return
       }
 
@@ -190,7 +220,7 @@ export default function Feed() {
   }
 
   const groupedCount = useMemo(() => new Set(items.map((item) => item.creatorAddr)).size, [items])
-  const activeItems = selectedTab === 'following' ? items : savedItems
+  const activeItems = selectedTab === 'foryou' ? foryouItems : selectedTab === 'following' ? items : savedItems
   const visibleItems = activeItems.slice(0, visibleCount)
 
   useEffect(() => {
@@ -229,7 +259,7 @@ export default function Feed() {
 
   useEffect(() => {
     setVisibleCount(FEED_PAGE_SIZE)
-  }, [selectedTab, items.length, savedItems.length, connected])
+  }, [selectedTab, items.length, savedItems.length, foryouItems.length, connected])
 
   function handleLoadMore() {
     setVisibleCount((count) => count + FEED_PAGE_SIZE)
@@ -240,36 +270,38 @@ export default function Feed() {
       <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'end', gap: 16, flexWrap: 'wrap' }}>
         <div>
           <div className="section-eyebrow">Feed</div>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 300, marginBottom: connected ? 6 : 0 }}>{connected ? 'From creators you follow' : 'Discover CULT contents.'}</h2>
-          {connected && <p style={{ fontSize: 13, color: 'var(--text-3)', margin: 0 }}>Latest drops from the people you already care about.</p>}
+          <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 300, marginBottom: 6 }}>
+            {selectedTab === 'foryou' ? 'For You' : selectedTab === 'following' ? 'From creators you follow' : 'Saved content'}
+          </h2>
+          <p style={{ fontSize: 13, color: 'var(--text-3)', margin: 0 }}>
+            {selectedTab === 'foryou' ? 'From across CULT' : selectedTab === 'following' ? 'Latest drops from the people you already care about.' : 'Content you\'ve bookmarked.'}
+          </p>
         </div>
         {!loading && (
           <span className="mono" style={{ fontSize: 11, color: 'var(--text-3)' }}>
-            {!connected ? `${items.length} public posts` : selectedTab === 'following' ? `${items.length} posts · ${groupedCount} creators` : `${savedItems.length} saved`}
+            {selectedTab === 'foryou' ? `${foryouItems.length} posts · ${new Set(foryouItems.map((i) => i.creatorAddr)).size} creators` : selectedTab === 'following' ? `${items.length} posts · ${groupedCount} creators` : `${savedItems.length} saved`}
           </span>
         )}
       </div>
 
-      {connected && (
-        <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '1px solid var(--border)', flexWrap: 'wrap' }}>
-          {(['following', 'saved'] as const).map((tab) => (
-            <button
-              key={tab}
-              className="btn btn-ghost btn-sm"
-              onClick={() => setSelectedTab(tab)}
-              style={{
-                color: selectedTab === tab ? 'var(--accent)' : 'var(--text-3)',
-                borderBottom: selectedTab === tab ? '2px solid var(--accent)' : '2px solid transparent',
-                borderRadius: 0,
-                paddingBottom: 12,
-                textTransform: 'capitalize',
-              }}
-            >
-              {tab}
-            </button>
-          ))}
-        </div>
-      )}
+      <div style={{ display: 'flex', gap: 4, marginBottom: 24, borderBottom: '1px solid var(--border)', flexWrap: 'wrap' }}>
+        {(['foryou', ...(connected ? (['following', 'saved'] as const) : ([] as const))] as const).map((tab) => (
+          <button
+            key={tab}
+            className="btn btn-ghost btn-sm"
+            onClick={() => setSelectedTab(tab)}
+            style={{
+              color: selectedTab === tab ? 'var(--accent)' : 'var(--text-3)',
+              borderBottom: selectedTab === tab ? '2px solid var(--accent)' : '2px solid transparent',
+              borderRadius: 0,
+              paddingBottom: 12,
+              textTransform: 'capitalize',
+            }}
+          >
+            {tab === 'foryou' ? 'For You' : tab}
+          </button>
+        ))}
+      </div>
 
       {loading ? (
         <div style={{ display: 'grid', gap: 12 }}>
@@ -281,7 +313,13 @@ export default function Feed() {
             </div>
           ))}
         </div>
-      ) : items.length === 0 && (!connected || selectedTab === 'following') ? (
+      ) : selectedTab === 'foryou' && foryouItems.length === 0 ? (
+        <div className="card" style={{ textAlign: 'center', padding: '60px 24px', borderStyle: 'dashed' }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '2.2rem', color: 'var(--text-3)', marginBottom: 12 }}>◌</div>
+          <p style={{ marginBottom: 18 }}>No content available yet. Creators need to publish posts to show up here.</p>
+          <Link to="/explore" className="btn btn-primary">Explore creators</Link>
+        </div>
+      ) : selectedTab === 'following' && items.length === 0 ? (
         <div className="card" style={{ textAlign: 'center', padding: '60px 24px', borderStyle: 'dashed' }}>
           <div style={{ fontFamily: 'var(--font-mono)', fontSize: '2.2rem', color: 'var(--text-3)', marginBottom: 12 }}>◌</div>
           <p style={{ marginBottom: 18 }}>{connected ? 'Your feed is empty. Follow creators to see their posts here.' : 'No public posts yet. Creators need to publish free content to show up here.'}</p>

@@ -730,15 +730,50 @@ export default function CreatorPage() {
 
 function LoadingSkeleton() {
   return (
-    <div>
-      <div className="skeleton" style={{ height: 220, width: '100%' }} />
-      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '20px 16px' }}>
-        <div style={{ display: 'flex', gap: 20, marginBottom: 32 }}>
-          <div className="skeleton" style={{ width: 88, height: 88, borderRadius: '50%' }} />
-          <div style={{ flex: 1 }}>
-            <div className="skeleton" style={{ height: 24, width: 200, marginBottom: 8 }} />
-            <div className="skeleton" style={{ height: 14, width: 120 }} />
+    <div style={{ minHeight: '100%' }}>
+      {/* Hero banner skeleton */}
+      <div className="skeleton" style={{ height: 200, width: '100%', borderRadius: 0 }} />
+
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 32px 8px' }}>
+        {/* Profile card skeleton */}
+        <div style={{ marginTop: 12, marginBottom: 24, padding: '20px 22px', background: 'var(--bg-2)', border: '1px solid var(--border)' }}>
+          <div style={{ display: 'flex', gap: 14, alignItems: 'center', marginBottom: 16 }}>
+            <div className="skeleton" style={{ width: 80, height: 80, borderRadius: '50%', flexShrink: 0 }} />
+            <div style={{ flex: 1 }}>
+              <div className="skeleton" style={{ height: 22, width: '60%', marginBottom: 8 }} />
+              <div className="skeleton" style={{ height: 16, width: '40%', marginBottom: 12 }} />
+              <div className="skeleton" style={{ height: 14, width: '80%' }} />
+            </div>
           </div>
+          {/* Bio skeleton */}
+          <div className="skeleton" style={{ height: 14, width: '90%', marginBottom: 8 }} />
+        </div>
+
+        {/* Stats row skeleton */}
+        <div style={{ display: 'flex', gap: 20, marginBottom: 28, paddingBottom: 20, borderBottom: '1px solid var(--border)' }}>
+          {[0, 1, 2].map((i) => (
+            <div key={i} style={{ minWidth: 84 }}>
+              <div className="skeleton" style={{ height: 24, width: 48, marginBottom: 6 }} />
+              <div className="skeleton" style={{ height: 10, width: 64 }} />
+            </div>
+          ))}
+        </div>
+
+        {/* Content cards skeleton */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} style={{ background: 'var(--bg-2)', border: '1px solid var(--border)', display: 'grid', gridTemplateColumns: '160px minmax(0, 1fr)' }}>
+              <div className="skeleton" style={{ height: 96, borderRadius: 0 }} />
+              <div style={{ padding: '12px' }}>
+                <div className="skeleton" style={{ height: 14, width: '70%', marginBottom: 8 }} />
+                <div className="skeleton" style={{ height: 11, width: '90%', marginBottom: 8 }} />
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <div className="skeleton" style={{ height: 18, width: 48, borderRadius: 10 }} />
+                  <div className="skeleton" style={{ height: 18, width: 60, borderRadius: 10 }} />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

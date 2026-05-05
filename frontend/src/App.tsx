@@ -10,9 +10,11 @@ import Dashboard from './pages/Dashboard'
 import Explore from './pages/Explore'
 import Layout from './components/Layout'
 import Feed from './pages/Feed'
+import Settings from './pages/Settings'
 import Notifications from './pages/Notifications'
 import FanProfile from './pages/FanProfile'
 import NotFound from './pages/NotFound'
+import ErrorBoundary from './components/ErrorBoundary'
 import { useStore } from './lib/store'
 import { readPushEnabled } from './lib/push'
 
@@ -56,7 +58,8 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/explore" element={<Explore />} />
             <Route path="/feed" element={<Feed />} />
-            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/dashboard" element={<ErrorBoundary><Dashboard /></ErrorBoundary>} />
+            <Route path="/settings" element={<ErrorBoundary><Settings /></ErrorBoundary>} />
             <Route path="/u/:handle" element={<CreatorPage />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/fan/:address" element={<FanProfile />} />
