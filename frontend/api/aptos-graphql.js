@@ -1,9 +1,16 @@
+const { rateLimit } = require('./_rateLimit')
 const APTOS_API_KEY = process.env.APTOS_API_KEY || ''
 const APTOS_GRAPHQL_URL = 'https://api.testnet.aptoslabs.com/v1/graphql'
 
 module.exports = async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' })
+  }
+
+  // Rate limit by IP
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown'
+  try { rateLimit(`graphql:${ip}`, 60, 60_000) } catch {
+    return res.status(429).json({ error: 'Rate limit exceeded. Try again later.' })
   }
 
   const body = req.body || {}

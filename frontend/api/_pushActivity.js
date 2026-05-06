@@ -18,7 +18,7 @@ async function graphql(query) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': process.env.VITE_APTOS_API_KEY || '',
+      'x-api-key': process.env.APTOS_API_KEY || '',
     },
     body: JSON.stringify({ query }),
   })

@@ -28,7 +28,9 @@ async function verifyWalletSignature(body) {
 
 function requireCronSecret(req) {
   const secret = process.env.CRON_SECRET
-  if (!secret) return // no secret configured, skip check (dev mode)
+  const isProd = process.env.VERCEL_ENV === 'production'
+  if (!secret && !isProd) return // dev mode: skip if no secret configured
+  if (!secret && isProd) throw new Error('CRON_SECRET not configured in production')
   const provided = req.headers['x-cron-secret'] || ''
   if (provided !== secret) {
     throw new Error('Unauthorized: invalid cron secret')
