@@ -40,6 +40,13 @@ self.addEventListener('notificationclick', (event) => {
   const rawUrl = event.notification.data?.url || '/'
   const targetUrl = self.registration.scope + rawUrl.replace(/^\//, '')
 
+  // Validate URL is within scope
+  try {
+    const parsed = new URL(targetUrl)
+    const scope = new URL(self.registration.scope)
+    if (parsed.origin !== scope.origin) return
+  } catch { return }
+
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clients) => {
       for (const client of clients) {

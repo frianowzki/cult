@@ -1052,12 +1052,9 @@ export {
 export async function getFollowerCount(creatorAddr: string): Promise<number> {
   // Query indexer for accounts that have creatorAddr in their FollowStore
   try {
-    const response = await fetch('https://api.testnet.aptoslabs.com/v1/graphql', {
+    const response = await fetch('/api/aptos-graphql', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': import.meta.env.VITE_APTOS_API_KEY || '',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         query: `
           query GetFollowerCount {

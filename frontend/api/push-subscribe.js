@@ -21,6 +21,11 @@ module.exports = async function handler(req, res) {
     return res.status(405).json({ ok: false, error: 'Method not allowed' })
   }
 
+  // Rate limit by IP
+  const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown'
+  try { rateLimit(`subscribe:${ip}`, 10, 60_000) } catch {
+    return res.status(429).json({ ok: false, error: 'Rate limit exceeded. Try again later.' })
+  }
   const body = req.body || {}
 
   // Verify wallet signature

@@ -15,6 +15,11 @@ function parseCid(cid) {
 
 module.exports = async function handler(req, res) {
   try {
+    // Rate limit by IP
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown'
+    try { rateLimit(`delete:${ip}`, 10, 60_000) } catch {
+      return res.status(429).json({ error: 'Rate limit exceeded. Try again later.' })
+    }
     if (req.method !== 'POST') {
       return res.status(405).json({ error: 'Method not allowed' })
     }
@@ -70,16 +75,12 @@ module.exports = async function handler(req, res) {
     console.log('shelby body:', raw)
 
     if (!response.ok) {
-      return res.status(response.status).json({
-        error: raw || 'Shelby delete failed',
-      })
+      return res.status(response.status).json({ error: 'Delete failed' })
     }
 
     return res.status(200).json({ ok: true })
   } catch (error) {
     console.error('delete-shelby-blob fatal:', error)
-    return res.status(500).json({
-      error: error && error.message ? error.message : 'Unexpected server error',
-    })
+    return res.status(500).json({ error: 'Internal server error' })
   }
 }

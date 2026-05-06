@@ -419,12 +419,9 @@ export async function getLegacyFanPurchases(fanAddr: string): Promise<LegacyPurc
 
 export async function getLegacyFanHistoryFromEvents(fanAddr: string): Promise<PurchaseHistoryItem[]> {
   try {
-    const response = await fetch('https://api.testnet.aptoslabs.com/v1/graphql', {
+    const response = await fetch('/api/aptos-graphql', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': import.meta.env.VITE_APTOS_API_KEY || '',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         query: `
           query GetLegacyFanHistory {
@@ -679,12 +676,9 @@ export function markNotificationsSeen(fanAddr: string, timestamp?: number) {
 }
 
 async function queryNotificationEvents(query: string) {
-  const response = await fetch('https://api.testnet.aptoslabs.com/v1/graphql', {
+  const response = await fetch('/api/aptos-graphql', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': import.meta.env.VITE_APTOS_API_KEY || '',
-    },
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ query }),
   })
   const json = await response.json()
@@ -907,12 +901,9 @@ export async function getRecentNotifications(fanAddr: string, limit = 10): Promi
 
 export async function getLegacyCreatorSalesHistory(creatorAddr: string): Promise<PurchaseHistoryItem[]> {
   try {
-    const response = await fetch('https://api.testnet.aptoslabs.com/v1/graphql', {
+    const response = await fetch('/api/aptos-graphql', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': import.meta.env.VITE_APTOS_API_KEY || '',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         query: `
           query GetLegacyCreatorSales {
@@ -970,12 +961,9 @@ export async function getLegacyCreatorSalesHistory(creatorAddr: string): Promise
 
 export async function getFollowerCount(creatorAddr: string): Promise<number> {
   try {
-    const response = await fetch('https://api.testnet.aptoslabs.com/v1/graphql', {
+    const response = await fetch('/api/aptos-graphql', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': import.meta.env.VITE_APTOS_API_KEY || '',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         query: `
           query GetFollowerCount {
