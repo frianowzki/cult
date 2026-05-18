@@ -119,7 +119,7 @@ export default function DynamicBackground() {
           top: '-15%',
           left: '-10%',
           background: theme === 'light'
-            ? 'radial-gradient(circle, rgba(254,119,201,0.26) 0%, rgba(254,119,201,0.15) 34%, rgba(255,182,226,0.1) 52%, rgba(184,79,144,0.05) 64%, transparent 78%)'
+            ? 'radial-gradient(circle, rgba(255,170,121,0.30) 0%, rgba(255,205,171,0.20) 34%, rgba(255,232,214,0.12) 54%, transparent 78%)'
             : 'radial-gradient(circle, rgba(254,119,201,0.34) 0%, rgba(254,119,201,0.14) 42%, rgba(184,79,144,0.08) 58%, transparent 74%)',
           opacity: theme === 'light' ? 0.5 : 0.32,
         }}
@@ -134,7 +134,7 @@ export default function DynamicBackground() {
           bottom: '-10%',
           right: '-8%',
           background: theme === 'light'
-            ? 'radial-gradient(circle, rgba(184,79,144,0.2) 0%, rgba(254,119,201,0.12) 34%, rgba(255,196,232,0.08) 52%, rgba(120,36,86,0.04) 64%, transparent 76%)'
+            ? 'radial-gradient(circle, rgba(179,150,255,0.28) 0%, rgba(211,188,255,0.18) 34%, rgba(236,226,255,0.11) 52%, transparent 76%)'
             : 'radial-gradient(circle, rgba(184,79,144,0.28) 0%, rgba(254,119,201,0.12) 38%, rgba(120,36,86,0.08) 58%, transparent 72%)',
           opacity: theme === 'light' ? 0.34 : 0.22,
         }}
@@ -160,11 +160,31 @@ export default function DynamicBackground() {
           position: 'absolute',
           inset: 0,
           background: theme === 'light'
-            ? 'radial-gradient(ellipse at 22% 18%, rgba(254,119,201,0.08) 0%, transparent 42%), radial-gradient(ellipse at 78% 24%, rgba(254,119,201,0.06) 0%, transparent 38%), radial-gradient(ellipse at 52% 78%, rgba(184,79,144,0.05) 0%, transparent 42%)'
+            ? 'radial-gradient(ellipse at 14% 18%, rgba(255,184,128,0.16) 0%, transparent 34%), radial-gradient(ellipse at 82% 24%, rgba(190,157,255,0.17) 0%, transparent 36%), radial-gradient(ellipse at 74% 76%, rgba(217,185,255,0.10) 0%, transparent 40%), linear-gradient(180deg, rgba(255,255,255,0.82), rgba(250,248,245,0.76))'
             : 'transparent',
           opacity: theme === 'light' ? 1 : 0,
         }}
       />
+
+      {theme === 'light' && (
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 1440 900"
+          preserveAspectRatio="none"
+          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.32 }}
+        >
+          <defs>
+            <linearGradient id="cult-light-line" x1="0" x2="1" y1="0" y2="0">
+              <stop offset="0%" stopColor="#f0b98f" stopOpacity="0.38" />
+              <stop offset="48%" stopColor="#ffffff" stopOpacity="0.16" />
+              <stop offset="100%" stopColor="#b99cff" stopOpacity="0.42" />
+            </linearGradient>
+          </defs>
+          <path d="M-120 420 C 210 130, 450 140, 740 320 S 1170 560, 1560 180" fill="none" stroke="url(#cult-light-line)" strokeWidth="1" />
+          <path d="M-80 520 C 260 250, 520 300, 820 430 S 1130 570, 1510 360" fill="none" stroke="url(#cult-light-line)" strokeWidth="0.8" opacity="0.78" />
+          <path d="M780 -120 C 930 120, 1070 230, 1520 270" fill="none" stroke="url(#cult-light-line)" strokeWidth="1" opacity="0.55" />
+        </svg>
+      )}
 
       {/* Animated accent grain */}
       <canvas

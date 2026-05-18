@@ -126,17 +126,11 @@ export default function Layout() {
 
   const headerSurface = theme === 'light'
     ? {
-        background: isCreatorPage
-          ? 'linear-gradient(180deg, rgba(255, 250, 244, 0.86) 0%, rgba(255, 250, 244, 0.76) 42%, rgba(247, 241, 232, 0.66) 100%)'
-          : 'linear-gradient(180deg, rgba(255, 250, 244, 0.82) 0%, rgba(247, 241, 232, 0.72) 42%, rgba(241, 231, 218, 0.62) 100%)',
-        backdropFilter: isCreatorPage
-          ? 'blur(18px) saturate(120%)'
-          : 'blur(24px) saturate(130%)',
-        WebkitBackdropFilter: isCreatorPage
-          ? 'blur(18px) saturate(120%)'
-          : 'blur(24px) saturate(130%)',
-        borderBottom: '1px solid rgba(120, 92, 68, 0.12)',
-        boxShadow: '0 10px 28px rgba(97, 72, 53, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.55)',
+        background: 'rgba(255, 255, 255, 0.82)',
+        backdropFilter: 'blur(18px) saturate(140%)',
+        WebkitBackdropFilter: 'blur(18px) saturate(140%)',
+        borderBottom: '1px solid rgba(18, 18, 18, 0.08)',
+        boxShadow: '0 1px 0 rgba(255,255,255,0.72)',
       }
     : {
         background: isCreatorPage
@@ -158,11 +152,11 @@ export default function Layout() {
 
   const footerSurface = theme === 'light'
     ? {
-        borderTop: '1px solid rgba(120, 92, 68, 0.12)',
-        background: 'linear-gradient(180deg, rgba(255, 250, 244, 0.92) 0%, rgba(241, 231, 218, 0.86) 100%)',
-        backdropFilter: 'blur(16px) saturate(125%)',
-        WebkitBackdropFilter: 'blur(16px) saturate(125%)',
-        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.5)',
+        borderTop: '1px solid rgba(18,18,18,0.08)',
+        background: 'rgba(255,255,255,0.76)',
+        backdropFilter: 'blur(16px) saturate(135%)',
+        WebkitBackdropFilter: 'blur(16px) saturate(135%)',
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.72)',
       }
     : {
         borderTop: '1px solid rgba(255, 255, 255, 0.05)',
@@ -341,7 +335,6 @@ export default function Layout() {
       <div
         style={{
           minHeight: '100vh',
-          height: '100dvh',
           display: 'grid',
           gridTemplateRows: 'auto minmax(0, 1fr) auto',
           position: 'relative',
@@ -446,7 +439,7 @@ export default function Layout() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-        style={{ minHeight: 0, position: 'relative', overflow: 'auto' }}
+        style={{ minHeight: 0, position: 'relative', overflow: 'visible' }}
       >
         <Outlet />
       </motion.main>

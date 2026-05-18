@@ -53,13 +53,13 @@ export default function Home() {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'center',
+          justifyContent: 'flex-start',
           textAlign: 'center',
-          padding: '44px 20px 28px',
+          padding: '36px 20px 24px',
           position: 'relative',
           overflow: 'hidden',
-          gap: 28,
-          background: 'var(--bg)',
+          gap: 20,
+          background: 'transparent',
           flex: 1,
         }}
       >
@@ -121,7 +121,7 @@ export default function Home() {
             style={{
               fontFamily: 'var(--font-display)',
               fontWeight: 300,
-              fontStyle: 'italic',
+              fontStyle: 'normal',
               marginBottom: 18,
               color: 'var(--text)',
               textAlign: 'center',
@@ -130,12 +130,18 @@ export default function Home() {
           >
             Where creators build
             <br />
-            <em style={{ color: 'var(--accent)' }}>devoted followings</em>
+            <em style={{
+              fontStyle: 'italic',
+              background: 'linear-gradient(90deg, #d98f8b 0%, #b16aa6 58%, #8e73d9 100%)',
+              WebkitBackgroundClip: 'text',
+              backgroundClip: 'text',
+              color: 'transparent',
+            }}>devoted followings</em>
           </motion.h1>
 
           <motion.p
             variants={stagger.item}
-            style={{ fontSize: '1.02rem', maxWidth: 620, margin: '0 auto 28px', lineHeight: 1.65, textAlign: 'center' }}
+            style={{ fontSize: '1.02rem', maxWidth: 620, margin: '0 auto 22px', lineHeight: 1.65, textAlign: 'center' }}
           >
             CULT is a decentralized creator platform on Aptos. Upload content to Shelby Serves,
             monetize with subscriptions, pay-per-view, and direct tips — all on-chain.
@@ -160,10 +166,10 @@ export default function Home() {
             maxWidth: 1120,
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-            gap: 1,
-            border: '1px solid var(--border)',
-            background: 'color-mix(in srgb, var(--bg-2) 88%, transparent)',
-            backdropFilter: 'blur(12px)',
+            gap: 12,
+            border: 'none',
+            background: 'transparent',
+            backdropFilter: 'none',
           }}
         >
           {FEATURES.slice(0, 4).map((f, i) => (
@@ -173,17 +179,28 @@ export default function Home() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.18 + i * 0.05, duration: 0.35 }}
               style={{
-                padding: '18px 16px',
-                background: 'color-mix(in srgb, var(--bg-2) 92%, transparent)',
-                borderRight: '1px solid var(--border)',
+                padding: '24px 20px',
+                background: 'rgba(255,255,255,0.72)',
+                border: '1px solid rgba(20,18,17,0.08)',
+                borderRadius: 18,
+                boxShadow: '0 20px 60px rgba(32,24,18,0.06), inset 0 1px 0 rgba(255,255,255,0.72)',
+                backdropFilter: 'blur(16px) saturate(120%)',
               }}
             >
               <div
                 style={{
-                  fontSize: '1.1rem',
+                  fontSize: '1.25rem',
                   color: 'var(--accent)',
-                  marginBottom: 8,
+                  margin: '0 auto 16px',
                   fontFamily: 'var(--font-mono)',
+                  width: 52,
+                  height: 52,
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'linear-gradient(135deg, rgba(255,225,211,0.9), rgba(237,225,255,0.85))',
+                  border: '1px solid rgba(20,18,17,0.06)',
                 }}
               >
                 {f.icon}

@@ -6,13 +6,14 @@ type ThemeMode = 'dark' | 'light'
 const THEME_STORAGE_KEY = 'cult:theme'
 
 function readInitialTheme(): ThemeMode {
-  if (typeof window === 'undefined') return 'dark'
+  if (typeof window === 'undefined') return 'light'
 
   try {
     const saved = window.localStorage.getItem(THEME_STORAGE_KEY)
-    return saved === 'light' ? 'light' : 'dark'
+    if (saved === 'dark' || saved === 'light') return saved
+    return 'light'
   } catch {
-    return 'dark'
+    return 'light'
   }
 }
 
