@@ -131,26 +131,26 @@ export default function Explore() {
   return (
     <div style={{ maxWidth: 1280, margin: '0 auto', padding: '24px clamp(16px, 4vw, 32px) 16px', minHeight: '100%' }}>
       {/* Header */}
-      <div style={{ marginBottom: 48 }}>
+      <div className="explore-hero" style={{ marginBottom: 28 }}>
         <div className="section-eyebrow">Discover</div>
         <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 300, marginBottom: 24 }}>
           Find your circle
         </h2>
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div className="explore-search-row" style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
           <input
             className="input"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search creators or content"
-            style={{ minWidth: 0, width: '100%', maxWidth: 320 }}
+            style={{ minWidth: 0, flex: '1 1 280px', maxWidth: 440 }}
           />
-          <button className="btn btn-primary btn-sm" onClick={loadCreators}>
+          <button className="btn btn-primary btn-sm explore-search-button" onClick={loadCreators}>
             Search
           </button>
         </div>
 
         {/* Content type filter pills */}
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 16 }}>
+        <div className="explore-filter-row" style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 16 }}>
           {FILTER_PILLS.map((pill) => {
             const isActive = contentTypeFilter === pill.value
             return (
@@ -181,7 +181,7 @@ export default function Explore() {
 
       {/* Results count + Sort */}
       {!loading && (
-        <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+        <div className="explore-toolbar" style={{ marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
           <span className="mono" style={{ fontSize: 11, color: 'var(--text-3)' }}>
             {filtered.length} creator{filtered.length !== 1 ? 's' : ''}
             {normalizedSearch ? ` matching @${normalizedSearch}` : ' on-chain'}
@@ -195,8 +195,9 @@ export default function Explore() {
                 background: 'var(--bg-2)',
                 color: 'var(--text-2)',
                 border: '1px solid var(--border)',
-                borderRadius: 4,
-                padding: '4px 8px',
+                borderRadius: 10,
+                padding: '8px 10px',
+                minHeight: 36,
                 fontSize: 11,
                 fontFamily: 'var(--font-mono)',
                 cursor: 'pointer',
@@ -220,7 +221,7 @@ export default function Explore() {
 
       {/* Loading */}
       {loading && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))', gap: 1, border: '1px solid var(--border)' }}>
+        <div className="explore-grid explore-skeleton-grid" style={{ display: 'grid' }}>
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div key={i} style={{ padding: '32px', borderRight: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
               <div style={{ display: 'flex', gap: 14, marginBottom: 16 }}>
@@ -264,7 +265,7 @@ export default function Explore() {
 
       {/* Grid */}
       {!loading && !error && filtered.length > 0 && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))', gap: 1, border: '1px solid var(--border)' }}>
+        <div className="explore-grid" style={{ display: 'grid' }}>
           {filtered.map((creator, i) => {
             const avatarUrl = resolveContentUrl(creator.avatar_shelby_cid)
             const accentChar = ACCENT_CHARS[i % ACCENT_CHARS.length]
@@ -277,16 +278,16 @@ export default function Explore() {
               >
                 <Link
                   to={`/u/${creator.handle}`}
+                  className="explore-card"
                   style={{
                     display: 'block',
-                    background: 'var(--bg-2)',
-                    borderRight: '1px solid var(--border)',
-                    borderBottom: '1px solid var(--border)',
-                    padding: '32px',
-                    transition: 'background var(--transition)',
+                    background: 'var(--surface)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 'var(--radius-md)',
+                    padding: '24px',
+                    minHeight: '100%',
+                    transition: 'background var(--transition), border-color var(--transition), transform var(--transition), box-shadow var(--transition)',
                   }}
-                  onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-3)' }}
-                  onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = 'var(--bg-2)' }}
                 >
                   {/* Avatar + name */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
@@ -294,8 +295,9 @@ export default function Explore() {
                       width: 52, height: 52, borderRadius: '50%', flexShrink: 0,
                       background: avatarUrl
                         ? `url(${avatarUrl}) center/cover no-repeat`
-                        : 'var(--bg-4)',
+                        : 'linear-gradient(135deg, rgba(255,87,183,0.16), rgba(184,121,255,0.12))',
                       border: '1px solid var(--border-light)',
+                      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.08), 0 8px 24px rgba(0,0,0,0.12)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: '1.3rem', color: 'var(--accent)', fontFamily: 'var(--font-mono)',
                     }}>
@@ -393,7 +395,7 @@ export default function Explore() {
                     {creator.tiers.map((_, ti) => (
                       <span key={ti} className="badge" style={{ fontSize: 10 }}>Tier {ti + 1}</span>
                     ))}
-                    <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--accent)', fontWeight: 700 }}>Open creator page →</span>
+                    <span className="explore-card-link" style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--accent)', fontWeight: 700 }}>Open creator page →</span>
                   </div>
                 </Link>
               </motion.div>

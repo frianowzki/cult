@@ -53,12 +53,11 @@ export default function Layout() {
   }, [walletMenuOpen])
 
   useEffect(() => {
-    function updateMobile() {
-      setIsMobile(window.innerWidth <= 640)
-    }
+    const query = window.matchMedia('(max-width: 640px)')
+    const updateMobile = () => setIsMobile(query.matches)
     updateMobile()
-    window.addEventListener('resize', updateMobile)
-    return () => window.removeEventListener('resize', updateMobile)
+    query.addEventListener('change', updateMobile)
+    return () => query.removeEventListener('change', updateMobile)
   }, [])
 
   useEffect(() => {
@@ -127,15 +126,15 @@ export default function Layout() {
   const headerSurface = theme === 'light'
     ? {
         background: 'rgba(255, 255, 255, 0.82)',
-        backdropFilter: 'blur(18px) saturate(140%)',
-        WebkitBackdropFilter: 'blur(18px) saturate(140%)',
+        backdropFilter: 'blur(12px) saturate(128%)',
+        WebkitBackdropFilter: 'blur(12px) saturate(128%)',
         borderBottom: '1px solid rgba(18, 18, 18, 0.08)',
         boxShadow: '0 1px 0 rgba(255,255,255,0.72)',
       }
     : {
         background: 'rgba(3, 3, 10, 0.72)',
-        backdropFilter: 'blur(22px) saturate(150%)',
-        WebkitBackdropFilter: 'blur(22px) saturate(150%)',
+        backdropFilter: 'blur(14px) saturate(132%)',
+        WebkitBackdropFilter: 'blur(14px) saturate(132%)',
         borderBottom: '1px solid rgba(255, 255, 255, 0.075)',
         boxShadow: '0 10px 38px rgba(0, 0, 0, 0.18), inset 0 -1px 0 rgba(255, 87, 183, 0.035)',
       }
@@ -144,15 +143,15 @@ export default function Layout() {
     ? {
         borderTop: '1px solid rgba(18,18,18,0.08)',
         background: 'rgba(255,255,255,0.76)',
-        backdropFilter: 'blur(16px) saturate(135%)',
-        WebkitBackdropFilter: 'blur(16px) saturate(135%)',
+        backdropFilter: 'blur(10px) saturate(124%)',
+        WebkitBackdropFilter: 'blur(10px) saturate(124%)',
         boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.72)',
       }
     : {
         borderTop: '1px solid rgba(255, 255, 255, 0.07)',
         background: 'rgba(3, 3, 10, 0.78)',
-        backdropFilter: 'blur(20px) saturate(140%)',
-        WebkitBackdropFilter: 'blur(20px) saturate(140%)',
+        backdropFilter: 'blur(12px) saturate(128%)',
+        WebkitBackdropFilter: 'blur(12px) saturate(128%)',
         boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.035)',
       }
 
@@ -349,7 +348,7 @@ export default function Layout() {
                   ✦ TESTNET
                 </span>
               </Link>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, alignSelf: 'flex-start' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6, flexShrink: 1, alignSelf: 'flex-start', minWidth: 0, flexWrap: 'wrap' }}>
                 {themeButton}
                 {connected && bellButton}
                 {connected && isPushSupported() && (
@@ -365,7 +364,7 @@ export default function Layout() {
                 )}
                 {walletMenu}
                 {!connected && (
-                  <button className="btn btn-primary btn-sm" onClick={handleConnect}>
+                  <button className="btn btn-primary btn-sm" onClick={handleConnect} style={{ maxWidth: 156 }}>
                     Connect Wallet
                   </button>
                 )}
