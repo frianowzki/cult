@@ -133,21 +133,11 @@ export default function Layout() {
         boxShadow: '0 1px 0 rgba(255,255,255,0.72)',
       }
     : {
-        background: isCreatorPage
-          ? 'linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.045) 20%, rgba(255, 255, 255, 0.025) 48%, rgba(255, 255, 255, 0.015) 100%)'
-          : 'linear-gradient(180deg, rgba(26, 18, 24, 0.44) 0%, rgba(14, 11, 14, 0.34) 42%, rgba(8, 8, 7, 0.24) 100%)',
-        backdropFilter: isCreatorPage
-          ? 'blur(19px) saturate(130%) brightness(1.01)'
-          : 'blur(26px) saturate(170%) brightness(1.03)',
-        WebkitBackdropFilter: isCreatorPage
-          ? 'blur(19px) saturate(130%) brightness(1.01)'
-          : 'blur(26px) saturate(170%) brightness(1.03)',
-        borderBottom: isCreatorPage
-          ? '1px solid rgba(255, 255, 255, 0.055)'
-          : '1px solid rgba(255, 255, 255, 0.06)',
-        boxShadow: isCreatorPage
-          ? '0 8px 22px rgba(0, 0, 0, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.07), inset 0 -1px 0 rgba(255, 255, 255, 0.015)'
-          : '0 10px 34px rgba(0, 0, 0, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.06), inset 0 -1px 0 rgba(254, 119, 201, 0.05)',
+        background: 'rgba(3, 3, 10, 0.72)',
+        backdropFilter: 'blur(22px) saturate(150%)',
+        WebkitBackdropFilter: 'blur(22px) saturate(150%)',
+        borderBottom: '1px solid rgba(255, 255, 255, 0.075)',
+        boxShadow: '0 10px 38px rgba(0, 0, 0, 0.18), inset 0 -1px 0 rgba(255, 87, 183, 0.035)',
       }
 
   const footerSurface = theme === 'light'
@@ -159,11 +149,11 @@ export default function Layout() {
         boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.72)',
       }
     : {
-        borderTop: '1px solid rgba(255, 255, 255, 0.05)',
-        background: 'linear-gradient(180deg, rgba(14, 12, 13, 0.58) 0%, rgba(8, 8, 7, 0.74) 100%)',
-        backdropFilter: 'blur(18px) saturate(135%)',
-        WebkitBackdropFilter: 'blur(18px) saturate(135%)',
-        boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.03)',
+        borderTop: '1px solid rgba(255, 255, 255, 0.07)',
+        background: 'rgba(3, 3, 10, 0.78)',
+        backdropFilter: 'blur(20px) saturate(140%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(140%)',
+        boxShadow: 'inset 0 1px 0 rgba(255, 255, 255, 0.035)',
       }
 
   const utilityButtonStyle = {

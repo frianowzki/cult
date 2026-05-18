@@ -132,7 +132,7 @@ export default function Home() {
             <br />
             <em style={{
               fontStyle: 'italic',
-              background: 'linear-gradient(90deg, #d98f8b 0%, #b16aa6 58%, #8e73d9 100%)',
+              background: 'linear-gradient(90deg, var(--accent-3) 0%, var(--accent) 52%, var(--accent-2) 100%)',
               WebkitBackgroundClip: 'text',
               backgroundClip: 'text',
               color: 'transparent',
@@ -178,30 +178,10 @@ export default function Home() {
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.18 + i * 0.05, duration: 0.35 }}
-              style={{
-                padding: '24px 20px',
-                background: 'rgba(255,255,255,0.72)',
-                border: '1px solid rgba(20,18,17,0.08)',
-                borderRadius: 18,
-                boxShadow: '0 20px 60px rgba(32,24,18,0.06), inset 0 1px 0 rgba(255,255,255,0.72)',
-                backdropFilter: 'blur(16px) saturate(120%)',
-              }}
+              className="home-feature-card"
             >
               <div
-                style={{
-                  fontSize: '1.25rem',
-                  color: 'var(--accent)',
-                  margin: '0 auto 16px',
-                  fontFamily: 'var(--font-mono)',
-                  width: 52,
-                  height: 52,
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  background: 'linear-gradient(135deg, rgba(255,225,211,0.9), rgba(237,225,255,0.85))',
-                  border: '1px solid rgba(20,18,17,0.06)',
-                }}
+                className="home-feature-icon"
               >
                 {f.icon}
               </div>

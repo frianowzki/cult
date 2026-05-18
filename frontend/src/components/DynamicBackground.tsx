@@ -120,8 +120,8 @@ export default function DynamicBackground() {
           left: '-10%',
           background: theme === 'light'
             ? 'radial-gradient(circle, rgba(255,170,121,0.30) 0%, rgba(255,205,171,0.20) 34%, rgba(255,232,214,0.12) 54%, transparent 78%)'
-            : 'radial-gradient(circle, rgba(254,119,201,0.34) 0%, rgba(254,119,201,0.14) 42%, rgba(184,79,144,0.08) 58%, transparent 74%)',
-          opacity: theme === 'light' ? 0.5 : 0.32,
+            : 'radial-gradient(circle, rgba(255,112,92,0.42) 0%, rgba(255,112,92,0.18) 34%, rgba(255,87,183,0.06) 58%, transparent 78%)',
+          opacity: theme === 'light' ? 0.5 : 0.36,
         }}
       />
       {/* Orb 2 — accent shadow, bottom-right */}
@@ -135,8 +135,8 @@ export default function DynamicBackground() {
           right: '-8%',
           background: theme === 'light'
             ? 'radial-gradient(circle, rgba(179,150,255,0.28) 0%, rgba(211,188,255,0.18) 34%, rgba(236,226,255,0.11) 52%, transparent 76%)'
-            : 'radial-gradient(circle, rgba(184,79,144,0.28) 0%, rgba(254,119,201,0.12) 38%, rgba(120,36,86,0.08) 58%, transparent 72%)',
-          opacity: theme === 'light' ? 0.34 : 0.22,
+            : 'radial-gradient(circle, rgba(130,64,255,0.46) 0%, rgba(255,87,183,0.18) 38%, rgba(63,26,150,0.12) 58%, transparent 74%)',
+          opacity: theme === 'light' ? 0.34 : 0.3,
         }}
       />
       {/* Orb 3 — soft accent haze, center-left mid */}
@@ -150,8 +150,8 @@ export default function DynamicBackground() {
           left: '20%',
           background: theme === 'light'
             ? 'radial-gradient(circle, rgba(255,168,224,0.18) 0%, rgba(254,119,201,0.1) 36%, rgba(255,214,239,0.07) 54%, rgba(184,79,144,0.035) 64%, transparent 76%)'
-            : 'radial-gradient(circle, rgba(255,168,224,0.18) 0%, rgba(254,119,201,0.1) 42%, rgba(184,79,144,0.06) 58%, transparent 72%)',
-          opacity: theme === 'light' ? 0.28 : 0.18,
+            : 'radial-gradient(circle, rgba(255,87,183,0.18) 0%, rgba(129,75,255,0.12) 42%, rgba(20,18,70,0.09) 58%, transparent 74%)',
+          opacity: theme === 'light' ? 0.28 : 0.2,
         }}
       />
 
@@ -166,25 +166,41 @@ export default function DynamicBackground() {
         }}
       />
 
-      {theme === 'light' && (
-        <svg
-          aria-hidden="true"
-          viewBox="0 0 1440 900"
-          preserveAspectRatio="none"
-          style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: 0.32 }}
-        >
-          <defs>
-            <linearGradient id="cult-light-line" x1="0" x2="1" y1="0" y2="0">
-              <stop offset="0%" stopColor="#f0b98f" stopOpacity="0.38" />
-              <stop offset="48%" stopColor="#ffffff" stopOpacity="0.16" />
-              <stop offset="100%" stopColor="#b99cff" stopOpacity="0.42" />
-            </linearGradient>
-          </defs>
-          <path d="M-120 420 C 210 130, 450 140, 740 320 S 1170 560, 1560 180" fill="none" stroke="url(#cult-light-line)" strokeWidth="1" />
-          <path d="M-80 520 C 260 250, 520 300, 820 430 S 1130 570, 1510 360" fill="none" stroke="url(#cult-light-line)" strokeWidth="0.8" opacity="0.78" />
-          <path d="M780 -120 C 930 120, 1070 230, 1520 270" fill="none" stroke="url(#cult-light-line)" strokeWidth="1" opacity="0.55" />
-        </svg>
-      )}
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 1440 900"
+        preserveAspectRatio="none"
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', opacity: theme === 'light' ? 0.32 : 0.46 }}
+      >
+        <defs>
+          <linearGradient id="cult-scene-line" x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0%" stopColor={theme === 'light' ? '#f0b98f' : '#ff765f'} stopOpacity={theme === 'light' ? '0.38' : '0.34'} />
+            <stop offset="48%" stopColor={theme === 'light' ? '#ffffff' : '#ff57b7'} stopOpacity={theme === 'light' ? '0.16' : '0.2'} />
+            <stop offset="100%" stopColor={theme === 'light' ? '#b99cff' : '#8f56ff'} stopOpacity={theme === 'light' ? '0.42' : '0.44'} />
+          </linearGradient>
+          <radialGradient id="cult-dark-planet" cx="50%" cy="45%" r="58%">
+            <stop offset="0%" stopColor="#a44dff" stopOpacity="0.42" />
+            <stop offset="54%" stopColor="#5b238f" stopOpacity="0.28" />
+            <stop offset="100%" stopColor="#080818" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+        {theme !== 'light' && (
+          <circle cx="1230" cy="560" r="174" fill="url(#cult-dark-planet)" opacity="0.82" />
+        )}
+        <path d="M-120 420 C 210 130, 450 140, 740 320 S 1170 560, 1560 180" fill="none" stroke="url(#cult-scene-line)" strokeWidth="1" />
+        <path d="M-80 520 C 260 250, 520 300, 820 430 S 1130 570, 1510 360" fill="none" stroke="url(#cult-scene-line)" strokeWidth="0.8" opacity="0.78" />
+        <path d="M780 -120 C 930 120, 1070 230, 1520 270" fill="none" stroke="url(#cult-scene-line)" strokeWidth="1" opacity="0.55" />
+        {theme !== 'light' && Array.from({ length: 11 }).map((_, i) => (
+          <path
+            key={i}
+            d={`M760 ${260 + i * 14} C 940 ${170 + i * 6}, 1120 ${190 + i * 10}, 1500 ${80 + i * 18}`}
+            fill="none"
+            stroke="url(#cult-scene-line)"
+            strokeWidth="0.45"
+            opacity={0.22 - i * 0.012}
+          />
+        ))}
+      </svg>
 
       {/* Animated accent grain */}
       <canvas
