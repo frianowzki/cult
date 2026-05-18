@@ -129,7 +129,7 @@ export default function Explore() {
   })
 
   return (
-    <div style={{ maxWidth: 1280, margin: '0 auto', padding: '24px clamp(16px, 4vw, 32px) 16px', minHeight: '100%' }}>
+    <div className="explore-page" style={{ maxWidth: 1280, margin: '0 auto', padding: '24px clamp(16px, 4vw, 32px) 16px', minHeight: '100%' }}>
       {/* Header */}
       <div className="explore-hero" style={{ marginBottom: 28 }}>
         <div className="section-eyebrow">Discover</div>
@@ -331,7 +331,7 @@ export default function Explore() {
                   </div>
 
                   {/* Stats */}
-                  <div style={{ display: 'flex', gap: 16, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
+                  <div className="explore-card-stats" style={{ display: 'flex', gap: 16, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
                     <div>
                       <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', color: 'var(--text)', lineHeight: 1 }}>
                         {creator.subscriber_count}
@@ -391,7 +391,7 @@ export default function Explore() {
                   )}
 
                   {/* Tier pills */}
-                  <div style={{ display: 'flex', gap: 6, marginTop: 14, flexWrap: 'wrap', alignItems: 'center' }}>
+                  <div className="explore-card-actions" style={{ display: 'flex', gap: 6, marginTop: 14, flexWrap: 'wrap', alignItems: 'center' }}>
                     {creator.tiers.map((_, ti) => (
                       <span key={ti} className="badge" style={{ fontSize: 10 }}>Tier {ti + 1}</span>
                     ))}

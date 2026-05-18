@@ -330,6 +330,7 @@ export default function Layout() {
         }}
       >
       <header
+        className="app-header"
         style={{
           position: 'sticky',
           top: 0,
@@ -338,9 +339,9 @@ export default function Layout() {
         }}
       >
         {isMobile ? (
-          <nav style={{ maxWidth: 1280, margin: '0 auto', padding: '10px 16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 10 }}>
-              <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <nav className="mobile-nav" style={{ maxWidth: 1280, margin: '0 auto', padding: '10px 16px' }}>
+            <div className="mobile-nav-top" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+              <Link to="/" className="brand-link" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 300, letterSpacing: '-0.03em', color: 'var(--text)' }}>
                   CULT
                 </span>
@@ -348,7 +349,7 @@ export default function Layout() {
                   ✦ TESTNET
                 </span>
               </Link>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6, flexShrink: 1, alignSelf: 'flex-start', minWidth: 0, flexWrap: 'wrap' }}>
+              <div className="mobile-wallet-controls" style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6, flexShrink: 1, alignSelf: 'flex-start', minWidth: 0, flexWrap: 'wrap' }}>
                 {themeButton}
                 {connected && bellButton}
                 {connected && isPushSupported() && (
@@ -364,13 +365,13 @@ export default function Layout() {
                 )}
                 {walletMenu}
                 {!connected && (
-                  <button className="btn btn-primary btn-sm" onClick={handleConnect} style={{ maxWidth: 156 }}>
-                    Connect Wallet
+                  <button className="btn btn-primary btn-sm mobile-connect-button" onClick={handleConnect} style={{ maxWidth: 156 }}>
+                    Connect
                   </button>
                 )}
               </div>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+            <div className="mobile-nav-links" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
               {nav.map((item) => (
                 <Link
                   key={item.to}
@@ -385,6 +386,7 @@ export default function Layout() {
           </nav>
         ) : (
           <nav
+            className="desktop-nav"
             style={{
               maxWidth: 1280,
               margin: '0 auto',
@@ -396,7 +398,7 @@ export default function Layout() {
               gap: 12,
             }}
           >
-            <Link to="/" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Link to="/" className="brand-link" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.5rem', fontWeight: 300, letterSpacing: '-0.03em', color: 'var(--text)' }}>
                 CULT
               </span>
@@ -489,6 +491,7 @@ export default function Layout() {
       )}
 
       <footer
+        className="app-footer"
         style={{
           width: '100%',
           ...footerSurface,

@@ -46,8 +46,9 @@ const FEATURES = [
 
 export default function Home() {
   return (
-    <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
+    <div className="home-page" style={{ minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
       <section
+        className="home-section"
         style={{
           minHeight: '100%',
           display: 'flex',
@@ -101,6 +102,7 @@ export default function Home() {
         />
 
         <motion.div
+          className="home-hero-copy"
           variants={stagger.container}
           initial="initial"
           animate="animate"
@@ -117,6 +119,7 @@ export default function Home() {
           }}
         >
           <motion.h1
+            className="home-hero-title"
             variants={stagger.item}
             style={{
               fontFamily: 'var(--font-display)',
@@ -140,6 +143,7 @@ export default function Home() {
           </motion.h1>
 
           <motion.p
+            className="home-hero-subtitle"
             variants={stagger.item}
             style={{ fontSize: '1.02rem', maxWidth: 620, margin: '0 auto 22px', lineHeight: 1.65, textAlign: 'center' }}
           >
@@ -148,6 +152,7 @@ export default function Home() {
           </motion.p>
 
           <motion.div
+            className="home-cta-row"
             variants={stagger.item}
             style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap', marginBottom: 6 }}
           >
@@ -161,6 +166,7 @@ export default function Home() {
         </motion.div>
 
         <div
+          className="home-feature-grid"
           style={{
             width: '100%',
             maxWidth: 1120,
