@@ -11,8 +11,22 @@ export const SHELBY_BASE_URL = 'https://api.testnet.shelby.xyz'
 export const SHELBY_RPC_ENDPOINT = 'https://api.testnet.shelby.xyz/shelby'
 
 const SHELBY_DEPLOYER = '0x85fdb9a176ab8ef1d9d9c1b60d60b3924f0800ac1de1cc2085fb0b8bb4988e6a'
-// Keep creator media available long-term. Short expirations make old posts lose thumbnails/previews.
-const BLOB_EXPIRATION_MS = 1000 * 60 * 60 * 24 * 365 * 10
+const DAY_MS = 1000 * 60 * 60 * 24
+
+export const SHELBY_EXPIRATION_OPTIONS = [
+  { label: '1 day', value: DAY_MS },
+  { label: '3 days', value: DAY_MS * 3 },
+  { label: '1 week', value: DAY_MS * 7 },
+  { label: '2 weeks', value: DAY_MS * 14 },
+  { label: '1 month', value: DAY_MS * 30 },
+  { label: '3 months', value: DAY_MS * 90 },
+  { label: '6 months', value: DAY_MS * 180 },
+  { label: '1 year', value: DAY_MS * 365 },
+  { label: '10 years', value: DAY_MS * 365 * 10 },
+] as const
+
+// Default to long-lived media so creator thumbnails/previews do not disappear unexpectedly.
+export const DEFAULT_BLOB_EXPIRATION_MS = DAY_MS * 365 * 10
 const DEFAULT_ENCODING_ENUM_INDEX = '0'
 export const SHELBY_REGISTER_BLOB_MAX_GAS = 20000
 export const SHELBY_REGISTER_BLOB_GAS_UNIT_PRICE = 100
@@ -102,6 +116,7 @@ export async function encodeFileAndGetPayload(
   file: File,
   accountAddress: string,
   onProgress?: ProgressCallback,
+  expirationMs: number = DEFAULT_BLOB_EXPIRATION_MS,
 ) {
   onProgress?.('encoding', 10)
   const uniqueName = makeUniqueName(file)
@@ -114,7 +129,10 @@ export async function encodeFileAndGetPayload(
   const commitments = await generateCommitments(provider, data)
   onProgress?.('encoding', 40)
 
-  const expirationMicros = (Date.now() + BLOB_EXPIRATION_MS) * 1000
+  const safeExpirationMs = Number.isFinite(expirationMs) && expirationMs > 0
+    ? expirationMs
+    : DEFAULT_BLOB_EXPIRATION_MS
+  const expirationMicros = (Date.now() + safeExpirationMs) * 1000
   const numChunksets = expectedTotalChunksets(commitments.raw_data_size)
 
   const payload = {

@@ -14,6 +14,8 @@ import {
   resolveContentUrl,
   SHELBY_REGISTER_BLOB_MAX_GAS,
   SHELBY_REGISTER_BLOB_GAS_UNIT_PRICE,
+  SHELBY_EXPIRATION_OPTIONS,
+  DEFAULT_BLOB_EXPIRATION_MS,
 } from '../lib/shelby'
 import { ACCESS_LEVELS, ACCESS_LEVEL_LABELS } from '../lib/constants'
 
@@ -36,6 +38,7 @@ export default function EditContentModal({ content, onSuccess, onClose }: Props)
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null)
   const [thumbnailPreview, setThumbnailPreview] = useState('')
   const [removeThumbnail, setRemoveThumbnail] = useState(false)
+  const [expirationMs, setExpirationMs] = useState<number>(DEFAULT_BLOB_EXPIRATION_MS)
 
   async function uploadFileToShelby(file: File): Promise<string> {
     const addr = String(account!.address)
@@ -43,7 +46,7 @@ export default function EditContentModal({ content, onSuccess, onClose }: Props)
       const result = await mockUpload(file)
       return `${result.uploaderAddress}::${result.blobName}`
     }
-    const { payload, data, uniqueName } = await encodeFileAndGetPayload(file, addr)
+    const { payload, data, uniqueName } = await encodeFileAndGetPayload(file, addr, undefined, expirationMs)
     const submitted = await signAndSubmitTransaction({
       data: payload,
       options: {
@@ -229,6 +232,24 @@ export default function EditContentModal({ content, onSuccess, onClose }: Props)
                   </button>
                 )}
               </div>
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="label">Shelby expiration for new files</label>
+            <select
+              className="input"
+              value={expirationMs}
+              onChange={(e) => setExpirationMs(Number(e.target.value))}
+              disabled={loading}
+              style={{ maxWidth: 220 }}
+            >
+              {SHELBY_EXPIRATION_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+            <div style={{ marginTop: 8, fontSize: 12, color: 'var(--text-3)', lineHeight: 1.5 }}>
+              Applies only when replacing the content file or thumbnail. Existing Shelby blobs keep their original expiration.
             </div>
           </div>
 

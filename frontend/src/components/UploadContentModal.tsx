@@ -12,6 +12,8 @@ import {
   isShelbyEnabled,
   SHELBY_REGISTER_BLOB_MAX_GAS,
   SHELBY_REGISTER_BLOB_GAS_UNIT_PRICE,
+  SHELBY_EXPIRATION_OPTIONS,
+  DEFAULT_BLOB_EXPIRATION_MS,
   type ProgressCallback,
   type ShelbyUploadResult,
 } from '../lib/shelby'
@@ -32,6 +34,7 @@ interface DraftItem {
   purchasePrice: string
   publishMode: PublishMode
   scheduledFor: string
+  expirationMs: number
   createdAt: number
 }
 
@@ -96,6 +99,7 @@ export default function UploadContentModal({ onSuccess }: Props) {
   const [uploadPercent, setUploadPercent] = useState(0)
   const [uploading, setUploading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [expirationMs, setExpirationMs] = useState<number>(DEFAULT_BLOB_EXPIRATION_MS)
 
   // Draft/schedule state
   const [publishMode, setPublishMode] = useState<PublishMode>('now')
@@ -150,7 +154,7 @@ export default function UploadContentModal({ onSuccess }: Props) {
     }
 
     // Step 1: encode + build on-chain registration payload
-    const { payload, data, uniqueName } = await encodeFileAndGetPayload(f, addr, onProgress)
+    const { payload, data, uniqueName } = await encodeFileAndGetPayload(f, addr, onProgress, expirationMs)
 
     // Step 2: register blob on-chain via Petra
     setUploadStep('registering')
@@ -183,6 +187,7 @@ export default function UploadContentModal({ onSuccess }: Props) {
       purchasePrice,
       publishMode,
       scheduledFor,
+      expirationMs,
       createdAt: editingDraftId
         ? (drafts.find((d) => d.id === editingDraftId)?.createdAt || Date.now())
         : Date.now(),
@@ -207,6 +212,7 @@ export default function UploadContentModal({ onSuccess }: Props) {
     setPurchasePrice('1')
     setPublishMode('now')
     setScheduledFor('')
+    setExpirationMs(DEFAULT_BLOB_EXPIRATION_MS)
     setFile(null)
     setThumbnail(null)
     setThumbnailPreview('')
@@ -220,6 +226,7 @@ export default function UploadContentModal({ onSuccess }: Props) {
     setPurchasePrice(draft.purchasePrice)
     setPublishMode(draft.publishMode)
     setScheduledFor(draft.scheduledFor)
+    setExpirationMs(draft.expirationMs || DEFAULT_BLOB_EXPIRATION_MS)
     setFile(null)
     setThumbnail(null)
     setThumbnailPreview('')
@@ -238,6 +245,7 @@ export default function UploadContentModal({ onSuccess }: Props) {
       setPurchasePrice('1')
       setPublishMode('now')
       setScheduledFor('')
+      setExpirationMs(DEFAULT_BLOB_EXPIRATION_MS)
     }
     toast.success('Draft deleted')
   }
@@ -445,6 +453,7 @@ export default function UploadContentModal({ onSuccess }: Props) {
                   setPurchasePrice('1')
                   setPublishMode('now')
                   setScheduledFor('')
+                  setExpirationMs(DEFAULT_BLOB_EXPIRATION_MS)
                 }}
               >
                 Cancel edit
@@ -534,6 +543,24 @@ export default function UploadContentModal({ onSuccess }: Props) {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="label">Shelby expiration</label>
+            <select
+              className="input"
+              value={expirationMs}
+              onChange={(e) => setExpirationMs(Number(e.target.value))}
+              disabled={isLoading}
+              style={{ maxWidth: 220 }}
+            >
+              {SHELBY_EXPIRATION_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </select>
+            <div style={{ marginTop: 8, fontSize: 12, color: 'var(--text-3)', lineHeight: 1.5 }}>
+              Controls how long Shelby keeps the uploaded file and thumbnail available. Default is 10 years for permanent creator posts.
             </div>
           </div>
 
