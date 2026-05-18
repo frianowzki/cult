@@ -602,6 +602,28 @@ struct UnfollowEvent has drop, store {
         abort E_CONTENT_NOT_FOUND
     }
 
+    /// Permanently delete a content entry from CULT storage.
+    public entry fun delete_content(
+        creator: &signer,
+        content_id: u64,
+    ) acquires ContentStore {
+        let creator_addr = signer::address_of(creator);
+        assert!(exists<ContentStore>(creator_addr), E_NOT_CREATOR);
+
+        let store = borrow_global_mut<ContentStore>(creator_addr);
+        let len = vector::length(&store.contents);
+        let i = 0u64;
+        while (i < len) {
+            let content = vector::borrow(&store.contents, i);
+            if (content.id == content_id) {
+                vector::remove(&mut store.contents, i);
+                return
+            };
+            i = i + 1;
+        };
+        abort E_CONTENT_NOT_FOUND
+    }
+
         fun shelby_usd_metadata(): Object<Metadata> {
         object::address_to_object<Metadata>(SHELBY_USD_METADATA_ADDR)
     }

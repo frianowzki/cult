@@ -15,7 +15,7 @@ import {
   getLegacyFanSubscriptions,
   getLegacyFanPurchases,
   getLegacyFanHistoryFromEvents,
-  buildToggleContentPayload,
+  buildDeleteContentPayload,
   unitsToUsd,
   type CreatorProfile,
   type Content,
@@ -180,10 +180,10 @@ export default function Dashboard() {
 
     try {
       // Remove from CULT first. Blob cleanup is best-effort so broken/missing Shelby blobs cannot trap bad posts.
-      const toggleTx = await signAndSubmitTransaction({
-        data: buildToggleContentPayload(c.id),
+      const deleteTx = await signAndSubmitTransaction({
+        data: buildDeleteContentPayload(c.id),
       })
-      await aptos.waitForTransaction({ transactionHash: (toggleTx as any).hash })
+      await aptos.waitForTransaction({ transactionHash: (deleteTx as any).hash })
 
       setContents((prev) => prev.filter((item) => item.id !== c.id))
       toast.success('Content removed from CULT')

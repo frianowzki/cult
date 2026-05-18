@@ -587,6 +587,15 @@ export function buildToggleContentPayload(contentId: number) {
     functionArguments: [contentId.toString()],
   }
 }
+
+export function buildDeleteContentPayload(contentId: number) {
+  return {
+    function: `${CONTRACT_ADDRESS}::${MODULE_NAME}::delete_content` as `${string}::${string}::${string}`,
+    typeArguments: [] as [],
+    functionArguments: [contentId.toString()],
+  }
+}
+
 export function buildDeleteCreatorPayload() {
   return {
     function: `${CONTRACT_ADDRESS}::${MODULE_NAME}::delete_creator` as `${string}::${string}::${string}`,
