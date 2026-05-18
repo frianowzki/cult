@@ -140,48 +140,60 @@ export default function Dashboard() {
     }
   }
 
+  async function tryDeleteShelbyBlob(cid: string | undefined, label: string) {
+    if (!cid) return
+
+    const parsed = parseCid(cid)
+    if (!parsed) {
+      console.warn(`Skipping ${label} Shelby delete: invalid CID`, cid)
+      return
+    }
+
+    // Old mock uploads were stored on-chain as 0xmock::blobName but never existed in Shelby.
+    if (parsed.address.toLowerCase() === '0xmock') {
+      console.warn(`Skipping ${label} Shelby delete: mock CID was never uploaded`, cid)
+      return
+    }
+
+    try {
+      const tx = await signAndSubmitTransaction({
+        data: buildDeleteBlobPayload(parsed.blobName),
+      })
+      await aptos.waitForTransaction({ transactionHash: (tx as any).hash })
+    } catch (error) {
+      // Missing Shelby metadata/blob should not block removing the CULT post.
+      console.warn(`Failed to delete ${label} Shelby blob; content is already removed from CULT`, cid, error)
+    }
+  }
+
   async function handlePermanentDelete(c: Content) {
     if (!connected || !account) {
       toast.error('Connect wallet first')
       return
     }
 
-    const ok = window.confirm('Delete this content from Shelby and remove it from CULT?')
+    const ok = window.confirm('Remove this content from CULT? Shelby blobs will be deleted when they exist; old broken mock blobs will be skipped.')
     if (!ok) return
 
     setViewingContent(null)
     setDeletingId(c.id)
 
     try {
-      const mainBlob = parseCid(c.shelby_cid)
-      if (!mainBlob) throw new Error('Invalid Shelby blob reference')
-
-      const mainDeleteTx = await signAndSubmitTransaction({
-        data: buildDeleteBlobPayload(mainBlob.blobName),
-      })
-      await aptos.waitForTransaction({ transactionHash: (mainDeleteTx as any).hash })
-
-      if (c.thumbnail_shelby_cid) {
-        const thumbBlob = parseCid(c.thumbnail_shelby_cid)
-        if (thumbBlob) {
-          const thumbDeleteTx = await signAndSubmitTransaction({
-            data: buildDeleteBlobPayload(thumbBlob.blobName),
-          })
-          await aptos.waitForTransaction({ transactionHash: (thumbDeleteTx as any).hash })
-        }
-      }
-
+      // Remove from CULT first. Blob cleanup is best-effort so broken/missing Shelby blobs cannot trap bad posts.
       const toggleTx = await signAndSubmitTransaction({
         data: buildToggleContentPayload(c.id),
       })
       await aptos.waitForTransaction({ transactionHash: (toggleTx as any).hash })
 
       setContents((prev) => prev.filter((item) => item.id !== c.id))
-      toast.success('Content deleted from Shelby and removed from CULT')
-      await loadData()
+      toast.success('Content removed from CULT')
       setViewingContent(null)
+
+      await tryDeleteShelbyBlob(c.shelby_cid, 'content')
+      await tryDeleteShelbyBlob(c.thumbnail_shelby_cid, 'thumbnail')
+      await loadData()
     } catch (e: any) {
-      toast.error(e?.message || 'Failed to permanently delete content')
+      toast.error(e?.message || 'Failed to remove content from CULT')
     } finally {
       setDeletingId(null)
     }
