@@ -178,7 +178,7 @@ export async function mockUpload(
 }
 
 export function isShelbyEnabled(): boolean {
-  return false
+  return true
 }
 
 export function buildDeleteBlobPayload(blobName: string) {
